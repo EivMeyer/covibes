@@ -16,7 +16,7 @@ const execAsync = promisify(exec);
 // Configuration
 const config = {
     dockerDir: path.join(__dirname, '..'),
-    workspaceBase: process.env.WORKSPACE_BASE || '/var/colabvibe/workspaces',
+    workspaceBase: process.env.WORKSPACE_BASE || require('os').homedir() + '/.covibes/workspaces',
     generatedDir: path.join(__dirname, '..', 'generated'),
     previewServicePath: path.join(__dirname, '../../server/services/preview-service.ts')
 };

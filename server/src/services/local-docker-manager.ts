@@ -117,8 +117,8 @@ class DockerManager extends EventEmitter implements TerminalManager {
   private containers: Map<string, ContainerInfo> = new Map();
   private activePTYSessions: Map<string, PTYInfo> = new Map();
   private readonly AGENT_IMAGE = 'colabvibe-claude-agent';
-  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
-  private readonly LOCAL_WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
+  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
+  private readonly LOCAL_WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
   private isEC2Available = false;
 
   constructor() {
@@ -335,7 +335,7 @@ class DockerManager extends EventEmitter implements TerminalManager {
    * Ensure team workspace exists on EC2 VM and clone repository
    */
   private async ensureTeamWorkspace(teamId: string, repoUrl?: string): Promise<string> {
-    const workspaceDir = `/home/ubuntu/.colabvibes/${teamId}`;
+    const workspaceDir = `/home/ubuntu/.covibes/workspaces/${teamId}`;
     
     try {
       // Create workspace directory on EC2 VM

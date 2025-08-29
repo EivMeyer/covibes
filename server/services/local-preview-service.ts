@@ -32,7 +32,7 @@ interface PreviewProcess {
 class LocalPreviewService {
   private previews = new Map<string, PreviewProcess>();
   private portStart = 4000;
-  private baseWorkspaceDir = path.join(os.homedir(), '.colabvibe', 'previews');
+  private baseWorkspaceDir = path.join(os.homedir(), '.covibes/workspaces', 'previews');
 
   constructor() {
     // Ensure workspace directory exists

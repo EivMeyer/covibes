@@ -377,7 +377,7 @@ app.use('/api', (_req, res, next) => {
 app.use('/test', express.static(path.join(__dirname, '../public')));
 
 // Serve static files from React build
-app.use(express.static(path.join(__dirname, '../../../client/dist'), {
+app.use(express.static(path.join(__dirname, '../../client/dist'), {
   setHeaders: (res) => {
     if (process.env['NODE_ENV'] === 'development') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -537,7 +537,7 @@ app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace pers
 
 // Catch-all route - serve React app for all non-API routes
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
 // WebSocket connection handling

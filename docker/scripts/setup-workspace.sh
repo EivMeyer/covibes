@@ -8,7 +8,7 @@
 set -euo pipefail
 
 # Configuration
-WORKSPACE_BASE="/var/colabvibe/workspaces"
+WORKSPACE_BASE="$HOME/.covibes/workspaces"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
 
@@ -245,12 +245,12 @@ Commands:
 Examples:
   $0 create team123
   $0 create team123 https://github.com/user/repo.git main
-  $0 init /var/colabvibe/workspaces/team123
-  $0 permissions /var/colabvibe/workspaces/team123
-  $0 volume team123 /var/colabvibe/workspaces/team123
+  $0 init ~/.covibes/workspaces/team123
+  $0 permissions ~/.covibes/workspaces/team123
+  $0 volume team123 ~/.covibes/workspaces/team123
 
 Environment Variables:
-  WORKSPACE_BASE   Base directory for workspaces (default: /var/colabvibe/workspaces)
+  WORKSPACE_BASE   Base directory for workspaces (default: ~/.covibes/workspaces)
 EOF
 }
 

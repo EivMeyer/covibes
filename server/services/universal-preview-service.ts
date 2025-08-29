@@ -41,7 +41,7 @@ class UniversalPreviewService {
   private workspaceDir: string;
 
   constructor() {
-    this.workspaceDir = path.join(os.homedir(), '.colabvibes');
+    this.workspaceDir = path.join(os.homedir(), '.covibes/workspaces');
     this.ensureWorkspaceDir();
   }
 
@@ -183,13 +183,13 @@ class UniversalPreviewService {
           });
           
           return {
-            port: proxyPort,
+            port: existing.port,  // Return the actual container port for direct access
             url: `/api/preview/proxy/${teamId}/main/`
           };
         }
         
         return {
-          port: existing.proxyPort,
+          port: existing.port,  // Return the actual container port, not proxy port
           url: `/api/preview/proxy/${teamId}/main/`
         };
       }
@@ -316,17 +316,24 @@ export default defineConfig({
   base: '/',
   plugins: [
     react({
-      // Keep HMR enabled
+      // Keep React plugin working normally
       include: "**/*.{jsx,tsx}",
     }),
-    // Custom plugin to fix virtual module MIME types
+    // SURGICAL plugin to fix ONLY virtual module MIME types
     {
-      name: 'fix-virtual-module-mime',
+      name: 'fix-virtual-module-mime-type',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          // Fix MIME types for Vite virtual modules
-          if (req.url && (req.url.startsWith('/@vite/') || req.url.startsWith('/@react-refresh'))) {
-            res.setHeader('Content-Type', 'text/javascript');
+          // ONLY target the exact problematic virtual modules
+          if (req.url === '/@vite/client' || req.url === '/@react-refresh') {
+            // Override setHeader ONLY for these specific requests
+            const originalSetHeader = res.setHeader;
+            res.setHeader = function(name, value) {
+              if (name.toLowerCase() === 'content-type' && value === 'text/html') {
+                return originalSetHeader.call(this, name, 'application/javascript');
+              }
+              return originalSetHeader.call(this, name, value);
+            };
           }
           next();
         });

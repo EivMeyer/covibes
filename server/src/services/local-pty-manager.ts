@@ -14,7 +14,7 @@ import { TerminalManager, TerminalSession, TerminalOptions } from './terminal-ma
 
 export class LocalPtyManager extends EventEmitter implements TerminalManager {
   private sessions: Map<string, TerminalSession> = new Map();
-  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
+  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
 
   constructor() {
     super();

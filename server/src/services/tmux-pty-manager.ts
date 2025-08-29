@@ -23,7 +23,7 @@ const prisma = new PrismaClient();
 
 export class TmuxPtyManager extends EventEmitter implements TerminalManager {
   private sessions: Map<string, TerminalSession> = new Map();
-  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
+  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
   private readonly SESSION_PREFIX = 'colabvibe-agent-';
 
   constructor() {

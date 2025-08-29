@@ -47,7 +47,7 @@ describe('Real HMR Integration Test', () => {
       .send({ branch: 'main' });
 
     previewPort = createRes.body.port;
-    workspaceDir = path.join(process.env.HOME || '', '.colabvibes', teamId);
+    workspaceDir = path.join(process.env.HOME || '', '.covibes/workspaces', teamId);
     
     // Wait for container to be ready
     await new Promise(resolve => setTimeout(resolve, 15000));

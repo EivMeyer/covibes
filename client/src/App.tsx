@@ -146,14 +146,14 @@ function AppContent() {
               
               // Update URL based on mode
               if (data.mode === 'docker' && data.workspace?.status === 'running') {
-                // Add authentication token to proxy URL
-                const baseUrl = data.workspace.url;
-                const token = localStorage.getItem('colabvibe_auth_token');
-                const urlWithToken = `${baseUrl}?token=${encodeURIComponent(token || '')}`;
-                setPreviewUrl(urlWithToken);
+                // Use direct proxy port URL for Vite compatibility
+                const port = data.workspace.port;
+                // Get the current host dynamically
+                const currentHost = window.location.hostname;
+                setPreviewUrl(`http://${currentHost}:${port}/`);
               } else if (data.main?.status === 'running') {
-                const token = localStorage.getItem('colabvibe_auth_token');
-                setPreviewUrl(`/api/preview/proxy/${team.id}/main/?token=${encodeURIComponent(token || '')}`);
+                // Preview proxy is publicly accessible for running previews
+                setPreviewUrl(`/api/preview/proxy/${team.id}/main/`);
               }
             } else {
               // Try to start preview automatically

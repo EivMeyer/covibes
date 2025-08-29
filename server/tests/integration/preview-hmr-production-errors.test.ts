@@ -44,7 +44,7 @@ describe('HMR Production Error Detection Tests', () => {
       .send({});
     
     previewPort = createRes.body.port;
-    workspaceDir = path.join(process.env.HOME || '', '.colabvibes', teamId);
+    workspaceDir = path.join(process.env.HOME || '', '.covibes/workspaces', teamId);
     
     // Wait for container
     await new Promise(resolve => setTimeout(resolve, 10000));

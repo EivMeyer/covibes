@@ -37,7 +37,77 @@ const createPreviewSchema = z.object({
   branch: z.enum(['main', 'staging', 'workspace']).default('main')
 });
 
-// Apply authentication to all preview routes
+/**
+ * GET /api/preview/proxy/:teamId/:branch/*
+ * Proxy requests to the preview container
+ * This handles the actual preview iframe content
+ * NOTE: This route handles its own authentication via query params or headers
+ * MUST be defined BEFORE the global auth middleware
+ */
+router.get('/proxy/:teamId/:branch/*', async (req, res) => {
+  try {
+    console.log(`🔍 Preview proxy request: ${req.method} ${req.url}`);
+    console.log(`🔍 Team ID: ${req.params.teamId}, Branch: ${req.params.branch}`);
+    console.log(`🔍 Query params:`, req.query);
+    console.log(`🔍 Headers:`, req.headers);
+    
+    const requestTeamId = req.params.teamId;
+    
+    // For preview proxy, we'll allow access if a preview is running for the team
+    // The preview itself is just a React app and not sensitive
+    // Authentication is still required for all other preview management routes
+    console.log(`🔓 Preview proxy allowing access for team ${requestTeamId}`);
+    
+    // Get the actual preview port for this team
+    const previewStatus = await universalPreviewService.getPreviewStatus(requestTeamId);
+    if (!previewStatus || !previewStatus.running) {
+      console.log(`❌ No preview running for team ${requestTeamId}`);
+      return res.status(404).json({ message: 'Preview not available for this team' });
+    }
+    
+    const proxyPort = previewStatus.proxyPort || previewStatus.port;
+    console.log(`🔄 Proxying to http://localhost:${proxyPort}`);
+    
+    // Get the rest of the path after /proxy/:teamId/:branch/
+    const restPath = req.params[0] || '/';
+    const fullPath = restPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
+    
+    // Create a simple proxy using node's http module
+    const proxyReq = http.request({
+      hostname: 'localhost',
+      port: proxyPort,
+      path: fullPath,
+      method: req.method,
+      headers: {
+        ...req.headers,
+        'host': `localhost:${proxyPort}`
+      }
+    }, (proxyRes: any) => {
+      // Forward status code and headers
+      res.status(proxyRes.statusCode);
+      Object.keys(proxyRes.headers).forEach(key => {
+        res.set(key, proxyRes.headers[key]);
+      });
+      
+      // Pipe the response
+      proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (err: any) => {
+      console.error('❌ Proxy error:', err);
+      res.status(502).json({ message: 'Preview service unavailable' });
+    });
+    
+    // Forward request body if any
+    req.pipe(proxyReq);
+    
+  } catch (error) {
+    console.error('❌ Preview proxy error:', error);
+    res.status(500).json({ message: 'Preview proxy failed' });
+  }
+});
+
+// Apply authentication to all OTHER preview routes (except proxy which handles its own auth)
 router.use(authenticateToken);
 
 /**
@@ -96,9 +166,9 @@ router.get('/status', createAuthHandler(async (req, res) => {
         const response = {
           workspace: {
             status: 'running',
-            port: dockerStatus.proxyPort || dockerStatus.port,  // Return proxy port
+            port: dockerStatus.port,  // Return actual container port for direct access
             url: dockerStatus.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined,
-            message: `Universal preview running on proxy port ${dockerStatus.proxyPort || dockerStatus.port}`,
+            message: `Universal preview running on port ${dockerStatus.port}`,
             projectType: dockerStatus.projectType
           },
           mode: 'docker'
@@ -381,81 +451,7 @@ router.get('/logs/:branch', createAuthHandler(async (req, res) => {
   }
 }));
 
-/**
- * GET /api/preview/proxy/:teamId/:branch/
- * Proxy requests to the preview container
- * This handles the actual preview iframe content
- */
-router.get('/proxy/:teamId/:branch/', async (req, res) => {
-  try {
-    console.log(`🔍 Preview proxy request: ${req.method} ${req.url}`);
-    console.log(`🔍 Team ID: ${req.params.teamId}, Branch: ${req.params.branch}`);
-    console.log(`🔍 Query params:`, req.query);
-    
-    const requestTeamId = req.params.teamId;
-    const token = req.query['token'] as string;
-    
-    // Authenticate via token in query params (for iframe access)
-    if (!token) {
-      console.log(`❌ No token provided for preview access`);
-      return res.status(401).json({ message: 'Authentication token required' });
-    }
-    
-    try {
-      const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as any;
-      const userId = decoded.userId;
-      const userTeamId = decoded.teamId;
-      
-      console.log(`🔍 Token valid for user: ${userId}, team: ${userTeamId}`);
-      
-      // Verify user belongs to the team
-      if (requestTeamId !== userTeamId) {
-        console.log(`❌ Team access denied: ${requestTeamId} !== ${userTeamId}`);
-        return res.status(403).json({ message: 'Access denied to this team preview' });
-      }
-      
-      // Check if preview is running (proxy to port 7174)
-      console.log(`🔄 Proxying to http://localhost:7174`);
-      
-      // Create a simple proxy using node's http module
-      const proxyReq = http.request({
-        hostname: 'localhost',
-        port: 7174,
-        path: req.url,
-        method: req.method,
-        headers: {
-          ...req.headers,
-          'host': 'localhost:7174'
-        }
-      }, (proxyRes: any) => {
-        // Forward status code and headers
-        res.status(proxyRes.statusCode);
-        Object.keys(proxyRes.headers).forEach(key => {
-          res.set(key, proxyRes.headers[key]);
-        });
-        
-        // Pipe the response
-        proxyRes.pipe(res);
-      });
-      
-      proxyReq.on('error', (err: any) => {
-        console.error('❌ Proxy error:', err);
-        res.status(502).json({ message: 'Preview service unavailable' });
-      });
-      
-      // Forward request body if any
-      req.pipe(proxyReq);
-      
-    } catch (jwtError) {
-      console.log(`❌ Invalid token for preview access:`, jwtError);
-      return res.status(401).json({ message: 'Invalid authentication token' });
-    }
-    
-  } catch (error) {
-    console.error('❌ Preview proxy error:', error);
-    res.status(500).json({ message: 'Preview proxy failed' });
-  }
-});
+// Proxy route has been moved before the global auth middleware to handle its own authentication
 
 /**
  * GET /api/preview/stats

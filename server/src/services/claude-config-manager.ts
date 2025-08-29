@@ -13,7 +13,7 @@ import fs from 'fs/promises';
 import os from 'os';
 
 export class ClaudeConfigManager {
-  private readonly CONFIG_BASE_DIR = path.join(os.homedir(), '.colabvibe', 'claude-configs');
+  private readonly CONFIG_BASE_DIR = path.join(os.homedir(), '.covibes', 'claude-configs');
   private readonly DEFAULT_CLAUDE_DIR = path.join(os.homedir(), '.claude');
 
   constructor() {

@@ -32,7 +32,7 @@ export class ScreenPtyManager extends EventEmitter implements TerminalManager {
       const { stdout } = await execAsync('screen -ls');
       const sessionExists = stdout.includes(sessionName);
 
-      const workspaceDir = path.join(os.homedir(), '.colabvibes', options.teamId);
+      const workspaceDir = path.join(os.homedir(), '.covibes/workspaces', options.teamId);
       
       // Ensure workspace exists
       await execAsync(`mkdir -p ${workspaceDir}`);

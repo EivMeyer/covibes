@@ -61,7 +61,7 @@ docker/
 # Set required environment variables
 export CLAUDE_API_KEY="your-claude-api-key"
 export SSH_KEY_PATH="/path/to/ssh/key"  # Optional, for private repositories
-export WORKSPACE_BASE="/var/colabvibe/workspaces"  # Optional, default location
+export WORKSPACE_BASE="~/.covibes/workspaces"  # Optional, default location
 ```
 
 ### 2. Create Team Environment
@@ -71,7 +71,7 @@ export WORKSPACE_BASE="/var/colabvibe/workspaces"  # Optional, default location
 ./scripts/manage-containers.sh start team123 https://github.com/user/repo.git main
 
 # This will:
-# - Create workspace at /var/colabvibe/workspaces/team123
+# - Create workspace at ~/.covibes/workspaces/team123
 # - Clone the repository
 # - Detect project type
 # - Generate Docker Compose configuration
@@ -173,7 +173,7 @@ GIT_BRANCH             # Git branch to work with
 
 ### Workspace Layout
 ```
-/var/colabvibe/workspaces/{team_id}/
+~/.covibes/workspaces/{team_id}/
 ├── .git/                    # Git repository
 ├── .colabvibe.yml          # Workspace configuration
 ├── .gitignore              # Git ignore patterns
@@ -208,7 +208,7 @@ Creates and initializes team workspaces with proper permissions and Git configur
 
 ```bash
 ./scripts/setup-workspace.sh create team123 https://github.com/user/repo.git main
-./scripts/setup-workspace.sh permissions /var/colabvibe/workspaces/team123
+./scripts/setup-workspace.sh permissions ~/.covibes/workspaces/team123
 ```
 
 ### `manage-containers.sh`
@@ -271,7 +271,7 @@ All containers include comprehensive health checks:
 #### Permission Problems
 ```bash
 # Fix workspace permissions
-./scripts/setup-workspace.sh permissions /var/colabvibe/workspaces/team123
+./scripts/setup-workspace.sh permissions ~/.covibes/workspaces/team123
 
 # Check container user mapping
 docker exec -it colabvibe_agent_team123_agent-1 id

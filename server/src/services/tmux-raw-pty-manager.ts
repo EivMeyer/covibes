@@ -34,7 +34,7 @@ export class TmuxRawPtyManager extends EventEmitter implements TerminalManager {
 
       if (!exists) {
         // Create new tmux session in detached mode
-        const workspaceDir = path.join(os.homedir(), '.colabvibes', options.teamId);
+        const workspaceDir = path.join(os.homedir(), '.covibes/workspaces', options.teamId);
         
         // Create session with proper terminal settings
         await execAsync(`tmux new-session -d -s ${sessionName} -c ${workspaceDir} -x 80 -y 24`);

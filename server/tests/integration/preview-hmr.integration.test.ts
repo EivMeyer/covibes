@@ -49,7 +49,7 @@ describe('Preview HMR Integration Tests', () => {
       .send({});
     
     previewPort = createRes.body.port;
-    workspaceDir = path.join(process.env.HOME || '', '.colabvibes', teamId);
+    workspaceDir = path.join(process.env.HOME || '', '.covibes/workspaces', teamId);
   });
 
   describe('WebSocket Connection for HMR', () => {
