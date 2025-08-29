@@ -85,10 +85,20 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
 
       {/* Terminal Slide-up Panel */}
       {showTerminal && selectedAgent && (
-        <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setShowTerminal(false)}>
+        <div 
+          className="fixed inset-0 z-50 bg-black/50" 
+          onClick={() => setShowTerminal(false)}
+          onTouchStart={(e) => {
+            // Only close on background touch, not on terminal content
+            if (e.target === e.currentTarget) {
+              setShowTerminal(false);
+            }
+          }}
+        >
           <div 
             className="absolute bottom-0 left-0 right-0 bg-midnight-800 rounded-t-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{ height: '75vh' }}
           >
             {/* Terminal Header */}
@@ -118,7 +128,17 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
             </div>
             
             {/* Terminal Content */}
-            <div className="h-full overflow-hidden" style={{ height: 'calc(100% - 60px)' }}>
+            <div 
+              className="h-full overflow-hidden" 
+              style={{ height: 'calc(100% - 60px)' }}
+              onTouchStart={(e) => {
+                // Ensure terminal area receives touch focus
+                e.stopPropagation();
+                // Focus the container to enable text selection
+                e.currentTarget.focus();
+              }}
+              tabIndex={0}
+            >
               <TerminalTile 
                 agent={selectedAgent} 
                 agentId={selectedAgent.id}

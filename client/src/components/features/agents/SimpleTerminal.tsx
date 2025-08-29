@@ -531,6 +531,25 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       <div
         ref={terminalRef}
         className="flex-1 terminal-container"
+        // Mobile touch focus support
+        tabIndex={0}
+        onTouchStart={(e) => {
+          // Focus terminal on touch start
+          e.currentTarget.focus();
+          // Get the actual terminal element and focus it
+          const terminal = TerminalManager.getTerminal(agentId);
+          if (terminal && terminal.element) {
+            terminal.focus();
+          }
+        }}
+        onMouseDown={(e) => {
+          // Focus terminal on mouse down for desktop
+          e.currentTarget.focus();
+          const terminal = TerminalManager.getTerminal(agentId);
+          if (terminal && terminal.element) {
+            terminal.focus();
+          }
+        }}
         style={{
           backgroundColor: '#1e1e1e',
           color: '#d4d4d4',
@@ -538,6 +557,9 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
           padding: 0, // xterm.js handles its own internal spacing
           width: '100%', // Use full available width
           height: '100%', // Use full available height
+          outline: 'none', // Remove focus outline
+          userSelect: 'auto', // Allow text selection
+          touchAction: 'manipulation', // Improve touch responsiveness
         }}
       />
     </div>
