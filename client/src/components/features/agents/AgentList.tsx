@@ -43,7 +43,6 @@ const AgentRow: React.FC<AgentRowProps> = ({
     };
     e.dataTransfer.setData('text/plain', JSON.stringify(dragData));
     e.dataTransfer.effectAllowed = 'copy';
-    console.log('🎯 Agent drag started:', dragData.agentId);
   };
 
   const handleDragEnd = () => {

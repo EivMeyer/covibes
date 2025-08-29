@@ -28,7 +28,7 @@ class SimpleDockerPreview {
       const port = await this.findAvailablePort();
       
       // Create a simple static HTML preview
-      const previewDir = path.join(os.homedir(), '.colabvibe', 'docker', `simple-${teamId}`);
+      const previewDir = path.join(os.homedir(), '.covibes/workspaces', 'docker', `simple-${teamId}`);
       await fs.mkdir(previewDir, { recursive: true });
       
       // Create a simple HTML file

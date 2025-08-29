@@ -33,9 +33,27 @@ const prisma = new PrismaClient();
 
 // VM Configuration - in production this would come from user's VM settings
 const DEFAULT_VM = {
-  host: process.env['EC2_HOST'] || 'ec2-13-60-242-174.eu-north-1.compute.amazonaws.com',
-  username: process.env['EC2_USERNAME'] || 'ubuntu',
-  keyPath: process.env['EC2_SSH_KEY_PATH'] || './.ssh/ec2.pem',
+  host: (() => {
+    const ec2Host = process.env['EC2_HOST'];
+    if (!ec2Host) {
+      throw new Error('EC2_HOST environment variable is required. Set it to your EC2 instance hostname.');
+    }
+    return ec2Host;
+  })(),
+  username: (() => {
+    const ec2Username = process.env['EC2_USERNAME'];
+    if (!ec2Username) {
+      throw new Error('EC2_USERNAME environment variable is required. Set it to your EC2 SSH username.');
+    }
+    return ec2Username;
+  })(),
+  keyPath: (() => {
+    const sshKeyPath = process.env['EC2_SSH_KEY_PATH'];
+    if (!sshKeyPath) {
+      throw new Error('EC2_SSH_KEY_PATH environment variable is required. Set it to your SSH key file path.');
+    }
+    return sshKeyPath;
+  })(),
   vmId: 'main-ec2'
 };
 
@@ -99,8 +117,8 @@ class DockerManager extends EventEmitter implements TerminalManager {
   private containers: Map<string, ContainerInfo> = new Map();
   private activePTYSessions: Map<string, PTYInfo> = new Map();
   private readonly AGENT_IMAGE = 'colabvibe-claude-agent';
-  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
-  private readonly LOCAL_WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
+  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
+  private readonly LOCAL_WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
   private isEC2Available = false;
 
   constructor() {
@@ -317,7 +335,7 @@ class DockerManager extends EventEmitter implements TerminalManager {
    * Ensure team workspace exists on EC2 VM and clone repository
    */
   private async ensureTeamWorkspace(teamId: string, repoUrl?: string): Promise<string> {
-    const workspaceDir = `/home/ubuntu/.colabvibes/${teamId}`;
+    const workspaceDir = `/home/ubuntu/.covibes/workspaces/${teamId}`;
     
     try {
       // Create workspace directory on EC2 VM

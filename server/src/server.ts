@@ -76,6 +76,25 @@ function getCorsOrigins(): string[] {
     'http://localhost:3003'
   ];
   
+  // Production origins based on BASE_HOST
+  if (BASE_HOST && BASE_HOST !== 'localhost') {
+    // Add HTTP and HTTPS versions for production
+    const prodOrigins = [
+      `http://${BASE_HOST}:3000`,
+      `https://${BASE_HOST}:3000`,
+      `http://${BASE_HOST}:3001`,
+      `https://${BASE_HOST}:3001`
+    ];
+    
+    // Add without port for standard HTTP/HTTPS
+    if (!BASE_HOST.includes(':')) {
+      prodOrigins.push(`http://${BASE_HOST}`);
+      prodOrigins.push(`https://${BASE_HOST}`);
+    }
+    
+    defaultOrigins.push(...prodOrigins);
+  }
+  
   // Add frontend URL if specified
   const frontendUrl = process.env['FRONTEND_URL'];
   if (frontendUrl && !defaultOrigins.includes(frontendUrl)) {
@@ -92,7 +111,10 @@ function getCorsOrigins(): string[] {
 }
 
 // Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 
 // ES module equivalent (commented out as unused)
 // const __filename = fileURLToPath(import.meta.url);
@@ -304,7 +326,10 @@ const sshSessions = new Map();
 
 // Configuration  
 const PORT = process.env['PORT'] || 3001;
-const JWT_SECRET = process.env['JWT_SECRET'] || 'fallback-secret-key';
+const JWT_SECRET = process.env['JWT_SECRET'];
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required. This is critical for authentication security.');
+}
 
 // CORS configuration - must match Socket.IO CORS settings
 app.use(cors({
@@ -318,7 +343,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration for OAuth
 app.use(session({
-  secret: process.env['SESSION_SECRET'] || 'development-session-secret',
+  secret: (() => {
+    const sessionSecret = process.env['SESSION_SECRET'];
+    if (!sessionSecret) {
+      throw new Error('SESSION_SECRET environment variable is required. This is critical for session security.');
+    }
+    return sessionSecret;
+  })(),
   resave: false,
   saveUninitialized: false,
   cookie: {

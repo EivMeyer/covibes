@@ -9,8 +9,11 @@ import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { Server } from 'http';
 
-// Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+// Get the base host from environment - FAIL if not configured
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 
 interface PreviewProxy {
   teamId: string;
@@ -49,9 +52,9 @@ class DedicatedPreviewProxyService {
     const proxyPort = existingProxyPort || this.findAvailablePort();
     const app = express();
 
-    // Pure reverse proxy - exactly like Caddy MVP
+    // Pure reverse proxy - connect to Docker host port (localhost)
     const proxy = createProxyMiddleware({
-      target: `http://${BASE_HOST}:${vitePort}`,
+      target: `http://localhost:${vitePort}`,  // Docker maps container:5173 -> host:vitePort
       changeOrigin: true,
       ws: true, // WebSocket support for HMR
       // No pathRewrite - completely transparent

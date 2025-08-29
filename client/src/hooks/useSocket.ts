@@ -56,11 +56,9 @@ export function useSocket(token: string | null): SocketHook {
     // Set up internal listeners to track connection state
     const internalListeners: Partial<SocketEventListeners> = {
       onConnect: () => {
-        console.log('Socket connected in hook');
         updateSocketState();
       },
       onDisconnect: (reason: string) => {
-        console.log('Socket disconnected in hook:', reason);
         updateSocketState();
       },
       onConnectError: (error: Error) => {
@@ -69,7 +67,6 @@ export function useSocket(token: string | null): SocketHook {
         updateSocketState();
       },
       onReconnect: (attemptNumber: number) => {
-        console.log('Socket reconnected in hook, attempt:', attemptNumber);
         updateSocketState();
       },
       onError: (data: { message: string }) => {
@@ -85,7 +82,6 @@ export function useSocket(token: string | null): SocketHook {
     // Connect to WebSocket
     socketRef.current.connect(token)
       .then(() => {
-        console.log('Socket connection established');
         updateSocketState();
       })
       .catch((error: SocketError) => {

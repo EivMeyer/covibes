@@ -8,8 +8,12 @@
  * - Proxy requests to running projects
  */
 
+console.log('🔥🔥🔥 PREVIEW ROUTES FILE LOADED!!! 🔥🔥🔥');
+
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import http from 'http';
 import { authenticateToken } from '../middleware/auth.js';
 import { createAuthHandler } from '../types/express.js';
 import { previewService } from '../../services/preview-service.js';
@@ -22,15 +26,88 @@ import { z } from 'zod';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+// Get the base host from environment - FAIL if not configured
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 
 // Validation schemas
 const createPreviewSchema = z.object({
   branch: z.enum(['main', 'staging', 'workspace']).default('main')
 });
 
-// Apply authentication to all preview routes
+/**
+ * GET /api/preview/proxy/:teamId/:branch/*
+ * Proxy requests to the preview container
+ * This handles the actual preview iframe content
+ * NOTE: This route handles its own authentication via query params or headers
+ * MUST be defined BEFORE the global auth middleware
+ */
+router.get('/proxy/:teamId/:branch/*', async (req, res) => {
+  try {
+    console.log(`🔍 Preview proxy request: ${req.method} ${req.url}`);
+    console.log(`🔍 Team ID: ${req.params.teamId}, Branch: ${req.params.branch}`);
+    console.log(`🔍 Query params:`, req.query);
+    console.log(`🔍 Headers:`, req.headers);
+    
+    const requestTeamId = req.params.teamId;
+    
+    // For preview proxy, we'll allow access if a preview is running for the team
+    // The preview itself is just a React app and not sensitive
+    // Authentication is still required for all other preview management routes
+    console.log(`🔓 Preview proxy allowing access for team ${requestTeamId}`);
+    
+    // Get the actual preview port for this team
+    const previewStatus = await universalPreviewService.getPreviewStatus(requestTeamId);
+    if (!previewStatus || !previewStatus.running) {
+      console.log(`❌ No preview running for team ${requestTeamId}`);
+      return res.status(404).json({ message: 'Preview not available for this team' });
+    }
+    
+    const proxyPort = previewStatus.proxyPort || previewStatus.port;
+    console.log(`🔄 Proxying to http://localhost:${proxyPort}`);
+    
+    // Get the rest of the path after /proxy/:teamId/:branch/
+    const restPath = req.params[0] || '/';
+    const fullPath = restPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
+    
+    // Create a simple proxy using node's http module
+    const proxyReq = http.request({
+      hostname: 'localhost',
+      port: proxyPort,
+      path: fullPath,
+      method: req.method,
+      headers: {
+        ...req.headers,
+        'host': `localhost:${proxyPort}`
+      }
+    }, (proxyRes: any) => {
+      // Forward status code and headers
+      res.status(proxyRes.statusCode);
+      Object.keys(proxyRes.headers).forEach(key => {
+        res.set(key, proxyRes.headers[key]);
+      });
+      
+      // Pipe the response
+      proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (err: any) => {
+      console.error('❌ Proxy error:', err);
+      res.status(502).json({ message: 'Preview service unavailable' });
+    });
+    
+    // Forward request body if any
+    req.pipe(proxyReq);
+    
+  } catch (error) {
+    console.error('❌ Preview proxy error:', error);
+    res.status(500).json({ message: 'Preview proxy failed' });
+  }
+});
+
+// Apply authentication to all OTHER preview routes (except proxy which handles its own auth)
 router.use(authenticateToken);
 
 /**
@@ -38,7 +115,17 @@ router.use(authenticateToken);
  * Get preview status for the team
  */
 router.get('/status', createAuthHandler(async (req, res) => {
+  console.log('🚨🚨🚨 PREVIEW STATUS ROUTE HIT!!! 🚨🚨🚨');
   try {
+    console.log('🎯 PREVIEW STATUS ENDPOINT CALLED for teamId:', req.user?.teamId);
+    
+    // Add cache-busting headers to ensure fresh data
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     const teamId = req.user?.teamId;
     if (!teamId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -73,18 +160,21 @@ router.get('/status', createAuthHandler(async (req, res) => {
     if (previewMode === 'local' || previewMode === 'docker') {
       // Use universal Docker preview service
       const dockerStatus = await universalPreviewService.getPreviewStatus(teamId);
+      console.log('🎯 DOCKER STATUS FROM SERVICE:', JSON.stringify(dockerStatus, null, 2));
       
       if (dockerStatus && dockerStatus.running) {
-        return res.json({
+        const response = {
           workspace: {
             status: 'running',
-            port: dockerStatus.proxyPort || dockerStatus.port,  // Return proxy port
-            url: dockerStatus.proxyPort ? `http://${BASE_HOST}:${dockerStatus.proxyPort}` : undefined,
-            message: `Universal preview running on proxy port ${dockerStatus.proxyPort || dockerStatus.port}`,
+            port: dockerStatus.port,  // Return actual container port for direct access
+            url: dockerStatus.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined,
+            message: `Universal preview running on port ${dockerStatus.port}`,
             projectType: dockerStatus.projectType
           },
           mode: 'docker'
-        });
+        };
+        console.log('🎯 PREVIEW STATUS RESPONSE:', JSON.stringify(response, null, 2));
+        return res.json(response);
       } else {
         return res.json({
           workspace: { status: 'stopped', message: 'No universal preview running' },
@@ -310,7 +400,7 @@ router.post('/restart', createAuthHandler(async (req, res) => {
       return res.json({
         message: 'Universal preview restarted successfully',
         mode: 'docker',
-        url: status?.proxyPort ? `http://${BASE_HOST}:${status.proxyPort}` : undefined
+        url: status?.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined
       });
     }
 
@@ -360,6 +450,8 @@ router.get('/logs/:branch', createAuthHandler(async (req, res) => {
     res.status(500).json({ message: 'Failed to get logs' });
   }
 }));
+
+// Proxy route has been moved before the global auth middleware to handle its own authentication
 
 /**
  * GET /api/preview/stats

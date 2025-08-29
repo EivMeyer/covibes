@@ -22,6 +22,7 @@ const mockAgent: Agent = {
   task: 'Test Agent',
   status: 'running',
   agentType: 'mock',
+  type: 'mock',
   teamId: '1',
   userId: '1',
   startedAt: new Date().toISOString()

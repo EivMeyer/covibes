@@ -43,7 +43,7 @@ router.use(authenticateToken);
  * Uses the shared workspace directory for agent/preview/IDE consistency
  */
 async function getRepoPath(teamId: string, _branch: string): Promise<string> {
-  const baseDir = path.join(os.homedir(), '.colabvibes', teamId);
+  const baseDir = path.join(os.homedir(), '.covibes/workspaces', teamId);
   return baseDir;
 }
 

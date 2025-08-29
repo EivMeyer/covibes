@@ -39,7 +39,10 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  const JWT_SECRET = process.env['JWT_SECRET'] || 'fallback-secret-key';
+  const JWT_SECRET = process.env['JWT_SECRET'];
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required. This is critical for authentication security.');
+  }
 
   jwt.verify(token, JWT_SECRET, (err: any, decoded: any) => {
     if (err) {

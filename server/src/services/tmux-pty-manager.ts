@@ -23,7 +23,7 @@ const prisma = new PrismaClient();
 
 export class TmuxPtyManager extends EventEmitter implements TerminalManager {
   private sessions: Map<string, TerminalSession> = new Map();
-  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.colabvibes');
+  private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
   private readonly SESSION_PREFIX = 'colabvibe-agent-';
 
   constructor() {
@@ -113,6 +113,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
       `echo "🎯 Task: ${options.task || 'Interactive Claude Session'}"`,
       `echo "⚙️ Claude Config: ${claudeConfigManager.getUserConfigDir(options.userId)}"`,
       `echo ""`,
+      `cd "${workspaceDir}"`, // Ensure we're in the workspace directory
       `export CLAUDE_CONFIG_DIR="${claudeEnv['CLAUDE_CONFIG_DIR']}"`,
       claudeCmd
     ];

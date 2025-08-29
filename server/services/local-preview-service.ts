@@ -10,8 +10,11 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 
-// Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+// Get the base host from environment - FAIL if not configured
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 // import { fileURLToPath } from 'url';
 
 // // const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +32,7 @@ interface PreviewProcess {
 class LocalPreviewService {
   private previews = new Map<string, PreviewProcess>();
   private portStart = 4000;
-  private baseWorkspaceDir = path.join(os.homedir(), '.colabvibe', 'previews');
+  private baseWorkspaceDir = path.join(os.homedir(), '.covibes/workspaces', 'previews');
 
   constructor() {
     // Ensure workspace directory exists

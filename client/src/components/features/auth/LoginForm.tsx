@@ -75,15 +75,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         errorMessage = error.response.data.message;
       }
       
-      // In dev mode, show full error details
-      if (import.meta.env.DEV && error?.response) {
-        console.log('Full error response:', {
-          status: error.response.status,
-          statusText: error.response.statusText,
-          data: error.response.data,
-          headers: error.response.headers,
-        });
-      }
+      // In dev mode, show full error details (logging removed)
       
       addNotification({
         message: errorMessage,

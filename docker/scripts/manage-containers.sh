@@ -10,7 +10,7 @@ set -euo pipefail
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_DIR="$(dirname "$SCRIPT_DIR")"
-WORKSPACE_BASE="/var/colabvibe/workspaces"
+WORKSPACE_BASE="$HOME/.covibes/workspaces"
 GENERATED_DIR="$DOCKER_DIR/generated"
 
 # Logging
@@ -357,7 +357,7 @@ Examples:
   $0 status team123
   $0 list
   $0 cleanup team123 true
-  $0 detect /var/colabvibe/workspaces/team123
+  $0 detect ~/.covibes/workspaces/team123
 
 Environment Variables:
   CLAUDE_API_KEY    Claude API key for agents

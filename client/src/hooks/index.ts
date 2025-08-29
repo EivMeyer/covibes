@@ -14,5 +14,5 @@ export type { ChatHook, ChatState } from './useChat';
 export { useVMConfig } from './useVMConfig';
 export type { VMConfigHook, VMConfigState, VMStatus } from './useVMConfig';
 
-export { useCoVibe } from './useCoVibe';
-export type { CoVibeHook, CoVibeState, OnlineUser } from './useCoVibe';
+// export { useCoVibe } from './useCoVibe';
+// export type { CoVibeHook, CoVibeState, OnlineUser } from './useCoVibe';

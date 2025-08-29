@@ -30,7 +30,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // Local workspace configuration
-// const WORKSPACE_BASE_PATH = path.join(os.homedir(), '.colabvibes');
+// const WORKSPACE_BASE_PATH = path.join(os.homedir(), '.covibes/workspaces');
 
 // Import module augmentation for Express types
 

@@ -12,8 +12,7 @@
     ".env",
     "coverage",
     "tests",
-    "/home/eivind/.colabvibes/**",
-    "/home/eivind/.colabvibe/**",
+    "/home/*/.covibes/**",
     "../client/**",
     "../../**"
   ],

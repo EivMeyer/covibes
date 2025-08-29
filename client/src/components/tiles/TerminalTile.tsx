@@ -118,7 +118,6 @@ const TerminalTileComponent: React.FC<TerminalTileProps> = ({
         const data = JSON.parse(rawData);
         
         if (data.type === 'agent' && data.agentId && onAgentDrop) {
-          console.log('🎯 Terminal tile: Agent dropped:', data.agentId);
           onAgentDrop(data.agentId);
         }
       } catch (error) {

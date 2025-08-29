@@ -4,8 +4,11 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  // Load environment variables based on mode
-  const env = loadEnv(mode, process.cwd(), '')
+  // Load environment variables based on mode (VITE_ prefix)
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  
+  // Determine if we're in production
+  const isProduction = mode === 'production'
   
   // Determine backend URL based on environment
   // Priority: VITE_BACKEND_URL > VITE_API_URL > default local URL
@@ -14,8 +17,15 @@ export default defineConfig(({ mode }) => {
   // Determine frontend URL for CORS
   const frontendUrl = env.VITE_FRONTEND_URL || 'http://localhost:3000'
   
+  // Base path for deployment (can be overridden with VITE_BASE_PATH)
+  const basePath = env.VITE_BASE_PATH || '/'
+  
   return {
+    base: basePath,
     plugins: [react()],
+    
+    // Environment variable handling
+    envPrefix: 'VITE_',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
@@ -30,9 +40,18 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0', // Allow external connections (needed for Docker)
       strictPort: true, // Fail if port is already in use
+      allowedHosts: ['ec2-13-60-242-174.eu-north-1.compute.amazonaws.com'],
       cors: {
-        origin: [frontendUrl, backendUrl],
+        origin: true, // Allow all origins for development
         credentials: true
+      },
+      // HMR settings
+      hmr: {
+        port: 3000,
+        // Use the actual hostname for WebSocket connections
+        host: env.VITE_FRONTEND_URL ? 
+          new URL(env.VITE_FRONTEND_URL).hostname : 
+          'ec2-13-60-242-174.eu-north-1.compute.amazonaws.com'
       },
       proxy: {
         '/api': {
@@ -65,9 +84,28 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
     },
+    
+    // Build configuration
+    build: {
+      outDir: 'dist',
+      sourcemap: !isProduction,
+      minify: isProduction ? 'esbuild' : false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            monaco: ['@monaco-editor/react'],
+            socket: ['socket.io-client']
+          }
+        }
+      }
+    },
+    
     // Define environment variables to be exposed to the client
     define: {
       __BACKEND_URL__: JSON.stringify(backendUrl),
+      __FRONTEND_URL__: JSON.stringify(frontendUrl),
+      __IS_PRODUCTION__: JSON.stringify(isProduction),
     },
   }
 })

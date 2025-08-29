@@ -19,8 +19,11 @@ import { PrismaClient } from '@prisma/client';
 
 const execAsync = promisify(exec);
 
-// Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+// Get the base host from environment - FAIL if not configured
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 
 interface PreviewInfo {
   running: boolean;
@@ -38,7 +41,7 @@ class UniversalPreviewService {
   private workspaceDir: string;
 
   constructor() {
-    this.workspaceDir = path.join(os.homedir(), '.colabvibes');
+    this.workspaceDir = path.join(os.homedir(), '.covibes/workspaces');
     this.ensureWorkspaceDir();
   }
 
@@ -180,14 +183,14 @@ class UniversalPreviewService {
           });
           
           return {
-            port: proxyPort,
-            url: `http://${BASE_HOST}:${proxyPort}`
+            port: existing.port,  // Return the actual container port for direct access
+            url: `/api/preview/proxy/${teamId}/main/`
           };
         }
         
         return {
-          port: existing.proxyPort,
-          url: `http://${BASE_HOST}:${existing.proxyPort}`
+          port: existing.port,  // Return the actual container port, not proxy port
+          url: `/api/preview/proxy/${teamId}/main/`
         };
       }
       
@@ -285,7 +288,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
       
       return {
         port: proxyPort,  // Return proxy port, not container port
-        url: `http://${BASE_HOST}:${proxyPort}`  // Direct URL like MVP
+        url: `/api/preview/proxy/${teamId}/main/`  // API route instead of direct URL
       };
 
     } catch (error) {
@@ -295,31 +298,72 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
     }
   }
 
+  /**
+   * Generate Vite configuration with MIME type fix and HMR support (DRY)
+   */
+  private generateViteConfig(containerPort: number = 8000, includeGlobalDefine: boolean = false): string {
+    const additionalConfig = includeGlobalDefine ? `,
+  // Additional configuration
+  define: {
+    global: 'globalThis'
+  }` : '';
+
+    return `import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  // CRITICAL FIX: Set base path to root to fix MIME type issues
+  base: '/',
+  plugins: [
+    react({
+      // Keep React plugin working normally
+      include: "**/*.{jsx,tsx}",
+    }),
+    // SURGICAL plugin to fix ONLY virtual module MIME types
+    {
+      name: 'fix-virtual-module-mime-type',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          // ONLY target the exact problematic virtual modules
+          if (req.url === '/@vite/client' || req.url === '/@react-refresh') {
+            // Override setHeader ONLY for these specific requests
+            const originalSetHeader = res.setHeader;
+            res.setHeader = function(name, value) {
+              if (name.toLowerCase() === 'content-type' && value === 'text/html') {
+                return originalSetHeader.call(this, name, 'application/javascript');
+              }
+              return originalSetHeader.call(this, name, value);
+            };
+          }
+          next();
+        });
+      }
+    }
+  ],
+  server: {
+    host: true,
+    port: 5173,
+    // Configure HMR for direct container access
+    hmr: {
+      clientPort: ${containerPort},  // Direct container port
+      host: '${BASE_HOST}'
+    },
+    cors: true,
+    origin: 'http://${BASE_HOST}:${containerPort}',
+    // Ensure proper file serving
+    fs: {
+      strict: false,
+      allow: ['..']
+    }
+  }${additionalConfig}
+})`;
+  }
+
   private async updateViteConfigWithProxy(teamId: string, proxyPort: number): Promise<void> {
     const projectDir = path.join(this.workspaceDir, teamId);
     const viteConfigPath = path.join(projectDir, 'vite.config.js');
     
-    // Create Vite config with HMR pointing to proxy (like Caddy MVP)
-    const viteConfig = `import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true,
-    port: 5173,
-    // Configure HMR to work through proxy
-    hmr: {
-      clientPort: ${proxyPort},  // Proxy port (like Caddy MVP)
-      host: '${BASE_HOST}'
-    },
-    // Allow connections from proxy
-    cors: true,
-    // Configure allowed origins if needed
-    origin: 'http://${BASE_HOST}:${proxyPort}'
-  }
-})`;
-    
+    const viteConfig = this.generateViteConfig(8000); // Direct container port access
     await fs.writeFile(viteConfigPath, viteConfig);
     
     // Restart Vite dev server in container to pick up new config
@@ -414,19 +458,8 @@ export default defineConfig({
       JSON.stringify(packageJson, null, 2)
     );
     
-    // Create vite.config.js - Simple config like Caddy MVP (proxy handles everything)
-    const viteConfig = `import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true,
-    port: 5173,
-    // HMR will be configured when proxy is created
-    cors: true
-  }
-})`;
+    // Create vite.config.js with DRY method
+    const viteConfig = this.generateViteConfig(8000, true); // Include global define for full app
     
     await fs.writeFile(path.join(projectDir, 'vite.config.js'), viteConfig);
     

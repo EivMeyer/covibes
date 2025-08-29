@@ -27,6 +27,8 @@
     "test:preview-e2e": "playwright test playwright-preview-e2e.test.js",
     "test:docker-preview": "playwright test docker-preview-integration.test.js",
     "test:preview-suite": "npm run test:showcase && npm run test:multiuser && npm run test:backend && npm run test:content && npm run test:live-rendering && npm run test:preview-e2e && npm run test:docker-preview",
+    "check:hmr": "node utils/hmr-health-check.js",
+    "test:hmr": "npm run check:hmr && cd ../server && npm run test -- tests/integration/preview-hmr-production-errors.test.ts",
     "test:persistence": "node test-chat-persistence.js",
     "test:websocket": "node test-websocket.js",
     "screenshots": "node screenshot-demo.js",

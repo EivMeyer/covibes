@@ -20,12 +20,10 @@ class MinimalTerminalManager {
     // Check if we already have a terminal
     const existing = this.terminals.get(agentId)
     if (existing) {
-      console.log(`[MinimalTerminal] Reusing terminal for agent: ${agentId}`)
       return existing
     }
 
     // Create new terminal - EXACTLY like the demo
-    console.log(`[MinimalTerminal] Creating terminal for agent: ${agentId}, isReadOnly: ${isReadOnly}`)
     
     const terminal = new Terminal({
       cursorBlink: !isReadOnly,
@@ -42,7 +40,6 @@ class MinimalTerminalManager {
     // Store it
     this.terminals.set(agentId, terminal)
     
-    console.log(`[MinimalTerminal] Terminal created and opened for agent: ${agentId}`)
     return terminal
   }
 
@@ -55,7 +52,6 @@ class MinimalTerminalManager {
     if (terminal) {
       terminal.dispose()
       this.terminals.delete(agentId)
-      console.log(`[MinimalTerminal] Disposed terminal for agent: ${agentId}`)
     }
   }
 }

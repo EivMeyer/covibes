@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear ColabVibe Storage</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>ColabVibe Storage Cleaner</h1>
+    <p>This will clear all stored tokens and data from your browser.</p>
+    
+    <button onclick="clearStorage()">Clear All Storage</button>
+    <button onclick="showStoredItems()">Show Stored Items</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function clearStorage() {
+            // Clear localStorage
+            const itemsBefore = Object.keys(localStorage).length;
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear cookies (for this domain)
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="success">
+                    <h2>✅ Storage Cleared Successfully!</h2>
+                    <p>Cleared ${itemsBefore} localStorage items</p>
+                    <p>Cleared sessionStorage</p>
+                    <p>Cleared cookies</p>
+                    <br>
+                    <a href="http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001" style="padding: 10px 20px; background: #0066cc; color: white; text-decoration: none; border-radius: 5px;">
+                        Go to ColabVibe (Fresh Login)
+                    </a>
+                </div>
+            `;
+        }
+        
+        function showStoredItems() {
+            const results = document.getElementById('results');
+            const localItems = Object.keys(localStorage);
+            const sessionItems = Object.keys(sessionStorage);
+            
+            results.innerHTML = `
+                <div class="info">
+                    <h3>LocalStorage items (${localItems.length}):</h3>
+                    <ul>${localItems.map(key => `<li>${key}: ${localStorage[key]?.substring(0, 50)}...</li>`).join('')}</ul>
+                    
+                    <h3>SessionStorage items (${sessionItems.length}):</h3>
+                    <ul>${sessionItems.map(key => `<li>${key}: ${sessionStorage[key]?.substring(0, 50)}...</li>`).join('')}</ul>
+                    
+                    <h3>Cookies:</h3>
+                    <p>${document.cookie || 'No cookies found'}</p>
+                </div>
+            `;
+        }
+        
+        // Auto-show what's stored on page load
+        showStoredItems();
+    </script>
+</body>
+</html>

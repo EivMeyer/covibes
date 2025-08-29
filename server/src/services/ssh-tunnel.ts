@@ -16,9 +16,27 @@ interface TunnelInfo {
 
 export class SSHTunnelManager {
   private tunnels: Map<string, TunnelInfo> = new Map();
-  private readonly EC2_HOST = process.env['EC2_HOST'] || 'ec2-13-60-242-174.eu-north-1.compute.amazonaws.com';
-  private readonly EC2_USERNAME = process.env['EC2_USERNAME'] || 'ubuntu';
-  private readonly SSH_KEY_PATH = process.env['EC2_SSH_KEY_PATH'] || './.ssh/ec2.pem';
+  private readonly EC2_HOST = (() => {
+    const ec2Host = process.env['EC2_HOST'];
+    if (!ec2Host) {
+      throw new Error('EC2_HOST environment variable is required. Set it to your EC2 instance hostname.');
+    }
+    return ec2Host;
+  })();
+  private readonly EC2_USERNAME = (() => {
+    const ec2Username = process.env['EC2_USERNAME'];
+    if (!ec2Username) {
+      throw new Error('EC2_USERNAME environment variable is required. Set it to your EC2 SSH username.');
+    }
+    return ec2Username;
+  })();
+  private readonly SSH_KEY_PATH = (() => {
+    const sshKeyPath = process.env['EC2_SSH_KEY_PATH'];
+    if (!sshKeyPath) {
+      throw new Error('EC2_SSH_KEY_PATH environment variable is required. Set it to your SSH key file path.');
+    }
+    return sshKeyPath;
+  })();
   private readonly LOCAL_PORT_START = 9000; // Start allocating local ports from 9000
 
   /**

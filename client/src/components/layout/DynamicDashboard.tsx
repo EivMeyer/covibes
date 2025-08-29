@@ -6,7 +6,7 @@ import GridLayout, {
 } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import type { GridTile } from './WorkspaceGrid'
+import type { GridTile } from '@/types'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
@@ -39,12 +39,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   onTileAdd,
   onTileRemove,
 }) => {
-  console.log('🔍 [DYNAMIC DASHBOARD] Component rendered with tiles:', {
-    count: tiles.length,
-    tileIds: tiles.map(t => t.id),
-    tileTypes: tiles.map(t => t.type),
-    tiles: tiles
-  });
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolling, setIsScrolling] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -55,19 +49,14 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   const [layouts, setLayouts] = useState<{ lg: DashboardLayout[] }>(() => {
     // Try to load saved layout from localStorage
     const savedLayouts = localStorage.getItem('dashboard-layouts')
-    console.log('🔍 [DYNAMIC DASHBOARD] Loading initial layouts from localStorage...');
     if (savedLayouts) {
       try {
         const parsed = JSON.parse(savedLayouts)
-        console.log('🔍 [DYNAMIC DASHBOARD] Found saved layouts:', parsed)
-        console.log('🔍 [DYNAMIC DASHBOARD] Layout count:', parsed.lg?.length || 0)
-        console.log('🔍 [DYNAMIC DASHBOARD] Layout IDs:', parsed.lg?.map((l: any) => l.i) || [])
         return parsed
       } catch (e) {
         console.error('🔍 [DYNAMIC DASHBOARD] Failed to parse saved layouts:', e)
       }
     }
-    console.log('🔍 [DYNAMIC DASHBOARD] No saved layouts found, using empty default')
     return { lg: [] }
   })
 
@@ -77,16 +66,10 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   // Listen for workspace layout updates from team members
   useEffect(() => {
     const handleWorkspaceLayoutsUpdated = (event: CustomEvent) => {
-      console.log('🔍 [DYNAMIC DASHBOARD] Received workspace-layouts-updated event');
-      console.log('🔍 [DYNAMIC DASHBOARD] Event detail:', event.detail);
-      console.log('🔍 [DYNAMIC DASHBOARD] Layout count in event:', event.detail?.lg?.length || 0);
-      console.log('🔍 [DYNAMIC DASHBOARD] Layout IDs in event:', event.detail?.lg?.map((l: any) => l.i) || []);
       setLayouts(event.detail || { lg: [] });
-      console.log('🔍 [DYNAMIC DASHBOARD] Layouts state updated from event');
     };
 
     window.addEventListener('workspace-layouts-updated', handleWorkspaceLayoutsUpdated as EventListener);
-    console.log('🔍 [DYNAMIC DASHBOARD] Workspace layout event listener registered');
     
     return () => {
       window.removeEventListener('workspace-layouts-updated', handleWorkspaceLayoutsUpdated as EventListener);
@@ -95,15 +78,10 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
 
   // Only add layouts for genuinely new tiles
   useEffect(() => {
-    console.log('🔍 [DYNAMIC DASHBOARD] Checking for new tiles...');
-    console.log('🔍 [DYNAMIC DASHBOARD] Current tiles:', tiles.map(t => t.id));
-    console.log('🔍 [DYNAMIC DASHBOARD] Seen tiles:', Array.from(seenTiles));
     
     const newTiles = tiles.filter(tile => !seenTiles.has(tile.id))
-    console.log('🔍 [DYNAMIC DASHBOARD] New tiles found:', newTiles.map(t => t.id));
     
     if (newTiles.length > 0) {
-      console.log('🔍 [DYNAMIC DASHBOARD] Adding layouts for new tiles:', newTiles);
       const newLayouts: DashboardLayout[] = newTiles.map((tile, index) => {
         const defaultLayouts: Record<GridTile['type'], Partial<DashboardLayout>> = {
           terminal: { w: 6, h: 12, minW: 3, minH: 6 },
@@ -149,17 +127,12 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
 
   // Save layout changes to localStorage and trigger parent save
   const handleLayoutChange = (currentLayout: Layout[], allLayouts: any) => {
-    console.log('🎯 Layout changed:', { 
-      currentLayoutCount: currentLayout.length, 
-      allLayouts: Object.keys(allLayouts) 
-    });
     
     // Save to localStorage for immediate use
     localStorage.setItem('dashboard-layouts', JSON.stringify(allLayouts))
     
     // Also trigger parent save to database if available
     if ((window as any).saveWorkspaceLayouts) {
-      console.log('🎯 Calling saveWorkspaceLayouts');
       (window as any).saveWorkspaceLayouts(allLayouts);
     } else {
       console.warn('🎯 saveWorkspaceLayouts not available on window');
@@ -168,7 +141,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
 
   // Collaborative drag event handlers
   const handleDragStart = (layout: Layout[], oldItem: Layout, newItem: Layout, placeholder: Layout, e: MouseEvent, element: HTMLElement) => {
-    console.log('🎯 Drag started:', newItem.i);
     onDragStart?.(newItem.i, { x: newItem.x, y: newItem.y });
   }
 
@@ -177,7 +149,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   }
 
   const handleDragStop = (layout: Layout[], oldItem: Layout, newItem: Layout, placeholder: Layout, e: MouseEvent, element: HTMLElement) => {
-    console.log('🎯 Drag stopped:', newItem.i);
     onDragStop?.(newItem.i, { x: newItem.x, y: newItem.y, w: newItem.w, h: newItem.h });
   }
 
@@ -463,16 +434,8 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   }, [])
 
   // Empty state
-  console.log('🔍 [DYNAMIC DASHBOARD] Before empty state check:', {
-    tilesLength: tiles.length,
-    tiles: tiles,
-    tileIds: tiles.map(t => t.id),
-    layoutsLength: layouts.lg?.length || 0,
-    layoutIds: layouts.lg?.map(l => l.i) || []
-  });
   
   if (tiles.length === 0) {
-    console.log('🔍 [DYNAMIC DASHBOARD] Rendering empty state - no tiles!');
     return (
       <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
         <div className="text-center space-y-6">
@@ -530,10 +493,8 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
         isDroppable={false}
       >
         {tiles.map((tile) => {
-          console.log('🔍 [DYNAMIC DASHBOARD] Rendering tile:', { id: tile.id, type: tile.type });
           // Find the layout for this tile from the current breakpoint (lg)
           const layoutItem = layouts.lg?.find((l) => l.i === tile.id)
-          console.log('🔍 [DYNAMIC DASHBOARD] Layout for tile:', { tileId: tile.id, layoutItem });
           
           // Check if this tile is being dragged by a team member
           const activeDrag = activeDrags.get(tile.id)
@@ -591,7 +552,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
-                        console.log('🔴 Closing tile:', tile.id, tile.title)
                         handleRemoveTileWithCollab(tile.id)
                       }}
                       className="text-red-400 hover:text-red-200 hover:bg-red-500/20 transition-all duration-200 p-1.5 rounded-md border border-transparent hover:border-red-400/30"
