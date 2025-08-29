@@ -146,13 +146,18 @@ function AppContent() {
               
               // Update URL based on mode
               if (data.mode === 'docker' && data.workspace?.status === 'running') {
-                // Use direct proxy port URL for Vite compatibility
-                const port = data.workspace.port;
-                // Get the current host dynamically
+                // ALWAYS use direct port URL for Docker mode - fuck the proxy!
+                const port = data.workspace.port || 8000; // Default to 8000 if port missing
                 const currentHost = window.location.hostname;
+                console.log(`🚀 Using direct preview port: ${port}`);
                 setPreviewUrl(`http://${currentHost}:${port}/`);
+              } else if (data.mode === 'docker') {
+                // Even if status is weird, still use direct port for docker mode
+                const currentHost = window.location.hostname;
+                console.log(`🚀 Forcing direct preview on port 8000 (docker mode)`);
+                setPreviewUrl(`http://${currentHost}:8000/`);
               } else if (data.main?.status === 'running') {
-                // Preview proxy is publicly accessible for running previews
+                // Only use proxy for non-docker modes
                 setPreviewUrl(`/api/preview/proxy/${team.id}/main/`);
               }
             } else {
