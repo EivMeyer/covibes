@@ -182,10 +182,15 @@ function AppContent() {
     const token = localStorage.getItem('colabvibe_auth_token');
     if (!token) return;
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    
     // Mobile detection for transport selection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // Use EC2 hostname for mobile, localhost for desktop dev  
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                      import.meta.env.VITE_API_URL || 
+                      (isMobile ? 'http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001' : 'http://localhost:3001');
+    
+    console.log(`🔍 Socket init - Mobile: ${isMobile}, URL: ${backendUrl}, Token: ${!!token}`);
     
     const socket = io(backendUrl, {
       auth: {
@@ -201,6 +206,8 @@ function AppContent() {
       upgrade: !isMobile, // Don't upgrade on mobile
       rememberUpgrade: !isMobile,
     });
+
+    console.log(`🔍 Socket created:`, socket);
 
     socketRef.current = socket;
     setSocket(socket); // Update state to trigger re-render
