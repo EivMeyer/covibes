@@ -25,11 +25,85 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
 }) => {
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState('75vh');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const handleAgentClick = (agent: any) => {
     setSelectedAgent(agent);
     setShowTerminal(true);
   };
+
+  // Handle mobile keyboard visibility and adjust terminal height
+  React.useEffect(() => {
+    let visualViewport: any = null;
+    let resizeHandler: (() => void) | null = null;
+
+    const updateTerminalHeight = () => {
+      if (typeof window === 'undefined') return;
+
+      // Try Visual Viewport API first (modern browsers)
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        
+        // Calculate keyboard height
+        const calculatedKeyboardHeight = windowHeight - viewportHeight;
+        
+        if (calculatedKeyboardHeight > 150) { // Keyboard threshold
+          // Keyboard is open - move modal up and resize
+          setKeyboardHeight(calculatedKeyboardHeight);
+          // Use available viewport height minus header and some padding
+          const availableHeight = viewportHeight - 80; // 80px for header + padding
+          setTerminalHeight(`${Math.max(availableHeight, 300)}px`);
+        } else {
+          // No keyboard, position at bottom normally
+          setKeyboardHeight(0);
+          setTerminalHeight('75vh');
+        }
+      } else {
+        // Fallback: listen for window resize events
+        const currentHeight = window.innerHeight;
+        const initialHeight = window.screen.height;
+        
+        if (currentHeight < initialHeight * 0.75) {
+          const estimatedKeyboardHeight = initialHeight - currentHeight;
+          setKeyboardHeight(estimatedKeyboardHeight);
+          setTerminalHeight(`${Math.max(currentHeight - 80, 300)}px`);
+        } else {
+          setKeyboardHeight(0);
+          setTerminalHeight('75vh');
+        }
+      }
+    };
+
+    if (showTerminal) {
+      // Set up listeners when terminal is shown
+      if (window.visualViewport) {
+        visualViewport = window.visualViewport;
+        resizeHandler = updateTerminalHeight;
+        visualViewport.addEventListener('resize', resizeHandler);
+      } else {
+        resizeHandler = updateTerminalHeight;
+        window.addEventListener('resize', resizeHandler);
+      }
+
+      // Initial calculation
+      updateTerminalHeight();
+    } else {
+      // Reset height and position when terminal is closed
+      setTerminalHeight('75vh');
+      setKeyboardHeight(0);
+    }
+
+    // Cleanup
+    return () => {
+      if (visualViewport && resizeHandler) {
+        visualViewport.removeEventListener('resize', resizeHandler);
+      } else if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler);
+      }
+    };
+  }, [showTerminal]);
 
   return (
     <div className="flex flex-col h-full bg-midnight-900">
@@ -83,23 +157,43 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
         </div>
       )}
 
-      {/* Terminal Slide-up Panel */}
+      {/* Full-Screen Terminal */}
       {showTerminal && selectedAgent && (
         <div 
-          className="fixed inset-0 z-50 bg-black/50" 
-          onClick={() => setShowTerminal(false)}
-          onTouchStart={(e) => {
-            // Only close on background touch, not on terminal content
+          className={`fixed inset-0 z-50 ${keyboardHeight > 0 ? 'bg-midnight-800' : 'bg-black/50'}`}
+          onClick={keyboardHeight > 0 ? undefined : () => setShowTerminal(false)}
+          onTouchStart={keyboardHeight > 0 ? undefined : (e) => {
+            // Only close on background touch when keyboard is closed
             if (e.target === e.currentTarget) {
               setShowTerminal(false);
             }
           }}
+          style={{
+            // When keyboard is open, make it full screen from top
+            // When keyboard is closed, show as bottom sheet
+            ...(keyboardHeight > 0 ? {
+              paddingTop: '0px',
+              paddingBottom: `${keyboardHeight}px`
+            } : {})
+          }}
         >
           <div 
-            className="absolute bottom-0 left-0 right-0 bg-midnight-800 rounded-t-2xl shadow-2xl"
+            className={`absolute left-0 right-0 bg-midnight-800 shadow-2xl mobile-terminal-modal ${
+              keyboardHeight > 0 
+                ? 'top-0 rounded-none keyboard-open' // Full screen from top when keyboard open
+                : 'bottom-0 rounded-t-2xl' // Bottom sheet when keyboard closed
+            }`}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
-            style={{ height: '75vh' }}
+            style={{ 
+              height: keyboardHeight > 0 ? `calc(100vh - ${keyboardHeight}px)` : terminalHeight,
+              '--terminal-height': terminalHeight,
+              '--keyboard-height': `${keyboardHeight}px`,
+              transition: 'all 0.2s ease-in-out',
+              // Ensure terminal captures all touch/scroll events
+              touchAction: 'none',
+              overscrollBehavior: 'contain'
+            } as React.CSSProperties & { [key: string]: any }}
           >
             {/* Terminal Header */}
             <div className="px-4 py-3 border-b border-midnight-600 flex items-center justify-between">
@@ -130,12 +224,34 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
             {/* Terminal Content */}
             <div 
               className="h-full overflow-hidden" 
-              style={{ height: 'calc(100% - 60px)' }}
+              style={{ 
+                height: 'calc(100% - 60px)',
+                // Add safe area insets for notched devices
+                paddingBottom: keyboardHeight > 0 ? '0px' : 'max(env(safe-area-inset-bottom), 0px)',
+                // Ensure terminal content is focusable and scrollable
+                position: 'relative',
+                zIndex: 1000
+              }}
               onTouchStart={(e) => {
-                // Ensure terminal area receives touch focus
+                // FORCE focus on terminal content
                 e.stopPropagation();
-                // Focus the container to enable text selection
+                e.preventDefault();
+                
+                // Focus this container immediately
                 e.currentTarget.focus();
+                
+                // Find and focus the actual xterm terminal
+                const xtermTextarea = e.currentTarget.querySelector('.xterm-helper-textarea') as HTMLTextAreaElement;
+                if (xtermTextarea) {
+                  setTimeout(() => {
+                    xtermTextarea.focus();
+                    xtermTextarea.click();
+                  }, 100);
+                }
+              }}
+              onTouchMove={(e) => {
+                // Allow scrolling within terminal only
+                e.stopPropagation();
               }}
               tabIndex={0}
             >

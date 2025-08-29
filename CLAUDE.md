@@ -184,6 +184,10 @@ npm run prisma:studio     # Open database admin interface
 ### Client Development
 ```bash
 cd client
+# Set REQUIRED environment variables first - NO FALLBACKS:
+export VITE_BACKEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
+
 npm run dev          # Start Vite development server on port 3000
 npm run build        # Build for production
 npm run lint         # Run ESLint
@@ -222,23 +226,24 @@ npx playwright test
 
 ## Environment Variables
 
-### Required Environment Variables for Server Startup
-**CRITICAL**: These environment variables must be set before starting the server to prevent startup failures:
+### Required Environment Variables - NO FALLBACKS ALLOWED
+**CRITICAL**: These environment variables must be set EXACTLY or the application will FAIL IMMEDIATELY. NO FALLBACKS.
 
+#### Server Environment Variables:
 ```bash
-# EC2 Configuration (REQUIRED for Docker services)
+# EC2 Configuration (REQUIRED - NO FALLBACKS)
 export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
 export EC2_USERNAME=ubuntu
 
-# Database Configuration
+# Database Configuration (REQUIRED - NO FALLBACKS)
 export DATABASE_URL="postgresql://postgres:password@localhost:5432/colabvibe_dev"
 export TEST_DATABASE_URL="postgresql://postgres:password@localhost:5433/colabvibe_test"
 
-# Authentication
+# Authentication (REQUIRED - NO FALLBACKS)
 export JWT_SECRET="development-jwt-secret-key"
 export ENCRYPTION_KEY="32-character-development-encrypt-key!"
 
-# GitHub OAuth (Optional - for GitHub integration)
+# GitHub OAuth (Optional)
 export GITHUB_CLIENT_ID="your-github-client-id"
 export GITHUB_CLIENT_SECRET="your-github-client-secret"
 
@@ -246,19 +251,31 @@ export GITHUB_CLIENT_SECRET="your-github-client-secret"
 export NODE_ENV="development"
 ```
 
-### Environment Setup Script
-Create a `.env` file in the root directory or run these commands before starting the server:
+#### Client Environment Variables:
+```bash
+# Frontend/Backend URLs (REQUIRED - NO FALLBACKS)
+export VITE_BACKEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
+```
+
+### Complete Environment Setup Script
+Run ALL these commands before starting any services (NO FALLBACKS):
 
 ```bash
-# Quick setup script for development
+# Server environment variables (REQUIRED)
 export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
 export EC2_USERNAME=ubuntu
 export JWT_SECRET="development-jwt-secret-key"
 export ENCRYPTION_KEY="32-character-development-encrypt-key!"
 export NODE_ENV="development"
 
-# Then start the server
-cd server && npm run dev
+# Client environment variables (REQUIRED)
+export VITE_BACKEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
+
+# Start servers
+cd server && npm run dev &
+cd ../client && npm run dev
 ```
 
 ### Startup Issues Prevention

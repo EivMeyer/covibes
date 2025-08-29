@@ -560,6 +560,11 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
           outline: 'none', // Remove focus outline
           userSelect: 'auto', // Allow text selection
           touchAction: 'manipulation', // Improve touch responsiveness
+          // Mobile-specific improvements for keyboard interaction
+          WebkitTouchCallout: 'none', // Disable iOS callout on long press
+          WebkitUserSelect: 'text', // Enable text selection on iOS
+          MozUserSelect: 'text', // Enable text selection on Firefox mobile
+          msUserSelect: 'text', // Enable text selection on IE/Edge mobile
         }}
       />
     </div>

@@ -8,6 +8,14 @@
   html {
     @apply antialiased;
     scroll-behavior: smooth;
+    /* Mobile viewport height fixes */
+    height: -webkit-fill-available;
+  }
+  
+  /* Mobile viewport unit fixes */
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
   
   /* Sidebar Resize Cursor and Styles */
@@ -353,6 +361,63 @@
   /* Minimal xterm styling - no interference */
   .xterm {
     font-family: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  
+  /* Mobile terminal improvements */
+  @media (max-width: 768px) {
+    /* Ensure terminal doesn't get obscured by mobile keyboard */
+    .xterm-viewport {
+      /* Better scroll behavior on mobile */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    
+    /* Improve mobile terminal focus */
+    .xterm-screen {
+      /* Ensure terminal input area remains accessible */
+      padding-bottom: env(keyboard-inset-height, 0px);
+    }
+    
+    /* Force focus capture for mobile terminal */
+    .mobile-terminal-modal {
+      /* Support dynamic height based on keyboard */
+      height: var(--terminal-height, 75vh);
+      max-height: calc(100vh - env(safe-area-inset-bottom, 0px));
+      transition: all 0.2s ease-in-out;
+      /* Ensure this captures all touch events */
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    
+    /* When keyboard is open, terminal should be full-screen focused */
+    .mobile-terminal-modal.keyboard-open {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100vw !important;
+      height: calc(100vh - var(--keyboard-height, 0px)) !important;
+      z-index: 9999 !important;
+      background: #1e1e1e !important;
+      border-radius: 0 !important;
+    }
+    
+    /* Terminal content area should capture all scroll */
+    .mobile-terminal-modal .terminal-container {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
+    }
+    
+    /* Ensure xterm helper textarea gets proper focus */
+    .xterm-helper-textarea {
+      opacity: 0 !important;
+      position: absolute !important;
+      z-index: -1 !important;
+    }
   }
   
   /* Removed terminal-readonly styling - observer terminals should look identical to agent terminals */
