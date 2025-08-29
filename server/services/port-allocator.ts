@@ -168,7 +168,13 @@ export class IntelligentPortAllocator {
     return new Promise((resolve) => {
       const http = require('http');
       const req = http.request({
-        hostname: process.env['BASE_HOST'] || 'localhost',
+        hostname: (() => {
+          const baseHost = process.env['BASE_HOST'];
+          if (!baseHost) {
+            throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+          }
+          return baseHost;
+        })(),
         port,
         method: 'HEAD',
         timeout: 3000

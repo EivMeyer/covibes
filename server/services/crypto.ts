@@ -34,11 +34,10 @@ export class CryptoService {
   private encryptionKey: Buffer;
 
   constructor(secretKey?: string) {
-    // Use provided key or get from environment
-    const key = secretKey || process.env['ENCRYPTION_KEY'] || 'default-development-key-not-for-production';
-    
-    if (key === 'default-development-key-not-for-production' && process.env['NODE_ENV'] === 'production') {
-      throw new Error('ENCRYPTION_KEY environment variable must be set in production');
+    // Use provided key or get from environment - FAIL if not configured
+    const key = secretKey || process.env['ENCRYPTION_KEY'];
+    if (!key) {
+      throw new Error('ENCRYPTION_KEY environment variable is required. This is critical for data security.');
     }
     
     // Derive encryption key using SHA-256

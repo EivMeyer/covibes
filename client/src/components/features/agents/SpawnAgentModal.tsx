@@ -149,14 +149,12 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
       // Enter to submit form (but not if in textarea to allow line breaks)
       if (e.key === 'Enter' && !e.shiftKey && e.target !== document.querySelector('#task')) {
         e.preventDefault();
-        console.log('🎹 Enter pressed - submitting agent form');
         handleSubmit();
       }
       
       // Escape to close modal
       if (e.key === 'Escape' && !isSubmitting) {
         e.preventDefault();
-        console.log('🎹 Escape pressed - closing modal');
         handleClose();
       }
     };

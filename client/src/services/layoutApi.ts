@@ -114,12 +114,10 @@ class LayoutApiService {
       const serverResponse = await this.getLayout(layoutType)
       
       if (serverResponse.success && serverResponse.layoutData) {
-        console.log('✅ Loaded layout from server')
         return serverResponse.layoutData
       }
       
       // Fallback to localStorage if server doesn't have data
-      console.log('📦 Falling back to localStorage')
       const localData: LayoutData = {}
       
       for (const key of localStorageKeys) {
@@ -144,10 +142,8 @@ class LayoutApiService {
       
       // If we found localStorage data, save it to server for future
       if (Object.keys(localData).length > 0) {
-        console.log('🔄 Migrating localStorage data to server')
         try {
           await this.saveLayout(localData, layoutType)
-          console.log('✅ Successfully migrated localStorage to server')
         } catch (e) {
           console.warn('⚠️ Failed to migrate localStorage to server:', e)
         }
@@ -176,7 +172,6 @@ class LayoutApiService {
     try {
       await this.saveLayout(layoutData, layoutType)
       serverSaved = true
-      console.log('✅ Saved layout to server')
     } catch (error) {
       console.warn('⚠️ Failed to save layout to server, using localStorage fallback')
     }
@@ -203,7 +198,6 @@ class LayoutApiService {
         }
       }
       localSaved = true
-      console.log('✅ Saved layout to localStorage')
     } catch (error) {
       console.warn('⚠️ Failed to save layout to localStorage:', error)
     }

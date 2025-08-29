@@ -41,7 +41,6 @@ class TerminalManager {
     // Check if we already have a terminal for this agent
     const existing = this.terminals.get(agentId)
     if (existing && !existing.disposed) {
-      console.log(`[TerminalManager] Reusing existing terminal for agent: ${agentId}`)
       
       // If the terminal is attached to a different container, reattach it
       if (existing.terminal.element?.parentElement !== container) {
@@ -53,7 +52,6 @@ class TerminalManager {
     }
 
     // Create new terminal - let xterm.js and FitAddon handle all sizing
-    console.log(`[TerminalManager] Creating new terminal for agent: ${agentId}`)
     
     const terminal = new Terminal({
       cursorBlink: true, // Always blink cursor for consistent feel
@@ -115,7 +113,6 @@ class TerminalManager {
     // Fit immediately to get initial sizing right
     try {
       fitAddon.fit()
-      console.log(`[TerminalManager] Initial fit for agent ${agentId}: ${terminal.cols}x${terminal.rows}`)
     } catch (e) {
       console.warn('[TerminalManager] Initial fit failed:', e)
     }
@@ -124,7 +121,6 @@ class TerminalManager {
     requestAnimationFrame(() => {
       try {
         fitAddon.fit()
-        console.log(`[TerminalManager] Frame fit for agent ${agentId}: ${terminal.cols}x${terminal.rows}`)
       } catch (e) {
         console.warn('[TerminalManager] Frame fit failed:', e)
       }
@@ -136,7 +132,6 @@ class TerminalManager {
         fitAddon.fit()
         const containerWidth = container.offsetWidth
         const containerHeight = container.offsetHeight
-        console.log(`[TerminalManager] Final fit for agent ${agentId}: ${terminal.cols}x${terminal.rows} in ${containerWidth}x${containerHeight}px container`)
       } catch (error) {
         console.warn(`[TerminalManager] Final fit failed:`, error)
       }
@@ -201,7 +196,6 @@ class TerminalManager {
         instance.terminal.write('\x1b[H')
         // Clear scrollback buffer
         instance.terminal.scrollToTop()
-        console.log(`[TerminalManager] Cleared terminal for agent: ${agentId}`)
       } catch (e) {
         console.warn(`[TerminalManager] Error clearing terminal:`, e)
       }
@@ -218,7 +212,6 @@ class TerminalManager {
         // Send reset escape sequence
         instance.terminal.write('\x1bc') // Full terminal reset
         instance.terminal.clear()
-        console.log(`[TerminalManager] Reset terminal for agent: ${agentId}`)
       } catch (e) {
         console.warn(`[TerminalManager] Error resetting terminal:`, e)
       }
@@ -276,7 +269,6 @@ class TerminalManager {
     const instance = this.terminals.get(agentId)
     if (instance && !instance.disposed && instance.fitAddon) {
       try {
-        console.log(`[TerminalManager] Force resizing terminal for agent: ${agentId}`)
         
         // Simply call fit multiple times to ensure proper sizing
         instance.fitAddon.fit()
@@ -291,7 +283,6 @@ class TerminalManager {
           instance.fitAddon?.fit()
           const cols = instance.terminal.cols
           const rows = instance.terminal.rows
-          console.log(`[TerminalManager] Force resize completed: ${cols}x${rows}`)
         }, 100)
         
       } catch (error) {
@@ -314,7 +305,6 @@ class TerminalManager {
   disposeTerminal(agentId: string): void {
     const instance = this.terminals.get(agentId)
     if (instance && !instance.disposed) {
-      console.log(`[TerminalManager] Disposing terminal for agent: ${agentId}`)
       
       try {
         instance.terminal.dispose()
@@ -332,7 +322,6 @@ class TerminalManager {
    * Dispose all terminals
    */
   disposeAll(): void {
-    console.log(`[TerminalManager] Disposing all terminals`)
     for (const [agentId] of this.terminals) {
       this.disposeTerminal(agentId)
     }

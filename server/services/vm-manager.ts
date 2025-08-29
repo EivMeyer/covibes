@@ -72,7 +72,13 @@ export class VMManager {
         instances: [
           {
             id: 'vm-dev-001',
-            host: process.env['BASE_HOST'] || 'localhost',
+            host: (() => {
+              const baseHost = process.env['BASE_HOST'];
+              if (!baseHost) {
+                throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+              }
+              return baseHost;
+            })(),
             region: 'us-east-1',
             instanceType: 't3.medium',
             status: 'available',

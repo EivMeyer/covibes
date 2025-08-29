@@ -100,11 +100,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
     mountedRef.current = true
 
     if (!terminalRef.current || !socket || !agentId) {
-      console.log('Missing requirements:', {
-        dom: !!terminalRef.current,
-        socket: !!socket,
-        agentId: !!agentId,
-      })
       return
     }
 
@@ -179,8 +174,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       // Connect to agent only if not already connected
       if (!TerminalManager.isConnected(agentId)) {
         if (socket.connected) {
-          console.log(`[SimpleTerminal] Emitting terminal_connect for agent: ${agentId}`)
-          console.log(`[SimpleTerminal] Socket connected: ${socket.connected}, Socket ID: ${socket.id}`)
           socket.emit('terminal_connect', { agentId })
           setStatus('Connecting...')  // Don't set Connected until we get confirmation
         } else {
@@ -238,9 +231,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
   useEffect(() => {
     if (!socket || !agentId) return
 
-    console.log(`[SimpleTerminal] Setting up socket handlers for agent: ${agentId}`)
-    console.log('[SimpleTerminal] Socket connected:', socket.connected)
-    console.log('[SimpleTerminal] Socket id:', socket.id)
 
     // Clear any existing handlers first
     const existingHandlers = TerminalManager.getSocketHandlers(agentId)
@@ -310,7 +300,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
 
     const handleTerminalConnected = (data: any) => {
       if (data.agentId === agentId && mountedRef.current) {
-        console.log(`[SimpleTerminal] Terminal connected successfully for: ${agentId}`)
         setStatus('Connected')
         TerminalManager.setConnected(agentId, true)
       }
@@ -318,7 +307,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
 
     const handleTerminalReplaced = (data: any) => {
       if (data.agentId === agentId && mountedRef.current) {
-        console.log(`[SimpleTerminal] Connection replaced for: ${agentId}`)
         setStatus('Replaced by new tab')
         const terminal = TerminalManager.getTerminal(agentId)
         if (terminal) {
@@ -343,14 +331,12 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
     
     // Debug all socket events - listen for ANY event to troubleshoot
     const debugAllEvents = (eventName: string, ...args: any[]) => {
-      console.log(`[SimpleTerminal] Socket event received: '${eventName}'`, args)
     }
     
     socket.onAny(debugAllEvents)
 
     // Cleanup
     return () => {
-      console.log(`[SimpleTerminal] Cleaning up PTY socket handlers for: ${agentId}`)
       socket.off('terminal_data', handleTerminalData) // NEW PTY
       socket.off('terminal_output', handleTerminalOutput) // Legacy
       socket.off('terminal_error', handleTerminalError)
@@ -398,13 +384,11 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
 
   // Handle force resize terminal
   const handleForceResize = () => {
-    console.log(`[SimpleTerminal] Force resizing terminal for agent: ${agentId}`)
     TerminalManager.forceResize(agentId)
   }
 
   // Handle retry connection
   const handleRetryConnection = () => {
-    console.log(`[SimpleTerminal] Retrying connection for agent: ${agentId}`)
     setStatus('Retrying...')
     
     // Clear previous connection state

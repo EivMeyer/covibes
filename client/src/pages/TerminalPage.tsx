@@ -29,7 +29,6 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
   // Update fontSize when URL parameter changes
   useEffect(() => {
     const newFontSize = urlFontSize ? parseInt(urlFontSize, 10) : 10
-    console.log('🔍 Terminal font size from URL:', urlFontSize, '-> setting to:', newFontSize)
     setFontSize(newFontSize)
   }, [urlFontSize])
 
@@ -50,7 +49,6 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
         .then(res => res.json())
         .then(agentsRes => {
           setAgents(agentsRes.agents || [])
-          console.log('📋 Available agents:', agentsRes.agents)
         })
         .catch(err => console.error('Failed to get agents:', err))
       }
@@ -76,7 +74,6 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
     .then(([userRes, agentsRes]) => {
       setUser(userRes.user)
       setAgents(agentsRes.agents || [])
-      console.log('📋 Available agents:', agentsRes.agents)
     })
     .catch(err => {
       console.error('Failed to get user/agents:', err)
@@ -94,12 +91,10 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
     socketRef.current = socket
 
     socket.on('connect', () => {
-      console.log('🔌 Terminal socket connected')
       setStatus('Socket connected')
     })
 
     socket.on('disconnect', () => {
-      console.log('🔌 Terminal socket disconnected')
       setStatus('Disconnected')
     })
 
@@ -121,19 +116,12 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
 
   useEffect(() => {
     if (!terminalRef.current || !socketRef.current || !currentAgentId || !user) {
-      console.log('Missing requirements:', {
-        dom: !!terminalRef.current,
-        socket: !!socketRef.current,
-        agentId: !!currentAgentId,
-        user: !!user
-      })
       return
     }
 
     const socket = socketRef.current
 
     // Create terminal
-    console.log('🔍 Creating terminal with font size:', fontSize)
     const terminal = new Terminal({
       cursorBlink: true,
       fontSize: fontSize,
@@ -158,21 +146,18 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
     // Handle terminal input
     const dataDisposable = terminal.onData((data: string) => {
       if (socket && socket.connected) {
-        console.log('🔌 Sending terminal input:', data)
         socket.emit('terminal_input', { agentId: currentAgentId, data })
       }
     })
 
     // Socket event handlers
     const handleTerminalOutput = (data: any) => {
-      console.log('🔌 Terminal output received:', data)
       if (data.agentId === currentAgentId) {
         terminal.write(data.output)
       }
     }
 
     const handleTerminalError = (data: any) => {
-      console.log('🔌 Terminal error:', data)
       if (data.agentId === currentAgentId) {
         setStatus('Error: ' + data.error)
         terminal.writeln('\r\n❌ Error: ' + data.error)
@@ -180,7 +165,6 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
     }
 
     const handleTerminalConnected = (data: any) => {
-      console.log('🔌 Terminal connected:', data)
       if (data.agentId === currentAgentId) {
         setStatus('Connected')
       }
@@ -192,7 +176,6 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
     socket.on('terminal_connected', handleTerminalConnected)
 
     // Connect to agent
-    console.log('🔌 Attempting to connect to agent:', currentAgentId)
     if (socket.connected) {
       socket.emit('terminal_connect', { agentId: currentAgentId })
       setStatus('Connecting to agent...')

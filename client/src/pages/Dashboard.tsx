@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar, SidebarSection } from '@/components/layout/Sidebar';
 import { DynamicDashboard } from '@/components/layout/DynamicDashboard';
-import type { GridTile } from '@/components/layout/WorkspaceGrid';
+import type { GridTile } from '@/types';
 import { ActiveHumans } from '@/components/features/humans/ActiveHumans';
 import { SpawnAgentModal } from '@/components/features/agents/SpawnAgentModal';
 import { VMConfigModal } from '@/components/features/config/VMConfigModal';
@@ -61,15 +61,8 @@ const requestIdleCallbackPolyfill = (callback: () => void) => {
 };
 
 export const Dashboard: React.FC<DashboardProps> = (props) => {
-  console.log('🟥🟥🟥 DASHBOARD COMPONENT RENDERED AT:', new Date().toISOString());
   // Get token for API calls - use the correct key!
   const token = typeof window !== 'undefined' ? localStorage.getItem('colabvibe_auth_token') : null;
-  console.log('📊 Dashboard rendered with:', { 
-    hasUser: !!props.user, 
-    hasToken: !!token, 
-    userId: props.user?.id,
-    teamId: props.user?.teamId 
-  });
   const { 
     loadWorkspace, 
     saveWorkspace, 
@@ -83,13 +76,11 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     emitTileRemove
   } = useTeamWorkspaceSync(token);
   
-  console.log('🔥🔥🔥 Dashboard got saveWorkspace from hook:', typeof saveWorkspace, !!saveWorkspace);
   
   // Debug: Expose saveWorkspace on window for testing
   useEffect(() => {
     if (typeof window !== 'undefined' && saveWorkspace) {
       (window as any).debugSaveWorkspace = saveWorkspace;
-      console.log('🔥🔥🔥 Exposed saveWorkspace on window.debugSaveWorkspace');
     }
   }, [saveWorkspace]);
   const [showSpawnAgent, setShowSpawnAgent] = useState(false);
@@ -101,7 +92,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default 256px (w-64)
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [gridTiles, setGridTiles] = useState<GridTile[]>(() => {
-    console.log('🔍 [GRID TILES] Initial state: empty array');
     return [];
   });
   const [workspaceLoaded, setWorkspaceLoaded] = useState(false);
@@ -140,81 +130,48 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
 
   // Load workspace from server when user becomes available
   useEffect(() => {
-    console.log('🔍 [WORKSPACE LOAD] useEffect triggered:', { 
-      workspaceLoaded, 
-      hasUser: !!user, 
-      hasToken: !!token,
-      userId: user?.id,
-      teamId: user?.teamId
-    });
     
     // Skip if already loaded or no user/token
     if (workspaceLoaded || !user?.id || !token) {
-      console.log('🔍 [WORKSPACE LOAD] Skipping:', { 
-        workspaceLoaded, 
-        hasUserId: !!user?.id, 
-        hasToken: !!token 
-      });
       return;
     }
     
     const loadWorkspaceData = async () => {
-      console.log('🔍 [WORKSPACE LOAD] Starting load for user:', user.id);
       try {
         const workspace = await loadWorkspace();
-        console.log('🔍 [WORKSPACE LOAD] Raw workspace response:', workspace);
         
         if (workspace) {
-            console.log('🔍🔍🔍 [WORKSPACE LOAD] FULL DATA:', JSON.stringify(workspace, null, 2));
             
             // Process tiles
             if (workspace.tiles && Array.isArray(workspace.tiles)) {
-              console.log('🔍 [WORKSPACE LOAD] Raw tiles from server:', workspace.tiles);
-              console.log('🔍 [WORKSPACE LOAD] Raw tiles count:', workspace.tiles.length);
               
               // Filter out agent tiles as they are dynamic
               const filtered = workspace.tiles.filter((tile: any) => 
                 tile.type !== 'agents' && tile.type !== 'agent'
               );
               
-              console.log('🔍 [WORKSPACE LOAD] Filtered tiles:', filtered);
-              console.log('🔍 [WORKSPACE LOAD] Filtered tiles count:', filtered.length);
-              console.log('🔍 [WORKSPACE LOAD] Tile IDs:', filtered.map((t: any) => t.id));
-              console.log('🔍 [WORKSPACE LOAD] Tile types:', filtered.map((t: any) => t.type));
               
-              console.log('🔍 [WORKSPACE LOAD] Calling setGridTiles with:', filtered);
               setGridTiles(filtered);
-              console.log('🔍 [WORKSPACE LOAD] setGridTiles called - tiles should be in state now');
             } else {
-              console.log('🔍 [WORKSPACE LOAD] No tiles in workspace or tiles not an array');
             }
             
             // Process sidebar width
             if (workspace.sidebarWidth) {
-              console.log('🔍 [WORKSPACE LOAD] Setting sidebar width:', workspace.sidebarWidth);
               setSidebarWidth(workspace.sidebarWidth);
             }
             
             // Process layouts for DynamicDashboard
             if (workspace.layouts) {
-              console.log('🔍 [WORKSPACE LOAD] Raw layouts:', workspace.layouts);
-              console.log('🔍 [WORKSPACE LOAD] Layout keys:', Object.keys(workspace.layouts));
               
               localStorage.setItem('dashboard-layouts', JSON.stringify(workspace.layouts));
-              console.log('🔍 [WORKSPACE LOAD] Layouts saved to localStorage');
               
               // CRITICAL: Dispatch event to update DynamicDashboard with loaded layouts
-              console.log('🔍 [WORKSPACE LOAD] Dispatching workspace-layouts-updated event');
               window.dispatchEvent(new CustomEvent('workspace-layouts-updated', { detail: workspace.layouts }));
-              console.log('🔍 [WORKSPACE LOAD] Event dispatched');
             } else {
-              console.log('🔍 [WORKSPACE LOAD] No layouts in workspace data');
             }
           } else {
-            console.log('🔍 [WORKSPACE LOAD] Workspace is null/undefined - using defaults');
           }
         } catch (error) {
-          console.error('🔍 [WORKSPACE LOAD] Failed to load workspace:', error);
           addNotification({
             message: 'Failed to load workspace configuration',
             type: 'error'
@@ -270,17 +227,14 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       },
       
       onDragStarted: (data) => {
-        console.log('👆 Team member started dragging:', data.tileId);
         // Visual feedback is handled through activeDrags state
       },
       
       onDragStopped: (data) => {
-        console.log('👆 Team member stopped dragging:', data.tileId);
         // The final position will come through workspace-update event
       },
       
       onTileAdded: (data) => {
-        console.log('➕ Team member added tile:', data.type);
         addNotification({
           message: `Team member added ${data.title} panel`,
           type: 'info',
@@ -288,7 +242,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       },
       
       onTileRemoved: (data) => {
-        console.log('➖ Team member removed tile:', data.tileId);
         addNotification({
           message: `Team member removed a panel`,
           type: 'info',
@@ -384,7 +337,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
           return tile;
         });
         // Save immediately for better persistence
-        console.log('💾 Saving workspace after agent connect:', updated.length, 'tiles');
         saveWorkspace({ tiles: updated });
         return updated;
       });
@@ -438,26 +390,21 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     setGridTiles(prev => {
       const tileToRemove = prev.find(tile => tile.id === id);
       const updated = prev.filter(tile => tile.id !== id);
-      console.log('💾 Removing tile:', tileToRemove?.type, tileToRemove?.title);
       // Save immediately instead of waiting for idle callback
-      console.log('💾 Saving workspace after tile remove:', updated.length, 'tiles');
       saveWorkspace({ tiles: updated });
       return updated;
     });
   }, [saveWorkspace]);
 
   const handleOpenTerminal = useCallback((agent: any) => {
-    console.log('🔥🔥🔥 Dashboard handleOpenTerminal called with agent:', agent);
     // Check if terminal for this agent is already open
     const existingTerminal = gridTiles.find(tile => 
       tile.type === 'terminal' && tile.agentId === agent.id
     );
     
     if (!existingTerminal) {
-      console.log('🔥🔥🔥 Creating new terminal for agent:', agent.id);
       handleAddTile('terminal', agent.id);
     } else {
-      console.log('🔥🔥🔥 Terminal already exists for agent:', agent.id);
     }
   }, [gridTiles, handleAddTile]);
   
@@ -473,7 +420,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       // Ctrl+L for new agent (spawn agent modal)
       if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
         e.preventDefault();
-        console.log('🎹 Ctrl+L pressed - opening spawn agent modal');
         handleSpawnAgent();
         return;
       }
@@ -481,12 +427,9 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       // Ctrl+W for testing workspace load/save
       if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
         e.preventDefault();
-        console.log('🎹 Ctrl+W pressed - testing workspace functionality');
         
         // Test loading workspace
-        console.log('🧪 Testing workspace load...');
         loadWorkspace().then((result) => {
-          console.log('🧪 Workspace load result:', result);
           
           // Test saving workspace
           const testData = {
@@ -495,7 +438,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
             sidebarWidth: 300
           };
           
-          console.log('🧪 Testing workspace save...');
           saveWorkspace(testData);
           
           addNotification({
@@ -520,7 +462,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         // Get the most recent agent (first in the array - newest agents appear first)
         if (agents.length > 0) {
           const mostRecentAgent = agents[0];
-          console.log('🎹 Ctrl+O pressed - opening terminal for:', mostRecentAgent.agentName || mostRecentAgent.id);
           handleOpenTerminal(mostRecentAgent);
           
           addNotification({
@@ -528,7 +469,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
             type: 'success',
           });
         } else {
-          console.log('🎹 Ctrl+O pressed - no agents available');
           addNotification({
             message: 'No agents available to open',
             type: 'warning',
@@ -544,7 +484,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
           e.preventDefault();
           const agent = agents[index];
           setSelectedAgentId(agent.id);
-          console.log(`🎹 Number ${e.key} pressed - selected agent:`, agent.agentName || agent.id);
           addNotification({
             message: `Selected: ${agent.agentName || agent.userName + "'s Agent"}`,
             type: 'info',
@@ -558,7 +497,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         e.preventDefault();
         const agent = agents.find(a => a.id === selectedAgentId);
         if (agent) {
-          console.log('🎹 T pressed - connecting selected agent to terminal:', agent.agentName || agent.id);
           
           // Find an empty terminal or create a new one
           const emptyTerminal = gridTiles.find(tile => 
@@ -590,7 +528,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       // Ctrl+T to add empty terminal tile
       if ((e.ctrlKey || e.metaKey) && e.key === 't') {
         e.preventDefault();
-        console.log('🎹 Ctrl+T pressed - adding empty terminal tile');
         handleAddTile('terminal');
         addNotification({
           message: 'Terminal tile added to workspace',
@@ -605,13 +542,11 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         if (agents.length > 0) {
           const newestAgent = agents[0]; // agents[0] is newest
           setSelectedAgentId(newestAgent.id);
-          console.log('🎹 Ctrl+Shift+L pressed - selected newest agent:', newestAgent.agentName || newestAgent.id);
           addNotification({
             message: `Selected newest agent: ${newestAgent.agentName || newestAgent.userName + "'s Agent"}`,
             type: 'success',
           });
         } else {
-          console.log('🎹 Ctrl+Shift+L pressed - no agents available');
           addNotification({
             message: 'No agents available to select',
             type: 'warning',
@@ -623,7 +558,6 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       // Escape to clear selection
       if (e.key === 'Escape' && selectedAgentId) {
         e.preventDefault();
-        console.log('🎹 Escape pressed - clearing agent selection');
         setSelectedAgentId(null);
         addNotification({
           message: 'Selection cleared',
@@ -658,15 +592,12 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
           user={user} 
           socket={props.socket}
           onAgentSelect={(agentId) => {
-            console.log('Terminal: Connecting agent:', agentId, 'to tile:', tile.id);
             handleAddTile('connect-agent', agentId, tile.id);
           }}
           onAgentDrop={(agentId) => {
-            console.log('Terminal: Agent dropped:', agentId, 'onto tile:', tile.id);
             handleAddTile('connect-agent', agentId, tile.id);
           }}
           onDisconnect={() => {
-            console.log('Terminal: Disconnecting agent from tile:', tile.id);
             // Update the tile to remove the agent
             setGridTiles(prev => {
               const updated = prev.map(t => 

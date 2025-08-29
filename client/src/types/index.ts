@@ -261,5 +261,14 @@ export type Status = 'idle' | 'loading' | 'success' | 'error';
 export type Theme = 'light' | 'dark' | 'system';
 export type Environment = 'development' | 'production' | 'test';
 
+// Grid Tile interface for workspace management
+export interface GridTile {
+  id: string;
+  type: 'terminal' | 'chat' | 'preview' | 'ide';
+  agentId?: string | undefined; // For terminal tiles - explicit undefined for exactOptionalPropertyTypes
+  title: string;
+  minimized?: boolean | undefined; // Explicit undefined for exactOptionalPropertyTypes
+}
+
 // Re-export types moved to avoid circular dependencies
 // Use direct imports from services instead if needed

@@ -326,7 +326,10 @@ const sshSessions = new Map();
 
 // Configuration  
 const PORT = process.env['PORT'] || 3001;
-const JWT_SECRET = process.env['JWT_SECRET'] || 'fallback-secret-key';
+const JWT_SECRET = process.env['JWT_SECRET'];
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required. This is critical for authentication security.');
+}
 
 // CORS configuration - must match Socket.IO CORS settings
 app.use(cors({
@@ -340,7 +343,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration for OAuth
 app.use(session({
-  secret: process.env['SESSION_SECRET'] || 'development-session-secret',
+  secret: (() => {
+    const sessionSecret = process.env['SESSION_SECRET'];
+    if (!sessionSecret) {
+      throw new Error('SESSION_SECRET environment variable is required. This is critical for session security.');
+    }
+    return sessionSecret;
+  })(),
   resave: false,
   saveUninitialized: false,
   cookie: {

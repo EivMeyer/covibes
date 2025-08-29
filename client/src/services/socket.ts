@@ -132,9 +132,9 @@ class SocketService {
       this.connectionState = 'connecting';
       
       // Create new socket connection with both polling and WebSocket for real-time terminal
-      // Use environment variable for backend URL with fallback
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      this.socket = io(backendUrl, {
+      // Use environment variable for WebSocket URL with fallbacks
+      const wsUrl = import.meta.env.VITE_WS_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      this.socket = io(wsUrl, {
         transports: ['polling', 'websocket'], // Match server configuration - enable both transports
         timeout: 20000,
         reconnection: true,
@@ -161,7 +161,6 @@ class SocketService {
       
       // Handle connection success
       const onConnect = () => {
-        console.log('🔌 WebSocket connected, authenticating...');
         this.connectionState = 'connected';
         this.reconnectAttempts = 0;
         this.authenticate(token)
@@ -210,7 +209,6 @@ class SocketService {
         this.teamId = teamId;
         
         const onTeamJoined = (data: any) => {
-          console.log('✅ Team joined successfully:', data);
           this.socket!.off('team-joined', onTeamJoined);
           this.socket!.off('error', onJoinError);
           this.listeners.onAuthSuccess?.({ user: { id: userId, name: 'User', email: '' }, team: { id: teamId, name: '', inviteCode: '' } });
@@ -229,7 +227,6 @@ class SocketService {
         this.socket.once('error', onJoinError);
         
         // Use join-team event like the server expects
-        console.log('🏠 Authenticating by joining team:', teamId);
         this.socket.emit('join-team', { teamId, token });
         
       } catch (error) {
@@ -243,7 +240,6 @@ class SocketService {
 
     // Connection events
     this.socket.on('connect', () => {
-      console.log('🔌 WebSocket connected');
       this.connectionState = 'connected';
       this.reconnectAttempts = 0;
       
@@ -253,7 +249,6 @@ class SocketService {
     });
 
     this.socket.on('disconnect', (reason: string) => {
-      console.log('🔌 WebSocket disconnected:', reason);
       this.connectionState = 'disconnected';
       this.listeners.onDisconnect?.(reason);
     });
@@ -265,30 +260,25 @@ class SocketService {
     });
 
     this.socket.on('reconnect', (attemptNumber: number) => {
-      console.log('🔌 WebSocket reconnected after', attemptNumber, 'attempts');
       this.connectionState = 'connected';
       this.listeners.onReconnect?.(attemptNumber);
     });
 
     this.socket.on('reconnect_attempt', (attemptNumber: number) => {
-      console.log('🔌 WebSocket reconnection attempt', attemptNumber);
       this.connectionState = 'reconnecting';
       this.reconnectAttempts = attemptNumber;
     });
 
     // User presence events
     this.socket.on('user_online', (user: SocketUser) => {
-      console.log('👤 User came online:', user.name);
       this.listeners.onUserOnline?.(user);
     });
 
     this.socket.on('user_offline', (data: { id: string; name: string }) => {
-      console.log('👤 User went offline:', data.name);
       this.listeners.onUserOffline?.(data);
     });
 
     this.socket.on('online_users', (users: SocketUser[]) => {
-      console.log('👥 Online users:', users.length);
       this.listeners.onOnlineUsers?.(users);
     });
 
@@ -298,7 +288,6 @@ class SocketService {
 
     // Chat events
     this.socket.on('chat_message', (message: SocketChatMessage) => {
-      console.log('💬 Chat message:', message.userName, ':', message.content);
       this.listeners.onChatMessage?.(message);
     });
 
@@ -312,51 +301,41 @@ class SocketService {
 
     // Agent events
     this.socket.on('agent_started', (agent: SocketAgentEvent) => {
-      console.log('🤖 Agent started:', agent.userName, 'spawned', agent.task);
       this.listeners.onAgentStarted?.(agent);
     });
 
     this.socket.on('agent_output', (output: SocketAgentOutput) => {
-      console.log('🤖 Agent output:', output.agentId, ':', output.output.substring(0, 50));
       this.listeners.onAgentOutput?.(output);
     });
 
     this.socket.on('agent_completed', (data: SocketAgentEvent) => {
-      console.log('🤖 Agent completed:', data.agentId, 'status:', data.status);
       this.listeners.onAgentCompleted?.(data);
     });
 
     this.socket.on('agent_input_sent', (data: { agentId: string; input: string; userId: string; userName: string }) => {
-      console.log('🤖 Agent input sent:', data.userName, 'to', data.agentId);
       this.listeners.onAgentInputSent?.(data);
     });
 
     // Preview events
     this.socket.on('preview_updated', (data: { triggeredBy: string; timestamp: Date }) => {
-      console.log('🖼️ Preview updated by:', data.triggeredBy);
       this.listeners.onPreviewUpdated?.(data);
     });
 
     // Team events
     this.socket.on('team-joined', (data: any) => {
-      console.log('🏠 Successfully joined team:', data);
     });
 
     this.socket.on('user-connected', (data: { userId: string; userName: string; connectedUsers: number }) => {
-      console.log('👤 User connected:', data.userName);
     });
 
     this.socket.on('user-disconnected', (data: { userId: string; userName: string; connectedUsers: number }) => {
-      console.log('👤 User disconnected:', data.userName);
     });
 
     // Terminal events - CRITICAL MISSING HANDLERS!
     this.socket.on('terminal_connected', (data: { agentId: string; message?: string }) => {
-      console.log('🖥️ Terminal connected for agent:', data.agentId);
     });
 
     this.socket.on('terminal_output', (data: { agentId: string; output: string }) => {
-      console.log('🖥️ Terminal output for agent:', data.agentId, data.output.substring(0, 50));
     });
 
     this.socket.on('terminal_error', (data: { agentId: string; error: string }) => {
@@ -364,26 +343,21 @@ class SocketService {
     });
 
     this.socket.on('claude_started', (data: { agentId: string }) => {
-      console.log('🤖 Claude started for agent:', data.agentId);
     });
 
     this.socket.on('terminal_disconnected', (data: { agentId: string }) => {
-      console.log('🖥️ Terminal disconnected for agent:', data.agentId);
     });
 
     // Container events
     this.socket.on('container_status', (data: { containerId: string; agentId?: string; status: string; timestamp: string; message?: string; error?: string }) => {
-      console.log('🐳 Container status update:', data.containerId, data.status);
       this.listeners.onContainerStatus?.(data);
     });
 
     this.socket.on('container_resource_update', (data: { containerId: string; agentId?: string; resources: any; timestamp: string }) => {
-      console.log('📊 Container resource update:', data.containerId);
       this.listeners.onContainerResourceUpdate?.(data);
     });
 
     this.socket.on('container_logs', (data: { containerId: string; agentId?: string; log: string; timestamp: string; level: string }) => {
-      console.log('📜 Container logs:', data.containerId, data.level);
       this.listeners.onContainerLogs?.(data);
     });
 
@@ -450,7 +424,6 @@ class SocketService {
   }
 
   disconnect(): void {
-    console.log('🔌 Manually disconnecting WebSocket');
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;

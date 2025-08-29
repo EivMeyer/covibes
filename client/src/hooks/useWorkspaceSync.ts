@@ -30,7 +30,6 @@ export const useWorkspaceSync = (token: string | null) => {
       });
       
       const workspace = response.data;
-      console.log('Loaded workspace from server:', workspace);
       setError(null);
       return workspace;
     } catch (err) {
@@ -75,7 +74,6 @@ export const useWorkspaceSync = (token: string | null) => {
 
         if (response.status === 200) {
           lastSavedRef.current = dataStr;
-          console.log('Workspace saved to server');
           setError(null);
         }
       } catch (err) {
@@ -93,7 +91,6 @@ export const useWorkspaceSync = (token: string | null) => {
       await axios.delete(`${API_BASE_URL}/workspace/config`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('Workspace cleared');
       setError(null);
     } catch (err) {
       console.error('Failed to clear workspace:', err);

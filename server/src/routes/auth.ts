@@ -26,7 +26,10 @@ import { createAuthHandler } from '../types/express.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env['JWT_SECRET'] || 'fallback-secret-key';
+const JWT_SECRET = process.env['JWT_SECRET'];
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required. This is critical for authentication security.');
+}
 const FRONTEND_URL = process.env['FRONTEND_URL'];
 if (!FRONTEND_URL) {
   throw new Error('FRONTEND_URL environment variable is required. Set it to your frontend URL.');

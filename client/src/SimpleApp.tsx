@@ -63,7 +63,6 @@ export default function SimpleApp() {
     const token = localStorage.getItem('colabvibe_auth_token');
     if (!token) return;
 
-    console.log('🔌 Connecting to WebSocket...');
     const socket = io({
       transports: ['websocket', 'polling'],
     });
@@ -71,7 +70,6 @@ export default function SimpleApp() {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('🔌 WebSocket connected');
       setIsConnected(true);
       
       // Join team
@@ -79,12 +77,10 @@ export default function SimpleApp() {
     });
 
     socket.on('disconnect', () => {
-      console.log('🔌 WebSocket disconnected');
       setIsConnected(false);
     });
 
     socket.on('chat-message', (message: ChatMessage) => {
-      console.log('💬 Chat message received:', message);
       setMessages(prev => [...prev, message]);
     });
 
@@ -93,7 +89,6 @@ export default function SimpleApp() {
     });
 
     return () => {
-      console.log('🔌 Disconnecting WebSocket');
       socket.disconnect();
       socketRef.current = null;
       setIsConnected(false);
@@ -132,7 +127,6 @@ export default function SimpleApp() {
     e.preventDefault();
     if (!newMessage.trim() || !socketRef.current || !isConnected) return;
 
-    console.log('💬 Sending message:', newMessage);
     socketRef.current.emit('chat-message', {
       message: newMessage.trim(),  // Changed from 'content' to 'message'
       teamId: team?.id

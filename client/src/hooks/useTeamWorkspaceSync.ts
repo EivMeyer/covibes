@@ -75,12 +75,10 @@ export const useTeamWorkspaceSync = (token: string | null) => {
     if (!socket) return;
 
     const handleWorkspaceUpdated = (data: WorkspaceUpdateEvent) => {
-      console.log('Received workspace update from team member:', data);
       onWorkspaceUpdated?.(data);
     };
 
     const handleDragStarted = (data: DragEvent) => {
-      console.log('Team member started dragging:', data);
       setActiveDrags(prev => new Map(prev.set(data.tileId, { draggedBy: data.draggedBy, position: data.position })));
       onDragStarted?.(data);
     };
@@ -98,7 +96,6 @@ export const useTeamWorkspaceSync = (token: string | null) => {
     };
 
     const handleDragStopped = (data: DragStopEvent) => {
-      console.log('Team member stopped dragging:', data);
       setActiveDrags(prev => {
         const newMap = new Map(prev);
         newMap.delete(data.tileId);
@@ -108,12 +105,10 @@ export const useTeamWorkspaceSync = (token: string | null) => {
     };
 
     const handleTileAdded = (data: TileAddEvent) => {
-      console.log('Team member added tile:', data);
       onTileAdded?.(data);
     };
 
     const handleTileRemoved = (data: TileRemoveEvent) => {
-      console.log('Team member removed tile:', data);
       onTileRemoved?.(data);
     };
 

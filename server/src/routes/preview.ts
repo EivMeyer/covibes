@@ -8,8 +8,12 @@
  * - Proxy requests to running projects
  */
 
+console.log('🔥🔥🔥 PREVIEW ROUTES FILE LOADED!!! 🔥🔥🔥');
+
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import http from 'http';
 import { authenticateToken } from '../middleware/auth.js';
 import { createAuthHandler } from '../types/express.js';
 import { previewService } from '../../services/preview-service.js';
@@ -41,7 +45,17 @@ router.use(authenticateToken);
  * Get preview status for the team
  */
 router.get('/status', createAuthHandler(async (req, res) => {
+  console.log('🚨🚨🚨 PREVIEW STATUS ROUTE HIT!!! 🚨🚨🚨');
   try {
+    console.log('🎯 PREVIEW STATUS ENDPOINT CALLED for teamId:', req.user?.teamId);
+    
+    // Add cache-busting headers to ensure fresh data
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     const teamId = req.user?.teamId;
     if (!teamId) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -76,18 +90,21 @@ router.get('/status', createAuthHandler(async (req, res) => {
     if (previewMode === 'local' || previewMode === 'docker') {
       // Use universal Docker preview service
       const dockerStatus = await universalPreviewService.getPreviewStatus(teamId);
+      console.log('🎯 DOCKER STATUS FROM SERVICE:', JSON.stringify(dockerStatus, null, 2));
       
       if (dockerStatus && dockerStatus.running) {
-        return res.json({
+        const response = {
           workspace: {
             status: 'running',
             port: dockerStatus.proxyPort || dockerStatus.port,  // Return proxy port
-            url: dockerStatus.proxyPort ? `http://${BASE_HOST}:${dockerStatus.proxyPort}` : undefined,
+            url: dockerStatus.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined,
             message: `Universal preview running on proxy port ${dockerStatus.proxyPort || dockerStatus.port}`,
             projectType: dockerStatus.projectType
           },
           mode: 'docker'
-        });
+        };
+        console.log('🎯 PREVIEW STATUS RESPONSE:', JSON.stringify(response, null, 2));
+        return res.json(response);
       } else {
         return res.json({
           workspace: { status: 'stopped', message: 'No universal preview running' },
@@ -313,7 +330,7 @@ router.post('/restart', createAuthHandler(async (req, res) => {
       return res.json({
         message: 'Universal preview restarted successfully',
         mode: 'docker',
-        url: status?.proxyPort ? `http://${BASE_HOST}:${status.proxyPort}` : undefined
+        url: status?.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined
       });
     }
 
@@ -363,6 +380,82 @@ router.get('/logs/:branch', createAuthHandler(async (req, res) => {
     res.status(500).json({ message: 'Failed to get logs' });
   }
 }));
+
+/**
+ * GET /api/preview/proxy/:teamId/:branch/
+ * Proxy requests to the preview container
+ * This handles the actual preview iframe content
+ */
+router.get('/proxy/:teamId/:branch/', async (req, res) => {
+  try {
+    console.log(`🔍 Preview proxy request: ${req.method} ${req.url}`);
+    console.log(`🔍 Team ID: ${req.params.teamId}, Branch: ${req.params.branch}`);
+    console.log(`🔍 Query params:`, req.query);
+    
+    const requestTeamId = req.params.teamId;
+    const token = req.query['token'] as string;
+    
+    // Authenticate via token in query params (for iframe access)
+    if (!token) {
+      console.log(`❌ No token provided for preview access`);
+      return res.status(401).json({ message: 'Authentication token required' });
+    }
+    
+    try {
+      const decoded = jwt.verify(token, process.env['JWT_SECRET']!) as any;
+      const userId = decoded.userId;
+      const userTeamId = decoded.teamId;
+      
+      console.log(`🔍 Token valid for user: ${userId}, team: ${userTeamId}`);
+      
+      // Verify user belongs to the team
+      if (requestTeamId !== userTeamId) {
+        console.log(`❌ Team access denied: ${requestTeamId} !== ${userTeamId}`);
+        return res.status(403).json({ message: 'Access denied to this team preview' });
+      }
+      
+      // Check if preview is running (proxy to port 7174)
+      console.log(`🔄 Proxying to http://localhost:7174`);
+      
+      // Create a simple proxy using node's http module
+      const proxyReq = http.request({
+        hostname: 'localhost',
+        port: 7174,
+        path: req.url,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          'host': 'localhost:7174'
+        }
+      }, (proxyRes: any) => {
+        // Forward status code and headers
+        res.status(proxyRes.statusCode);
+        Object.keys(proxyRes.headers).forEach(key => {
+          res.set(key, proxyRes.headers[key]);
+        });
+        
+        // Pipe the response
+        proxyRes.pipe(res);
+      });
+      
+      proxyReq.on('error', (err: any) => {
+        console.error('❌ Proxy error:', err);
+        res.status(502).json({ message: 'Preview service unavailable' });
+      });
+      
+      // Forward request body if any
+      req.pipe(proxyReq);
+      
+    } catch (jwtError) {
+      console.log(`❌ Invalid token for preview access:`, jwtError);
+      return res.status(401).json({ message: 'Invalid authentication token' });
+    }
+    
+  } catch (error) {
+    console.error('❌ Preview proxy error:', error);
+    res.status(500).json({ message: 'Preview proxy failed' });
+  }
+});
 
 /**
  * GET /api/preview/stats

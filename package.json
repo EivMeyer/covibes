@@ -1,7 +1,15 @@
 {
   "scripts": {
-    "lint": "cd colabvibe/server && npm run lint && cd ../client && npm run lint",
-    "type-check": "cd colabvibe/server && npm run lint && cd ../client && npm run type-check"
+    "install:all": "cd client && npm install && cd ../server && npm install",
+    "build:development": "cd client && npm run build:development && cd ../server && npm run build:development",
+    "build:production": "cd client && npm run build:production && cd ../server && npm run build:production",
+    "dev:development": "concurrently \"cd server && npm run dev:development\" \"cd client && npm run dev:development\"",
+    "dev:production": "concurrently \"cd server && npm run dev:production\" \"cd client && npm run dev:production\"",
+    "start:development": "cd server && npm run start:development",
+    "start:production": "cd server && npm run start:production",
+    "lint": "cd server && npm run lint && cd ../client && npm run lint",
+    "type-check": "cd server && npm run lint && cd ../client && npm run type-check",
+    "test": "cd server && npm run test && cd ../client && npm run test"
   },
   "dependencies": {
     "ssh2": "^1.16.0",
@@ -9,6 +17,7 @@
   },
   "devDependencies": {
     "axios": "^1.11.0",
+    "concurrently": "^8.2.2",
     "node-fetch": "^2.7.0",
     "playwright": "^1.54.2",
     "socket.io-client": "^4.8.1"

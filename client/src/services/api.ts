@@ -144,13 +144,6 @@ class ApiService {
           config.headers.Authorization = `Bearer ${token}`;
         }
         
-        // Log API requests in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
-            params: config.params,
-            data: config.data,
-          });
-        }
         
         return config;
       },
@@ -163,13 +156,6 @@ class ApiService {
     // Response interceptor - handle errors and logging
     this.api.interceptors.response.use(
       (response) => {
-        // Log API responses in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-            status: response.status,
-            data: response.data,
-          });
-        }
         return response;
       },
       (error) => {
