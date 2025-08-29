@@ -952,6 +952,8 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
                 onlineUsers={onlineUsers}
                 sendChatMessage={sendChatMessage}
                 isSocketConnected={isSocketConnected()}
+                socket={props.socket}
+                logout={props.logout}
               />
             )}
             
