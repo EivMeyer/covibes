@@ -52,12 +52,23 @@ export const MobileTeamView: React.FC<MobileTeamViewProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-midnight-900">
-      {/* Header - Redesigned for mobile */}
-      <div className="px-3 py-2 bg-midnight-800 border-b border-midnight-600">
-        {/* Top row: Team name and logout */}
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-base font-semibold text-white truncate flex-1">{team?.name || 'Team'}</h2>
-          {/* Logout button - Icon only to save space */}
+      {/* Header - Fixed to never overflow */}
+      <div className="px-2 py-2 bg-midnight-800 border-b border-midnight-600 overflow-hidden">
+        {/* Top row: Team name and logout - with min-width: 0 to allow truncation */}
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-sm font-semibold text-white truncate min-w-0 flex-1">{team?.name || 'Team'}</h2>
+          {/* Connection status indicator - compact */}
+          <button
+            onClick={() => setShowConnectionDiagnostics(true)}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-midnight-700 flex-shrink-0"
+            title="Connection status - tap for details"
+          >
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isSocketConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
+            <span className={`text-xs ${isSocketConnected ? 'text-green-400' : 'text-red-400'}`}>
+              {isSocketConnected ? 'On' : 'Off'}
+            </span>
+          </button>
+          {/* Logout button - Icon only */}
           {logout && (
             <button
               onClick={() => {
@@ -65,7 +76,7 @@ export const MobileTeamView: React.FC<MobileTeamViewProps> = ({
                   logout();
                 }
               }}
-              className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors ml-2"
+              className="p-1 bg-red-500/20 text-red-400 rounded flex-shrink-0"
               title="Logout"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,22 +87,10 @@ export const MobileTeamView: React.FC<MobileTeamViewProps> = ({
           )}
         </div>
         
-        {/* Bottom row: Code and connection status */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400">Code: {team?.inviteCode}</span>
-          {/* Compact clickable connection status */}
-          <button
-            onClick={() => setShowConnectionDiagnostics(true)}
-            className="flex items-center space-x-1 px-1.5 py-0.5 rounded hover:bg-midnight-700 transition-colors"
-          >
-            <div className={`w-1.5 h-1.5 rounded-full ${isSocketConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`} />
-            <span className={`text-xs ${isSocketConnected ? 'text-green-400' : 'text-red-400'}`}>
-              {isSocketConnected ? `${onlineUsers.length} online` : 'Disconnected'}
-            </span>
-            <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
+        {/* Bottom row: Code and user count */}
+        <div className="flex items-center justify-between text-xs text-gray-400">
+          <span className="truncate">Code: {team?.inviteCode}</span>
+          <span className="flex-shrink-0">{onlineUsers.length} users online</span>
         </div>
       </div>
 
