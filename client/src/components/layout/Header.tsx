@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useNotification } from '@/components/ui/Notification';
 import { useVMPing } from '@/hooks/useVMPing';
+import { ConnectionDiagnostics } from '@/components/ui/ConnectionDiagnostics';
 
 interface HeaderProps {
   user?: any;
   team?: any;
   logout?: () => void;
   isSocketConnected?: () => boolean;
+  socket?: any;
   onConfigureVM?: () => void;
   onConfigureRepo?: () => void;
   showVMConfig?: boolean;
@@ -19,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   team,
   logout,
   isSocketConnected,
+  socket,
   onConfigureVM,
   onConfigureRepo,
   showVMConfig = true,
@@ -27,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   const isConnected = isSocketConnected ? isSocketConnected() : false;
   const { addNotification } = useNotification();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showConnectionDiagnostics, setShowConnectionDiagnostics] = useState(false);
   
   // VM ping status - disabled for now due to 403 errors
   const pingStatus = { status: 'online', ping: 45 };
@@ -121,13 +125,20 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Connection status */}
-          <div className="flex items-center space-x-2">
+          {/* Connection status - now clickable for diagnostics */}
+          <button
+            onClick={() => setShowConnectionDiagnostics(true)}
+            className="flex items-center space-x-2 px-2 py-1 rounded hover:bg-midnight-700 transition-colors cursor-pointer"
+            title="Click to view connection details"
+          >
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success animate-pulse' : 'bg-coral'}`} />
             <span className={`text-xs ${isConnected ? 'text-success' : 'text-coral'}`}>
               {isConnected ? 'Connected' : 'Disconnected'}
             </span>
-          </div>
+            <svg className="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
         </div>
 
         {/* Right side - Status, Actions and user info */}
@@ -296,6 +307,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Connection Diagnostics Modal */}
+      <ConnectionDiagnostics
+        isOpen={showConnectionDiagnostics}
+        onClose={() => setShowConnectionDiagnostics(false)}
+        isConnected={isConnected}
+        socket={socket}
+      />
     </header>
   );
 };
