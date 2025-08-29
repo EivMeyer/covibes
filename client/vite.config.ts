@@ -10,12 +10,17 @@ export default defineConfig(({ mode }) => {
   // Determine if we're in production
   const isProduction = mode === 'production'
   
-  // Determine backend URL based on environment
-  // Priority: VITE_BACKEND_URL > VITE_API_URL > default local URL
-  const backendUrl = env.VITE_BACKEND_URL || env.VITE_API_URL || 'http://localhost:3001'
+  // REQUIRED: Backend URL must be explicitly set - NO FALLBACKS
+  const backendUrl = env.VITE_BACKEND_URL || env.VITE_API_URL
+  if (!backendUrl) {
+    throw new Error('VITE_BACKEND_URL or VITE_API_URL environment variable is required. No fallbacks allowed.')
+  }
   
-  // Determine frontend URL for CORS
-  const frontendUrl = env.VITE_FRONTEND_URL || 'http://localhost:3000'
+  // REQUIRED: Frontend URL must be explicitly set - NO FALLBACKS
+  const frontendUrl = env.VITE_FRONTEND_URL
+  if (!frontendUrl) {
+    throw new Error('VITE_FRONTEND_URL environment variable is required. No fallbacks allowed.')
+  }
   
   // Base path for deployment (can be overridden with VITE_BASE_PATH)
   const basePath = env.VITE_BASE_PATH || '/'

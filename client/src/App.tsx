@@ -185,10 +185,11 @@ function AppContent() {
     // Mobile detection for transport selection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // Use EC2 hostname for mobile, localhost for desktop dev  
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 
-                      import.meta.env.VITE_API_URL || 
-                      (isMobile ? 'http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001' : 'http://localhost:3001');
+    // REQUIRED: Backend URL must be explicitly set - NO FALLBACKS
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
+    if (!backendUrl) {
+      throw new Error('VITE_BACKEND_URL or VITE_API_URL environment variable is required. No fallbacks allowed.');
+    }
     
     console.log(`🔍 Socket init - Mobile: ${isMobile}, URL: ${backendUrl}, Token: ${!!token}`);
     
