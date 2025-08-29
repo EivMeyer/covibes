@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+coverage/
+*.min.js
+public/js/config/
+public/js/data/
+public/js/scripts/
+server/prisma/
+tests/screenshots/
+tests/videos/

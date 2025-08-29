@@ -1,0 +1,107 @@
+{
+  "config": {
+    "configFile": "/home/eivind/repos/colabvibe/colabvibe/tests/playwright.config.js",
+    "rootDir": "/home/eivind/repos/colabvibe/colabvibe/tests",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "line",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/eivind/repos/colabvibe/colabvibe/tests/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/eivind/repos/colabvibe/colabvibe/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/playwright-*.test.js"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/eivind/repos/colabvibe/colabvibe/tests/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/home/eivind/repos/colabvibe/colabvibe/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/playwright-*.test.js"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/home/eivind/repos/colabvibe/colabvibe/tests/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {},
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/home/eivind/repos/colabvibe/colabvibe/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/playwright-*.test.js"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.2",
+    "workers": 1,
+    "webServer": {
+      "command": "cd ../server && npm run dev:src",
+      "port": 3001,
+      "timeout": 120000,
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+    }
+  ],
+  "stats": {
+    "startTime": "2025-08-11T22:02:04.652Z",
+    "duration": 4038.7789999999995,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

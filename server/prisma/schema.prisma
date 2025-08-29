@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model agents {
+  id                  String                @id
+  userId              String
+  teamId              String
+  type                String
+  task                String
+  repositoryUrl       String?
+  status              String                @default("running")
+  output              String                @default("")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  agentName           String?
+  terminalIsolation   String                @default("tmux")
+  terminalLocation    String                @default("local")
+  isSessionPersistent Boolean               @default(false)
+  tmuxSessionName     String?
+  teams               teams                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  users               users                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  container_instances container_instances[]
+  terminal_history    terminal_history[]
+}
+
+model container_instances {
+  id           String   @id
+  teamId       String
+  userId       String
+  type         String
+  containerId  String?
+  status       String   @default("starting")
+  terminalPort Int?
+  previewPort  Int?
+  agentId      String?
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  agents       agents?  @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  teams        teams    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  users        users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model messages {
+  id        String   @id
+  content   String
+  userId    String
+  teamId    String
+  createdAt DateTime @default(now())
+  teams     teams    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model preview_containers {
+  id          String   @id
+  teamId      String
+  branch      String
+  containerId String?
+  port        Int
+  status      String   @default("stopped")
+  projectType String   @default("unknown")
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@unique([teamId, branch])
+}
+
+model preview_deployments {
+  id              String    @id
+  teamId          String    @unique
+  containerId     String
+  containerName   String
+  port            Int
+  proxyPort       Int
+  status          String
+  projectType     String
+  lastHealthCheck DateTime?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  teams           teams     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model teams {
+  id                     String                     @id
+  name                   String
+  teamCode               String                     @unique
+  repositoryUrl          String?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime
+  sidebarWidth           Int                        @default(256)
+  workspaceLayouts       Json?
+  workspaceTiles         Json?
+  agents                 agents[]
+  container_instances    container_instances[]
+  messages               messages[]
+  preview_deployments    preview_deployments?
+  users                  users[]
+  userLayoutPreferences  userLayoutPreference[]
+}
+
+model terminal_history {
+  id        String   @id
+  agentId   String
+  output    String
+  timestamp DateTime @default(now())
+  type      String   @default("output")
+  agents    agents   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+model users {
+  id                     String                     @id
+  email                  String                     @unique
+  userName               String
+  password               String?
+  teamId                 String
+  vmId                   String?
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime
+  accessToken            String?
+  avatarUrl              String?
+  githubId               String?                    @unique
+  githubUsername         String?
+  claudeConfigDir        String?
+  agents                 agents[]
+  container_instances    container_instances[]
+  messages               messages[]
+  userLayoutPreferences  userLayoutPreference[]
+  teams                  teams                      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model userLayoutPreference {
+  id         String   @id @default(cuid())
+  userId     String
+  teamId     String
+  layoutType String   @default("dashboard")
+  layoutData Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  users      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teams      teams    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId, layoutType])
+}

@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "lint": "cd colabvibe/server && npm run lint && cd ../client && npm run lint",
+    "type-check": "cd colabvibe/server && npm run lint && cd ../client && npm run type-check"
+  },
+  "dependencies": {
+    "ssh2": "^1.16.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "axios": "^1.11.0",
+    "node-fetch": "^2.7.0",
+    "playwright": "^1.54.2",
+    "socket.io-client": "^4.8.1"
+  }
+}

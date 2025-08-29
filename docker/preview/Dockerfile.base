@@ -1,0 +1,57 @@
+# Base Preview Container
+#
+# This is the foundational container for all preview types.
+# It provides common tools and utilities that all preview containers need.
+
+ARG NODE_VERSION=20
+FROM node:${NODE_VERSION}-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    wget \
+    bash \
+    python3 \
+    py3-pip \
+    make \
+    g++ \
+    linux-headers \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create preview user with UID/GID 1000:1000
+RUN addgroup -g 1000 preview && \
+    adduser -D -s /bin/bash -u 1000 -G preview preview
+
+# Create application and workspace directories
+RUN mkdir -p /app /workspace && \
+    chown -R preview:preview /app /workspace
+
+# Install global Node.js tools
+RUN npm install -g \
+    http-server \
+    serve \
+    nodemon \
+    && npm cache clean --force
+
+# Switch to preview user
+USER preview
+WORKDIR /app
+
+# Set environment for file watching in Docker
+ENV CHOKIDAR_USEPOLLING=true
+ENV CHOKIDAR_INTERVAL=1000
+
+# Copy workspace content (will be overridden by volume mount)
+COPY --chown=preview:preview . /workspace/
+
+# Default expose port (will be overridden by specific project types)
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-3000}/ || exit 1
+
+# Default command (will be overridden by specific project types)
+CMD ["http-server", "/workspace", "-p", "3000", "--cors"]

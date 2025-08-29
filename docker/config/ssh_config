@@ -1,0 +1,52 @@
+# SSH Configuration for ColabVibe Containers
+#
+# This configuration is mounted read-only into containers that need
+# SSH access for Git operations and repository cloning
+
+Host *
+    # Disable strict host key checking for development
+    # In production, consider enabling with known_hosts management
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    
+    # Suppress warnings about host key checking
+    LogLevel ERROR
+    
+    # Use SSH keys for authentication
+    PubkeyAuthentication yes
+    PasswordAuthentication no
+    
+    # Connection settings
+    ConnectTimeout 10
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    
+    # Compression for better performance over slower connections
+    Compression yes
+    
+    # Disable X11 forwarding (not needed for Git operations)
+    ForwardX11 no
+    
+    # Disable agent forwarding for security
+    ForwardAgent no
+    
+    # Use SSH protocol version 2 only
+    Protocol 2
+
+# GitHub-specific configuration
+Host github.com
+    HostName github.com
+    User git
+    Port 22
+    
+# GitLab-specific configuration  
+Host gitlab.com
+    HostName gitlab.com
+    User git
+    Port 22
+
+# Bitbucket-specific configuration
+Host bitbucket.org
+    HostName bitbucket.org
+    User git
+    Port 22

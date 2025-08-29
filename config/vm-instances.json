@@ -1,0 +1,17 @@
+{
+  "instances": [
+    {
+      "id": "vm-main-001",
+      "host": "ec2-13-60-242-174.eu-north-1.compute.amazonaws.com",
+      "region": "eu-north-1",
+      "instanceType": "t3.medium",
+      "status": "available",
+      "sshKeyPath": "./.ssh/ec2.pem",
+      "maxUsers": 10,
+      "currentUsers": 0
+    }
+  ],
+  "defaultSSHKeyPath": "./.ssh/ec2.pem",
+  "defaultRepository": "https://github.com/EivMeyer/colabvibe-test-repo",
+  "maxConnectionsPerVM": 10
+}

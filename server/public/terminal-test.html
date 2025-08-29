@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Terminal Integration Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #1a1a1a;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #000000;
+        }
+        
+        .terminal-header {
+            background: #333333;
+            padding: 12px 20px;
+            border-bottom: 1px solid #555555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .terminal-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .connection-status {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-connected {
+            background: #4ade80;
+            color: #000000;
+        }
+        
+        .status-connecting {
+            background: #fbbf24;
+            color: #000000;
+        }
+        
+        .status-disconnected {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        
+        .terminal-output {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .terminal-input-container {
+            border-top: 1px solid #333333;
+            padding: 16px 20px;
+            background: #111111;
+        }
+        
+        .terminal-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            padding: 8px 0;
+        }
+        
+        .prompt {
+            color: #4ade80;
+        }
+        
+        .command {
+            color: #ffffff;
+        }
+        
+        .output {
+            color: #d1d5db;
+            margin-bottom: 10px;
+        }
+        
+        .error {
+            color: #ef4444;
+        }
+        
+        .system {
+            color: #8b5cf6;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #333333;
+        }
+        
+        .controls button {
+            background: #374151;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            margin: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        
+        .controls button:hover {
+            background: #4b5563;
+        }
+        
+        .controls button:disabled {
+            background: #1f2937;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .auto-connecting {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title">Claude Code Terminal Test</div>
+            <div class="connection-status status-connecting" id="connectionStatus">
+                CHECKING...
+            </div>
+        </div>
+        
+        <div class="terminal-output" id="terminalOutput">
+            <div class="system">Claude Code Terminal - Direct Agent Interface</div>
+            <div class="system">Connected to persistent Claude Code agent</div>
+            <div class="system">Type any message to interact with Claude Code</div>
+            <div class="system">---</div>
+        </div>
+        
+        <div class="terminal-input-container">
+            <span class="prompt">claude> </span>
+            <input 
+                type="text" 
+                class="terminal-input" 
+                id="terminalInput" 
+                placeholder="Type a message to Claude Code..."
+                autocomplete="off"
+                spellcheck="false"
+            />
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="checkAgentStatus()">Agent Status</button>
+        <button onclick="restartAgent()">Restart Agent</button>
+        <button onclick="clearTerminal()">Clear</button>
+        <button onclick="runIntegrationTest()">Run Test</button>
+    </div>
+
+    <script>
+        class ClaudeTerminalTest {
+            constructor() {
+                this.output = document.getElementById('terminalOutput');
+                this.input = document.getElementById('terminalInput');
+                this.status = document.getElementById('connectionStatus');
+                
+                this.setupEventListeners();
+                this.checkAgentStatus(); // Check agent status on load
+                this.log('system', 'Terminal initialized - ready to interact with Claude Code');
+            }
+            
+            setupEventListeners() {
+                this.input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.executeCommand(this.input.value);
+                        this.input.value = '';
+                    }
+                });
+                
+                // Auto-focus input
+                document.addEventListener('click', () => {
+                    this.input.focus();
+                });
+                
+                this.input.focus();
+            }
+            
+            updateConnectionStatus(status) {
+                this.status.className = 'connection-status status-' + status;
+                this.status.textContent = status.toUpperCase();
+            }
+            
+            log(type, message) {
+                const line = document.createElement('div');
+                line.className = type;
+                line.textContent = message;
+                this.output.appendChild(line);
+                this.scrollToBottom();
+            }
+            
+            scrollToBottom() {
+                this.output.scrollTop = this.output.scrollHeight;
+            }
+            
+            async executeCommand(command) {
+                if (!command.trim()) return;
+                
+                // Show command in terminal
+                this.log('command', '> ' + command);
+                
+                try {
+                    // Send message to Claude Code agent
+                    const response = await fetch('/api/terminal/message', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: command
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.log('output', result.response || '(no response)');
+                        
+                        // Update status indicator based on agent status
+                        if (result.agent) {
+                            this.updateConnectionStatus(result.agent.running ? 'connected' : 'disconnected');
+                        }
+                    } else {
+                        this.log('error', result.error || 'Message failed');
+                    }
+                    
+                } catch (error) {
+                    this.log('error', 'Network error: ' + error.message);
+                    this.updateConnectionStatus('disconnected');
+                }
+            }
+            
+            async checkAgentStatus() {
+                try {
+                    this.log('system', 'Checking Claude Code agent status...');
+                    
+                    const response = await fetch('/api/terminal/status');
+                    const result = await response.json();
+                    
+                    if (result.success && result.agent) {
+                        const { running, queueLength, hasProcess } = result.agent;
+                        this.updateConnectionStatus(running ? 'connected' : 'disconnected');
+                        
+                        this.log('system', `Agent Status: ${result.message}`);
+                        this.log('system', `Process: ${hasProcess ? 'Active' : 'None'}, Queue: ${queueLength} messages`);
+                    } else {
+                        this.updateConnectionStatus('disconnected');
+                        this.log('error', 'Failed to get agent status');
+                    }
+                    
+                } catch (error) {
+                    this.updateConnectionStatus('disconnected');
+                    this.log('error', 'Status check error: ' + error.message);
+                }
+            }
+            
+            async restartAgent() {
+                try {
+                    this.updateConnectionStatus('connecting');
+                    this.log('system', 'Restarting Claude Code agent...');
+                    
+                    const response = await fetch('/api/terminal/restart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.log('system', 'Agent restarted successfully!');
+                        // Check status after restart
+                        setTimeout(() => this.checkAgentStatus(), 1000);
+                    } else {
+                        this.updateConnectionStatus('disconnected');
+                        this.log('error', 'Restart failed: ' + result.error);
+                    }
+                    
+                } catch (error) {
+                    this.updateConnectionStatus('disconnected');
+                    this.log('error', 'Restart error: ' + error.message);
+                }
+            }
+            
+            clear() {
+                this.output.innerHTML = '';
+                this.log('system', 'Terminal cleared');
+            }
+            
+            async runIntegrationTest() {
+                this.log('system', '=== Starting Claude Code Integration Test ===');
+                
+                const testMessages = [
+                    'help',
+                    'What is 2+2?',
+                    'echo "Hello from Claude Code integration test"',
+                    'pwd',
+                    'Tell me a joke about programming'
+                ];
+                
+                for (const message of testMessages) {
+                    this.log('system', `Testing message: ${message}`);
+                    await this.executeCommand(message);
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds between messages
+                }
+                
+                this.log('system', '=== Integration Test Complete ===');
+                this.checkAgentStatus(); // Final status check
+            }
+        }
+        
+        // Global instance
+        const terminal = new ClaudeTerminalTest();
+        
+        // Global functions for buttons
+        function checkAgentStatus() {
+            terminal.checkAgentStatus();
+        }
+        
+        function restartAgent() {
+            terminal.restartAgent();
+        }
+        
+        function clearTerminal() {
+            terminal.clear();
+        }
+        
+        function runIntegrationTest() {
+            terminal.runIntegrationTest();
+        }
+    </script>
+</body>
+</html>

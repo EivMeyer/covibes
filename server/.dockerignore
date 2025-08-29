@@ -1,0 +1,96 @@
+# Dependencies - will be installed in container
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# package-lock.json is needed for npm ci
+
+# Build output - will be generated in container
+dist
+build
+.next
+
+# Environment files (security)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+logs
+*.log.*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+.nyc_output
+
+# Test files and outputs
+test-results
+tests/setup/*.js
+test-output
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation and markdown files
+*.md
+README*
+CHANGELOG*
+LICENSE*
+docs/
+
+# Development and debugging files
+.cache
+.temp
+tmp/
+
+# Screenshots and media
+screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+colabvibe-*.png
+
+# Development scripts and demos
+*demo*
+*test*
+check-*.js
+create-*.js
+setup-*.js
+*.html
+
+# EC2 and SSH keys
+*.pem
+.ssh/

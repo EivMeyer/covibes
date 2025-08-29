@@ -1,0 +1,48 @@
+{
+  "name": "colabvibe-tests",
+  "version": "1.0.0",
+  "description": "Test suite for CoVibe",
+  "scripts": {
+    "test": "node test-runner.js all",
+    "test:unit": "node test-runner.js unit",
+    "test:integration": "node test-runner.js integration",
+    "test:e2e": "node test-runner.js e2e",
+    "test:playwright": "node test-runner.js playwright",
+    "test:chat": "node test-runner.js chat",
+    "test:agents": "node test-runner.js agents",
+    "test:visual": "node test-runner.js visual",
+    "test:watch": "node test-runner.js all --watch",
+    "test:verbose": "node test-runner.js all --verbose",
+    "test:coverage": "node test-runner.js all --coverage",
+    "test:quick": "node quick-e2e-test.js",
+    "test:smoke": "node e2e/smoke/quick-test.js",
+    "test:browser": "echo 'Open frontend-test.html in a browser to run frontend tests'",
+    "test:playwright:ui": "playwright test --ui",
+    "test:playwright:headed": "playwright test --headed",
+    "test:showcase": "playwright test playwright-showcase.test.js",
+    "test:multiuser": "playwright test playwright-multiuser-preview.test.js",
+    "test:backend": "playwright test backend-preview-integration.test.js",
+    "test:content": "playwright test playwright-preview-content.test.js",
+    "test:live-rendering": "playwright test playwright-live-rendering.test.js",
+    "test:preview-e2e": "playwright test playwright-preview-e2e.test.js",
+    "test:docker-preview": "playwright test docker-preview-integration.test.js",
+    "test:preview-suite": "npm run test:showcase && npm run test:multiuser && npm run test:backend && npm run test:content && npm run test:live-rendering && npm run test:preview-e2e && npm run test:docker-preview",
+    "test:persistence": "node test-chat-persistence.js",
+    "test:websocket": "node test-websocket.js",
+    "screenshots": "node screenshot-demo.js",
+    "screenshots:mobile": "node capture-mobile-screenshots.js",
+    "video:mobile": "node create-mobile-demo-video.js",
+    "organize": "bash organize-tests.sh",
+    "clean": "rm -rf results/* screenshots/*.png videos/*.mp4",
+    "install:playwright": "npm install && npx playwright install",
+    "test:all": "./run-all-tests.sh",
+    "help": "node test-runner.js --help"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "ws": "^8.18.3"
+  }
+}

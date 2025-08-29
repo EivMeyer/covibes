@@ -1,0 +1,112 @@
+# Global Git Configuration for ColabVibe Containers
+#
+# This configuration provides sensible defaults for all Git operations
+# within containers. Individual containers may override these settings.
+
+[user]
+    name = ColabVibe Agent
+    email = agent@colabvibe.dev
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+    default = current
+
+[core]
+    # Ignore file permission changes (important for Docker containers)
+    fileMode = false
+    
+    # Handle line endings consistently
+    autocrlf = false
+    eol = lf
+    
+    # Better diffs for common file types
+    attributesfile = ~/.gitattributes
+    
+    # Use less pager with better options
+    pager = less -FRX
+
+[merge]
+    # Use the new merge conflict style
+    conflictStyle = diff3
+    
+    # Default merge tool (can be overridden)
+    tool = vimdiff
+
+[diff]
+    # Better algorithm for detecting moved lines
+    algorithm = histogram
+    
+    # Show renames and copies
+    renames = copies
+
+[log]
+    # Show dates in relative format by default
+    date = relative
+
+[status]
+    # Show untracked files in directories
+    showUntrackedFiles = all
+
+[branch]
+    # Automatically set up tracking when creating new branches
+    autosetupmerge = always
+    autosetuprebase = always
+
+[remote "origin"]
+    # Push current branch to upstream branch with same name
+    push = HEAD
+
+[color]
+    # Enable colored output
+    ui = auto
+    branch = auto
+    diff = auto
+    status = auto
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = green
+    changed = yellow
+    untracked = red
+
+[alias]
+    # Useful aliases for container environments
+    st = status
+    co = checkout
+    br = branch
+    cm = commit
+    cp = cherry-pick
+    df = diff
+    dc = diff --cached
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = !gitk
+
+# Security settings
+[transfer]
+    fsckobjects = true
+    
+[fetch]
+    fsckobjects = true
+    
+[receive]
+    fsckObjects = true
+
+# Performance settings for large repositories
+[pack]
+    threads = 2
+    
+[gc]
+    auto = 1000

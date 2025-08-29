@@ -1,0 +1,59 @@
+# Node.js Preview Container
+#
+# For general Node.js applications and APIs
+
+ARG NODE_VERSION=20
+ARG PREVIEW_PORT=3000
+
+FROM node:${NODE_VERSION}-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    bash \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/cache/apk/*
+
+# Create preview user
+RUN addgroup -g 1000 preview && \
+    adduser -D -s /bin/bash -u 1000 -G preview preview
+
+# Create directories
+RUN mkdir -p /app /workspace && \
+    chown -R preview:preview /app /workspace
+
+# Switch to preview user
+USER preview
+WORKDIR /app
+
+# Copy workspace content and install dependencies
+COPY --chown=preview:preview /workspace/package*.json ./
+RUN if [ -f package.json ]; then \
+        npm ci --only=production --silent && \
+        npm cache clean --force; \
+    fi
+
+# Copy application source
+COPY --chown=preview:preview /workspace/ ./
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV CHOKIDAR_USEPOLLING=true
+ENV CHOKIDAR_INTERVAL=1000
+ENV PORT=${PREVIEW_PORT}
+
+# Expose port
+EXPOSE ${PREVIEW_PORT}
+
+# Health check
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:${PREVIEW_PORT}/health || curl -f http://localhost:${PREVIEW_PORT}/ || exit 1
+
+# Start script
+COPY --chown=preview:preview start-node.sh /usr/local/bin/start-node.sh
+RUN chmod +x /usr/local/bin/start-node.sh
+
+CMD ["/usr/local/bin/start-node.sh"]

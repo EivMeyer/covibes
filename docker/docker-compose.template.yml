@@ -1,0 +1,282 @@
+# Docker Compose Template for ColabVibe Multi-Agent Environment
+# 
+# This template orchestrates:
+# - Claude agents in isolated containers with shared workspace access
+# - Dynamic preview containers based on project type detection
+# - Shared volume structure for seamless file collaboration
+# - Container networking and port management
+# 
+# Variables to be substituted:
+# - TEAM_ID: Unique team identifier
+# - PROJECT_NAME: Sanitized project name
+# - REPOSITORY_URL: Git repository URL
+# - WORKSPACE_PATH: Host path to shared workspace
+# - CLAUDE_API_KEY: Claude API key for agent containers
+# - VM_HOST: VM host for deployment
+# - PREVIEW_PORT: Allocated port for preview service
+# - GIT_BRANCH: Branch to work with (main/staging)
+
+version: '3.8'
+
+services:
+  # Claude Agent Container Template
+  claude-agent-${AGENT_ID}:
+    build:
+      context: ./claude-agent
+      dockerfile: Dockerfile
+      args:
+        - CLAUDE_VERSION=latest
+        - NODE_VERSION=20
+    container_name: colabvibe_agent_${TEAM_ID}_${AGENT_ID}
+    restart: unless-stopped
+    environment:
+      # Claude Configuration
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      CLAUDE_AGENT_ID: ${AGENT_ID}
+      CLAUDE_AGENT_TYPE: ${AGENT_TYPE:-code-writer}
+      
+      # Workspace Configuration
+      WORKSPACE_PATH: /workspace
+      PROJECT_NAME: ${PROJECT_NAME}
+      REPOSITORY_URL: ${REPOSITORY_URL}
+      GIT_BRANCH: ${GIT_BRANCH:-main}
+      
+      # Team and Communication
+      TEAM_ID: ${TEAM_ID}
+      SOCKET_URL: http://colabvibe_backend:3001
+      
+      # File Watching (Docker compatibility)
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: 1000
+      
+      # Development Settings
+      NODE_ENV: development
+      DEBUG: "claude:*"
+    
+    volumes:
+      # Shared workspace volume (read-write)
+      - workspace_${TEAM_ID}:/workspace:rw
+      
+      # Agent-specific temporary storage
+      - agent_temp_${AGENT_ID}:/tmp/agent:rw
+      
+      # SSH keys and configuration (read-only)
+      - ${SSH_KEY_PATH:-/dev/null}:/home/claude/.ssh/id_rsa:ro
+      - ./config/ssh_config:/home/claude/.ssh/config:ro
+    
+    networks:
+      - colabvibe_agent_network
+    
+    # Resource limits to prevent one agent from consuming all resources
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    
+    # Health check to ensure agent is responsive
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Security settings
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Claude needs to write files
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Preview Container Template
+  preview-${TEAM_ID}-${GIT_BRANCH}:
+    build:
+      context: ./preview
+      dockerfile: Dockerfile.${PROJECT_TYPE}
+      args:
+        - PROJECT_TYPE: ${PROJECT_TYPE}
+        - NODE_VERSION: ${NODE_VERSION:-20}
+        - PREVIEW_PORT: ${PREVIEW_PORT}
+    container_name: colabvibe_preview_${TEAM_ID}_${GIT_BRANCH}
+    restart: unless-stopped
+    environment:
+      # Project Configuration
+      PROJECT_TYPE: ${PROJECT_TYPE}
+      PROJECT_NAME: ${PROJECT_NAME}
+      REPOSITORY_URL: ${REPOSITORY_URL}
+      GIT_BRANCH: ${GIT_BRANCH}
+      
+      # Port Configuration
+      PORT: ${PREVIEW_PORT}
+      VITE_PORT: ${PREVIEW_PORT}
+      NEXT_PORT: ${PREVIEW_PORT}
+      
+      # File Watching
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: 1000
+      
+      # Development Settings
+      NODE_ENV: development
+      FAST_REFRESH: "true"
+      
+      # Team Context
+      TEAM_ID: ${TEAM_ID}
+    
+    ports:
+      - "${PREVIEW_PORT}:${PREVIEW_PORT}"
+    
+    volumes:
+      # Shared workspace (read-only for preview)
+      - workspace_${TEAM_ID}:/workspace:ro
+      
+      # Preview-specific build cache
+      - preview_cache_${TEAM_ID}_${GIT_BRANCH}:/app/.cache:rw
+      - preview_modules_${TEAM_ID}_${GIT_BRANCH}:/app/node_modules:rw
+    
+    networks:
+      - colabvibe_agent_network
+      - colabvibe_preview_network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.1'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PREVIEW_PORT}/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    
+    # Security
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Build processes need write access
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # Workspace Synchronization Service
+  workspace-sync-${TEAM_ID}:
+    build:
+      context: ./workspace-sync
+      dockerfile: Dockerfile
+    container_name: colabvibe_sync_${TEAM_ID}
+    restart: unless-stopped
+    environment:
+      TEAM_ID: ${TEAM_ID}
+      REPOSITORY_URL: ${REPOSITORY_URL}
+      GIT_BRANCH: ${GIT_BRANCH}
+      SYNC_INTERVAL: 5
+    
+    volumes:
+      # Shared workspace (read-write for sync)
+      - workspace_${TEAM_ID}:/workspace:rw
+      
+      # Git configuration
+      - ${GIT_CONFIG_PATH:-./config/gitconfig}:/home/sync/.gitconfig:ro
+      - ${SSH_KEY_PATH:-/dev/null}:/home/sync/.ssh/id_rsa:ro
+    
+    networks:
+      - colabvibe_agent_network
+    
+    # Resource limits (minimal for sync service)
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+    
+    # Security
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+
+volumes:
+  # Shared workspace volume for team
+  workspace_${TEAM_ID}:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${WORKSPACE_PATH}
+  
+  # Agent-specific temporary storage
+  agent_temp_${AGENT_ID}:
+    driver: local
+  
+  # Preview build caches
+  preview_cache_${TEAM_ID}_${GIT_BRANCH}:
+    driver: local
+  
+  preview_modules_${TEAM_ID}_${GIT_BRANCH}:
+    driver: local
+
+networks:
+  # Internal network for agents and workspace sync
+  colabvibe_agent_network:
+    driver: bridge
+    internal: false  # Agents need external access for Claude API
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+  
+  # Network for preview services (externally accessible)
+  colabvibe_preview_network:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
+
+# Configuration for container monitoring and management
+x-common-config: &common-config
+  # User mapping for consistent permissions
+  user: "1000:1000"
+  
+  # Common labels for identification
+  labels:
+    - "colabvibe.team=${TEAM_ID}"
+    - "colabvibe.project=${PROJECT_NAME}"
+    - "colabvibe.type=multi-agent"
+    - "colabvibe.version=1.0"
+  
+  # Restart policy
+  restart: unless-stopped
+  
+  # Stop grace period
+  stop_grace_period: 30s
+
+# Secrets management (for production)
+secrets:
+  claude_api_key:
+    external: true
+    external_name: colabvibe_claude_api_key_${TEAM_ID}
+  
+  ssh_private_key:
+    external: true  
+    external_name: colabvibe_ssh_key_${TEAM_ID}

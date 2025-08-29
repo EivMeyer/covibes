@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: colabvibe_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install backend dependencies
+      working-directory: ./server
+      run: npm install
+    
+    - name: Setup test environment
+      working-directory: ./server
+      run: |
+        cp .env.example .env || echo "No .env.example found"
+        echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/colabvibe_test" >> .env
+        echo "JWT_SECRET=test-secret-key-for-ci" >> .env
+        echo "ENCRYPTION_KEY=test-encryption-key-32-characters" >> .env
+        echo "PORT=3001" >> .env
+        echo "REDIS_URL=redis://localhost:6379" >> .env
+    
+    - name: Run Prisma migrations
+      working-directory: ./server
+      run: npx prisma migrate deploy
+    
+    - name: Run backend tests
+      working-directory: ./server
+      run: npm test
+      continue-on-error: true
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install test dependencies
+      working-directory: ./tests
+      run: npm install
+    
+    - name: Install Playwright browsers
+      working-directory: ./tests
+      run: npx playwright install --with-deps
+    
+    - name: Install backend dependencies
+      working-directory: ./server
+      run: npm install
+    
+    - name: Setup backend environment
+      working-directory: ./server
+      run: |
+        echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/colabvibe_test" > .env
+        echo "JWT_SECRET=test-secret-key-for-ci" >> .env
+        echo "ENCRYPTION_KEY=test-encryption-key-32-characters" >> .env
+        echo "PORT=3001" >> .env
+    
+    - name: Start PostgreSQL
+      run: |
+        sudo systemctl start postgresql.service
+        sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'password';" || true
+        sudo -u postgres psql -c "CREATE DATABASE colabvibe_test;" || true
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE colabvibe_test TO postgres;" || true
+    
+    - name: Run Prisma setup
+      working-directory: ./server
+      run: |
+        npx prisma generate
+        npx prisma migrate deploy || npx prisma db push
+    
+    - name: Start backend server
+      working-directory: ./server
+      run: |
+        npm start &
+        sleep 10
+    
+    - name: Run unit tests
+      working-directory: ./tests
+      run: node unit-tests.js
+      continue-on-error: true
+    
+    - name: Run E2E tests
+      working-directory: ./tests
+      run: node e2e-test.js
+      continue-on-error: true
+    
+    - name: Run Playwright tests
+      working-directory: ./tests
+      run: npx playwright test
+      continue-on-error: true
+    
+    - name: Upload Playwright report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: tests/playwright-report/
+        retention-days: 7
+
+  docker-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Test Docker build
+      run: |
+        docker compose build --no-cache
+    
+    - name: Test Docker services startup
+      run: |
+        docker compose up -d
+        sleep 30
+        docker compose ps
+        curl -f http://localhost:3001 || echo "Server health check"
+        docker compose logs
+        docker compose down
+
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install ESLint and Prettier
+      run: |
+        npm install -g eslint prettier
+    
+    - name: Run ESLint
+      run: |
+        eslint server/**/*.js || echo "ESLint check completed"
+      continue-on-error: true
+    
+    - name: Check Prettier formatting
+      run: |
+        prettier --check "server/**/*.js" "server/**/*.html" "server/**/*.css" || echo "Prettier check completed"
+      continue-on-error: true

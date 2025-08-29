@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVibe Frontend Test Runner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-passed { background-color: #10b981; }
+        .test-failed { background-color: #ef4444; }
+        .test-running { background-color: #3b82f6; }
+        #testResults { font-family: monospace; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Hidden UI Elements for Testing -->
+    <div id="testElements" class="hidden">
+        <!-- Auth Screens -->
+        <div id="loginScreen" class="hidden">
+            <form id="loginForm">
+                <input type="email" id="loginEmail" />
+                <input type="password" id="loginPassword" />
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        
+        <div id="registerScreen" class="hidden">
+            <form id="registerForm">
+                <input type="text" id="registerTeamName" />
+                <input type="text" id="registerUserName" />
+                <input type="email" id="registerEmail" />
+                <input type="password" id="registerPassword" />
+                <button type="submit">Register</button>
+            </form>
+        </div>
+        
+        <div id="joinTeamScreen" class="hidden">
+            <form id="joinTeamForm">
+                <input type="text" id="joinTeamCode" />
+                <input type="text" id="joinUserName" />
+                <button type="submit">Join</button>
+            </form>
+        </div>
+        
+        <!-- Main App -->
+        <div id="appScreen" class="hidden">
+            <div id="commandDeck">
+                <div id="agentList"></div>
+                <button id="spawnAgentBtn">Spawn Agent</button>
+                <div id="agentOutput"></div>
+            </div>
+            
+            <div id="workshop">
+                <div id="chatMessages"></div>
+                <form id="chatForm">
+                    <input type="text" id="chatInput" />
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+            
+            <div id="showcase">
+                <iframe id="previewFrame"></iframe>
+            </div>
+        </div>
+        
+        <!-- VM Modal -->
+        <div id="vmModal" class="hidden">
+            <input type="text" id="vmHost" />
+            <input type="text" id="vmUser" />
+            <input type="text" id="vmKeyPath" />
+        </div>
+        
+        <!-- Error Container -->
+        <div id="errorContainer"></div>
+    </div>
+    
+    <!-- Test Runner UI -->
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold mb-8">CoVibe Frontend Test Runner</h1>
+        
+        <div class="mb-6 space-x-4">
+            <button id="runTestsBtn" class="bg-blue-500 hover:bg-blue-600 px-6 py-2 rounded font-semibold">
+                Run All Tests
+            </button>
+            <button id="clearResultsBtn" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">
+                Clear Results
+            </button>
+            <button id="loadAppBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                Load Real App
+            </button>
+        </div>
+        
+        <div id="testStatus" class="mb-6 p-4 bg-gray-800 rounded"></div>
+        
+        <div id="testResults" class="bg-gray-800 p-6 rounded min-h-[400px] whitespace-pre-wrap"></div>
+    </div>
+    
+    <!-- Load Mock Classes First -->
+    <script>
+        // Mock API Class
+        class API {
+            constructor(baseURL) {
+                this.baseURL = baseURL;
+            }
+            
+            async register(teamName, userName, email, password) {
+                return { success: true, token: 'mock-token' };
+            }
+            
+            async login(email, password) {
+                return { success: true, token: 'mock-token' };
+            }
+            
+            async joinTeam(teamCode, userName) {
+                return { success: true, token: 'mock-token' };
+            }
+            
+            async getTeamStatus() {
+                return { team: { id: '123', name: 'Test Team' } };
+            }
+            
+            async spawnAgent(config) {
+                return { success: true, agentId: 'agent-123' };
+            }
+            
+            async configureVM(config) {
+                return { success: true };
+            }
+        }
+        
+        // Mock SocketManager Class
+        class SocketManager {
+            constructor(url) {
+                this.url = url;
+                this.listeners = {};
+            }
+            
+            connect() {
+                console.log('Mock socket connected');
+            }
+            
+            disconnect() {
+                console.log('Mock socket disconnected');
+            }
+            
+            emit(event, data) {
+                console.log('Mock emit:', event, data);
+            }
+            
+            on(event, callback) {
+                this.listeners[event] = callback;
+            }
+        }
+        
+        // Mock App Class
+        class App {
+            constructor() {
+                this.api = new API('http://localhost:3001');
+                this.socket = new SocketManager('ws://localhost:3001');
+                this.currentScreen = 'login';
+            }
+            
+            init() {
+                console.log('App initialized');
+            }
+            
+            showScreen(screen) {
+                const screens = ['login', 'register', 'joinTeam', 'app'];
+                screens.forEach(s => {
+                    const el = document.querySelector(`#${s}Screen`);
+                    if (el) {
+                        if (s === screen) {
+                            el.classList.remove('hidden');
+                        } else {
+                            el.classList.add('hidden');
+                        }
+                    }
+                });
+                this.currentScreen = screen;
+            }
+            
+            handleLogin(email, password) {
+                return this.api.login(email, password);
+            }
+            
+            handleRegister(teamName, userName, email, password) {
+                return this.api.register(teamName, userName, email, password);
+            }
+            
+            addChatMessage(message) {
+                const chatMessages = document.querySelector('#chatMessages');
+                const messageEl = document.createElement('div');
+                messageEl.className = 'message';
+                messageEl.innerHTML = `
+                    <span class="font-bold">${message.user}:</span>
+                    <span>${message.message}</span>
+                `;
+                chatMessages.appendChild(messageEl);
+            }
+            
+            addAgent(agent) {
+                const agentList = document.querySelector('#agentList');
+                const agentEl = document.createElement('div');
+                agentEl.className = 'agent-item';
+                agentEl.innerHTML = `
+                    <span>${agent.name}</span>
+                    <span class="status">${agent.status}</span>
+                `;
+                agentList.appendChild(agentEl);
+            }
+            
+            showVMModal() {
+                const modal = document.querySelector('#vmModal');
+                modal.classList.remove('hidden');
+            }
+            
+            hideVMModal() {
+                const modal = document.querySelector('#vmModal');
+                modal.classList.add('hidden');
+            }
+            
+            showError(message) {
+                const errorContainer = document.querySelector('#errorContainer');
+                errorContainer.textContent = message;
+                errorContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    errorContainer.classList.add('hidden');
+                }, 3000);
+            }
+        }
+    </script>
+    
+    <!-- Load Test Runner -->
+    <script src="frontend-test.js"></script>
+    
+    <!-- Test Runner Control -->
+    <script>
+        const resultsDiv = document.getElementById('testResults');
+        const statusDiv = document.getElementById('testStatus');
+        
+        document.getElementById('runTestsBtn').addEventListener('click', async () => {
+            resultsDiv.textContent = '';
+            statusDiv.textContent = '🔄 Running tests...';
+            statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded test-running';
+            
+            // Capture console output
+            const originalLog = console.log;
+            const originalError = console.error;
+            let output = '';
+            
+            console.log = (...args) => {
+                output += args.join(' ') + '\n';
+                originalLog(...args);
+            };
+            
+            console.error = (...args) => {
+                output += args.join(' ') + '\n';
+                originalError(...args);
+            };
+            
+            try {
+                const results = await frontendTests.run();
+                resultsDiv.textContent = output;
+                
+                const passed = results.filter(r => r.status === 'passed').length;
+                const failed = results.filter(r => r.status === 'failed').length;
+                
+                if (failed === 0) {
+                    statusDiv.textContent = `✅ All ${passed} tests passed!`;
+                    statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded test-passed';
+                } else {
+                    statusDiv.textContent = `⚠️ ${failed} of ${results.length} tests failed`;
+                    statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded test-failed';
+                }
+            } catch (error) {
+                resultsDiv.textContent = `Error running tests: ${error.message}\n${error.stack}`;
+                statusDiv.textContent = '❌ Test runner error';
+                statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded test-failed';
+            }
+            
+            // Restore console
+            console.log = originalLog;
+            console.error = originalError;
+        });
+        
+        document.getElementById('clearResultsBtn').addEventListener('click', () => {
+            resultsDiv.textContent = '';
+            statusDiv.textContent = '';
+            statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded';
+        });
+        
+        document.getElementById('loadAppBtn').addEventListener('click', () => {
+            // Try to load the real app files
+            const script = document.createElement('script');
+            script.src = '../server/public/js/app.js';
+            script.onload = () => {
+                statusDiv.textContent = '✅ Real app loaded successfully';
+                statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded test-passed';
+            };
+            script.onerror = () => {
+                statusDiv.textContent = '⚠️ Could not load real app files (server may not be running)';
+                statusDiv.className = 'mb-6 p-4 bg-gray-800 rounded test-failed';
+            };
+            document.head.appendChild(script);
+        });
+        
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            statusDiv.textContent = 'Ready to run tests. Click "Run All Tests" to begin.';
+        });
+    </script>
+</body>
+</html>
