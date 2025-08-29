@@ -23,6 +23,7 @@ function AppContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   
   // Agent state
   const [agents, setAgents] = useState<AgentDetails[]>([]);
@@ -182,22 +183,27 @@ function AppContent() {
     if (!token) return;
 
     const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    
+    // Mobile detection for transport selection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
     const socket = io(backendUrl, {
       auth: {
         token: token
       },
-      transports: ['polling', 'websocket'], // Start with polling, upgrade to websocket
+      transports: isMobile ? ['polling'] : ['polling', 'websocket'], // Mobile uses polling only
       timeout: 30000,
       reconnection: true,
       reconnectionDelay: 2000,
       reconnectionAttempts: 3,
       reconnectionDelayMax: 10000,
       forceNew: false, // Reuse connections when possible
-      upgrade: true,
-      rememberUpgrade: true,
+      upgrade: !isMobile, // Don't upgrade on mobile
+      rememberUpgrade: !isMobile,
     });
 
     socketRef.current = socket;
+    setSocket(socket); // Update state to trigger re-render
 
     socket.on('connect', () => {
       setIsConnected(true);
@@ -310,6 +316,7 @@ function AppContent() {
       socket.removeAllListeners(); // Remove all event listeners
       socket.disconnect();
       socketRef.current = null;
+      setSocket(null); // Clear socket state
       setIsConnected(false);
     };
   }, [user?.id, team?.id]);
@@ -557,7 +564,7 @@ function AppContent() {
       }
     },
     isSocketConnected: () => isConnected,
-    socket: socketRef.current,
+    socket: socket, // Use state variable for proper re-renders
     
     // Real-time state
     chatMessages: messages,
