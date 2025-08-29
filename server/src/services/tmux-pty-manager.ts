@@ -113,6 +113,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
       `echo "🎯 Task: ${options.task || 'Interactive Claude Session'}"`,
       `echo "⚙️ Claude Config: ${claudeConfigManager.getUserConfigDir(options.userId)}"`,
       `echo ""`,
+      `cd "${workspaceDir}"`, // Ensure we're in the workspace directory
       `export CLAUDE_CONFIG_DIR="${claudeEnv['CLAUDE_CONFIG_DIR']}"`,
       claudeCmd
     ];

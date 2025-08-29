@@ -112,9 +112,9 @@ export interface AuthResponse {
   message: string;
 }
 
-// Server uses task-based agent creation - task is now optional for interactive sessions
+// Server uses task-based agent creation
 export interface SpawnAgentRequest {
-  task?: string;
+  task: string; // Required to match API service
   agentType?: 'claude' | 'mock';
   terminalLocation?: 'local' | 'remote';
   terminalIsolation?: 'none' | 'docker' | 'tmux';

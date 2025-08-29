@@ -22,8 +22,11 @@ import { z } from 'zod';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+// Get the base host from environment - FAIL if not configured
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 
 // Validation schemas
 const createPreviewSchema = z.object({

@@ -27,7 +27,10 @@ import { createAuthHandler } from '../types/express.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env['JWT_SECRET'] || 'fallback-secret-key';
-const FRONTEND_URL = process.env['FRONTEND_URL'] || 'http://localhost:3000';
+const FRONTEND_URL = process.env['FRONTEND_URL'];
+if (!FRONTEND_URL) {
+  throw new Error('FRONTEND_URL environment variable is required. Set it to your frontend URL.');
+}
 
 // Password validation - minimum 6 characters for security
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters long');
@@ -385,7 +388,15 @@ router.get('/github', passport.authenticate('github', {
 
 // GET /api/auth/github/callback - GitHub OAuth callback
 router.get('/github/callback', (req, res, next) => {
+  // Prevent Chrome from caching auth redirects
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  
   passport.authenticate('github', (err: any, user: any, info: any) => {
+    console.log('🔧 DEBUG: FRONTEND_URL during redirect:', FRONTEND_URL);
     if (err) {
       console.error('GitHub auth error:', err);
       console.error('Error details:', {

@@ -76,6 +76,25 @@ function getCorsOrigins(): string[] {
     'http://localhost:3003'
   ];
   
+  // Production origins based on BASE_HOST
+  if (BASE_HOST && BASE_HOST !== 'localhost') {
+    // Add HTTP and HTTPS versions for production
+    const prodOrigins = [
+      `http://${BASE_HOST}:3000`,
+      `https://${BASE_HOST}:3000`,
+      `http://${BASE_HOST}:3001`,
+      `https://${BASE_HOST}:3001`
+    ];
+    
+    // Add without port for standard HTTP/HTTPS
+    if (!BASE_HOST.includes(':')) {
+      prodOrigins.push(`http://${BASE_HOST}`);
+      prodOrigins.push(`https://${BASE_HOST}`);
+    }
+    
+    defaultOrigins.push(...prodOrigins);
+  }
+  
   // Add frontend URL if specified
   const frontendUrl = process.env['FRONTEND_URL'];
   if (frontendUrl && !defaultOrigins.includes(frontendUrl)) {
@@ -92,7 +111,10 @@ function getCorsOrigins(): string[] {
 }
 
 // Get the base host from environment or default to localhost
-const BASE_HOST = process.env['BASE_HOST'] || 'localhost';
+const BASE_HOST = process.env['BASE_HOST'];
+if (!BASE_HOST) {
+  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
+}
 
 // ES module equivalent (commented out as unused)
 // const __filename = fileURLToPath(import.meta.url);
@@ -346,7 +368,7 @@ app.use('/api', (_req, res, next) => {
 app.use('/test', express.static(path.join(__dirname, '../public')));
 
 // Serve static files from React build
-app.use(express.static(path.join(__dirname, '../../client/dist'), {
+app.use(express.static(path.join(__dirname, '../../../client/dist'), {
   setHeaders: (res) => {
     if (process.env['NODE_ENV'] === 'development') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -506,7 +528,7 @@ app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace pers
 
 // Catch-all route - serve React app for all non-API routes
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../../client/dist/index.html'));
 });
 
 // WebSocket connection handling

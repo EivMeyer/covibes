@@ -30,8 +30,9 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0', // Allow external connections (needed for Docker)
       strictPort: true, // Fail if port is already in use
+      allowedHosts: ['ec2-13-60-242-174.eu-north-1.compute.amazonaws.com'],
       cors: {
-        origin: [frontendUrl, backendUrl],
+        origin: true, // Allow all origins for development
         credentials: true
       },
       proxy: {
