@@ -186,9 +186,14 @@ function AppContent() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     // REQUIRED: Backend URL must be explicitly set - NO FALLBACKS
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
+    let backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
     if (!backendUrl) {
       throw new Error('VITE_BACKEND_URL or VITE_API_URL environment variable is required. No fallbacks allowed.');
+    }
+    
+    // Mobile fix: Use same port as frontend to avoid mobile browser blocking
+    if (isMobile) {
+      backendUrl = window.location.origin; // Use current origin (port 3000) - Vite will proxy to 3001
     }
     
     console.log(`🔍 Socket init - Mobile: ${isMobile}, URL: ${backendUrl}, Token: ${!!token}`);
