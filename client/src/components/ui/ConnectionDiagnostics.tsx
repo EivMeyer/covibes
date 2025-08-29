@@ -17,6 +17,7 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
   const [diagnostics, setDiagnostics] = useState<any>({});
   const [testResults, setTestResults] = useState<any[]>([]);
   const [testing, setTesting] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -24,7 +25,55 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
     }
   }, [isOpen]);
 
+  // Re-gather diagnostics when socket changes
+  useEffect(() => {
+    if (isOpen && socket) {
+      console.log('🔄 Socket changed, re-gathering diagnostics');
+      gatherDiagnostics();
+    }
+  }, [socket, isConnected]);
+
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugLogs(prev => [...prev.slice(-19), `[${timestamp}] ${message}`]); // Keep last 20 logs
+  };
+
   const gatherDiagnostics = () => {
+    const debugInfo = `isConnected: ${isConnected}, socket: ${socket ? 'exists' : 'null'}, socketType: ${typeof socket}`;
+    addDebugLog(`🔍 Diagnostics gathered - ${debugInfo}`);
+    
+    // Get debug info from sessionStorage
+    const socketDebug = sessionStorage.getItem('socketDebug');
+    const socketCreated = sessionStorage.getItem('socketCreated');
+    const socketConnected = sessionStorage.getItem('socketConnected');
+    const socketError = sessionStorage.getItem('socketError');
+    
+    if (socketDebug) {
+      const debug = JSON.parse(socketDebug);
+      addDebugLog(`⚙️ Socket init - Mobile: ${debug.mobile}, URL: ${debug.url}, HasToken: ${debug.hasToken}`);
+    }
+    
+    if (socketCreated) {
+      addDebugLog(`🔧 Socket created at: ${new Date(socketCreated).toLocaleTimeString()}`);
+    }
+    
+    if (socketConnected) {
+      addDebugLog(`✅ Socket connected at: ${new Date(socketConnected).toLocaleTimeString()}`);
+    }
+    
+    if (socketError) {
+      const error = JSON.parse(socketError);
+      addDebugLog(`❌ Socket error: ${error.error} at ${new Date(error.timestamp).toLocaleTimeString()}`);
+    }
+    
+    if (socket) {
+      addDebugLog(`🔌 Socket details - connected: ${socket.connected}, id: ${socket.id || 'none'}`);
+      addDebugLog(`🌐 Socket URL - ${socket.io?.uri || 'unknown'}`);
+      addDebugLog(`🚛 Transport - ${socket.io?.engine?.transport?.name || 'unknown'}`);
+    } else {
+      addDebugLog(`❌ Socket is null/undefined - check socket initialization`);
+    }
+    
     const diag: any = {
       timestamp: new Date().toISOString(),
       browser: navigator.userAgent,
@@ -43,6 +92,11 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
       lastError: socket?.io?.engine?.transport?.lastError || sessionStorage.getItem('lastSocketError') || 'None',
       reconnectionAttempts: socket?.io?.reconnectionAttempts || 0,
       backoff: socket?.io?.backoff?.ms || 0,
+      // Debug info
+      socketExists: !!socket,
+      socketConnected: socket?.connected,
+      ioExists: !!socket?.io,
+      engineExists: !!socket?.io?.engine,
     };
 
     // Get socket events if available
@@ -339,6 +393,22 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
           <div className="bg-midnight-700 rounded-lg p-4">
             <h3 className="text-white font-semibold mb-2">Environment</h3>
             <p className="text-gray-400 text-xs font-mono break-all">{diagnostics.browser}</p>
+          </div>
+
+          {/* Debug Logs */}
+          <div className="bg-midnight-800 rounded-lg p-4 border border-red-500/30">
+            <h3 className="text-red-400 font-semibold mb-2">🐛 Debug Logs</h3>
+            <div className="bg-black/50 rounded p-3 max-h-48 overflow-y-auto">
+              {debugLogs.length > 0 ? (
+                debugLogs.map((log, i) => (
+                  <div key={i} className="text-xs font-mono text-green-400 mb-1">
+                    {log}
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-xs">No debug logs yet...</div>
+              )}
+            </div>
           </div>
         </div>
 

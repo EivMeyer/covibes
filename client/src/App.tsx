@@ -193,6 +193,14 @@ function AppContent() {
     
     console.log(`🔍 Socket init - Mobile: ${isMobile}, URL: ${backendUrl}, Token: ${!!token}`);
     
+    // Store debug info in sessionStorage for diagnostics
+    sessionStorage.setItem('socketDebug', JSON.stringify({
+      mobile: isMobile,
+      url: backendUrl,
+      hasToken: !!token,
+      timestamp: new Date().toISOString()
+    }));
+    
     const socket = io(backendUrl, {
       auth: {
         token: token
@@ -209,15 +217,23 @@ function AppContent() {
     });
 
     console.log(`🔍 Socket created:`, socket);
+    sessionStorage.setItem('socketCreated', new Date().toISOString());
 
     socketRef.current = socket;
     setSocket(socket); // Update state to trigger re-render
 
     socket.on('connect', () => {
+      console.log('✅ Socket connected!');
+      sessionStorage.setItem('socketConnected', new Date().toISOString());
       setIsConnected(true);
       
       // Join team
       socket.emit('join-team', { teamId: team.id, token });
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('❌ Socket connect error:', error);
+      sessionStorage.setItem('socketError', JSON.stringify({ error: error.message, timestamp: new Date().toISOString() }));
     });
 
     socket.on('disconnect', (reason) => {
