@@ -36,7 +36,7 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
       wsReadyState: socket?.connected !== undefined ? (socket.connected ? 'OPEN' : 'CLOSED') : 'UNKNOWN',
       transportType: socket?.io?.engine?.transport?.name || 'N/A',
       socketId: socket?.id || 'N/A',
-      authToken: localStorage.getItem('token') ? 'Present' : 'Missing',
+      authToken: localStorage.getItem('colabvibe_auth_token') ? 'Present' : 'Missing',
       tokenExpiry: checkTokenExpiry(),
       networkType: getNetworkType(),
       onLine: navigator.onLine,
@@ -59,7 +59,7 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
   };
 
   const checkTokenExpiry = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('colabvibe_auth_token');
     if (!token) return 'No token';
     
     try {
@@ -96,7 +96,7 @@ export const ConnectionDiagnostics: React.FC<ConnectionDiagnosticsProps> = ({
       const apiStart = Date.now();
       const response = await fetch('/api/auth/me', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          'Authorization': `Bearer ${localStorage.getItem('colabvibe_auth_token') || ''}`
         }
       });
       const apiTime = Date.now() - apiStart;
