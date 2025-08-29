@@ -126,10 +126,9 @@ ColabVibe is a fully functional web-based collaboration platform where developer
 ## Project Structure
 
 ```
-colabvibe/
+covibes/
 ├── CLAUDE.md                      # Main project context (this file)
-├── colabvibe/                     # Main application directory
-│   ├── server/                    # Backend Express/Socket.io server
+├── server/                        # Backend Express/Socket.io server
 │   │   ├── src/                   # TypeScript source code
 │   │   │   ├── routes/            # API route handlers (9 modules)
 │   │   │   ├── services/          # Terminal management services
@@ -138,7 +137,7 @@ colabvibe/
 │   │   ├── services/              # Business logic services (14 modules)
 │   │   ├── prisma/                # Database schema and migrations
 │   │   └── tests/                 # Backend test suites (integration + unit)
-│   ├── client/                    # Frontend React application
+├── client/                        # Frontend React application
 │   │   ├── src/                   # React components and logic
 │   │   │   ├── components/        # Feature-based component organization
 │   │   │   │   ├── features/      # Feature modules (agents, auth, chat, etc.)
@@ -151,7 +150,7 @@ colabvibe/
 │   │   │   └── pages/             # Main page components
 │   │   ├── public/                # Static assets
 │   │   └── tests/                 # Frontend test suites
-│   └── docker-compose.yml         # Local development services
+├── docker-compose.yml             # Local development services
 ├── docker/                        # Docker infrastructure
 │   ├── claude-agent/              # Claude agent containerization
 │   ├── preview/                   # Multi-language preview containers
@@ -168,7 +167,11 @@ colabvibe/
 
 ### Server Development
 ```bash
-cd colabvibe/server
+cd server
+# Set required environment variables first:
+export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+export EC2_USERNAME=ubuntu
+
 npm run dev          # Start development server on port 3001 with hot reload
 npm run build        # Build TypeScript to JavaScript
 npm run lint         # Type check with TypeScript
@@ -180,7 +183,7 @@ npm run prisma:studio     # Open database admin interface
 
 ### Client Development
 ```bash
-cd colabvibe/client
+cd client
 npm run dev          # Start Vite development server on port 3000
 npm run build        # Build for production
 npm run lint         # Run ESLint
@@ -194,7 +197,7 @@ npm run type-check   # TypeScript type checking
 docker-compose up -d postgres redis
 
 # Database operations
-cd colabvibe/server
+cd server
 npm run prisma:migrate     # Apply schema changes
 npm run prisma:generate    # Regenerate Prisma client
 npm run prisma:seed        # Seed with demo data
@@ -203,11 +206,11 @@ npm run prisma:seed        # Seed with demo data
 ### Testing
 ```bash
 # Backend tests
-cd colabvibe/server
+cd server
 TEST_DATABASE_URL="postgresql://..." npm run test:integration
 
 # Frontend tests
-cd colabvibe/client
+cd client
 npm run test
 npm run test:coverage
 
@@ -217,28 +220,85 @@ npm install
 npx playwright test
 ```
 
+## Environment Variables
+
+### Required Environment Variables for Server Startup
+**CRITICAL**: These environment variables must be set before starting the server to prevent startup failures:
+
+```bash
+# EC2 Configuration (REQUIRED for Docker services)
+export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+export EC2_USERNAME=ubuntu
+
+# Database Configuration
+export DATABASE_URL="postgresql://postgres:password@localhost:5432/colabvibe_dev"
+export TEST_DATABASE_URL="postgresql://postgres:password@localhost:5433/colabvibe_test"
+
+# Authentication
+export JWT_SECRET="development-jwt-secret-key"
+export ENCRYPTION_KEY="32-character-development-encrypt-key!"
+
+# GitHub OAuth (Optional - for GitHub integration)
+export GITHUB_CLIENT_ID="your-github-client-id"
+export GITHUB_CLIENT_SECRET="your-github-client-secret"
+
+# Development Mode
+export NODE_ENV="development"
+```
+
+### Environment Setup Script
+Create a `.env` file in the root directory or run these commands before starting the server:
+
+```bash
+# Quick setup script for development
+export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+export EC2_USERNAME=ubuntu
+export JWT_SECRET="development-jwt-secret-key"
+export ENCRYPTION_KEY="32-character-development-encrypt-key!"
+export NODE_ENV="development"
+
+# Then start the server
+cd server && npm run dev
+```
+
+### Startup Issues Prevention
+Common startup failures and their fixes:
+
+1. **"EC2_HOST environment variable is required"**
+   - Fix: `export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com`
+
+2. **"EC2_USERNAME environment variable is required"**
+   - Fix: `export EC2_USERNAME=ubuntu`
+
+3. **"listen EADDRINUSE: address already in use :::3001"**
+   - Fix: `lsof -ti:3001 | xargs kill -9`
+
+4. **Database connection errors**
+   - Ensure PostgreSQL is running: `docker-compose up -d postgres`
+   - Check DATABASE_URL environment variable
+
 ## Important Files & Their Purposes
 
 ### Core Application Files
-- `colabvibe/server/src/server.ts` - Main Express server with Socket.io setup
-- `colabvibe/server/src/routes/` - API route handlers (agents, auth, github, ide, layout, preview, team, terminal, vm, workspace)
-- `colabvibe/server/prisma/schema.prisma` - Database schema with 7 models (agents, teams, users, messages, container_instances, preview_deployments, terminal_history)
-- `colabvibe/client/src/App.tsx` - Main React application component
-- `colabvibe/client/src/components/features/` - Feature-based component organization
-- `colabvibe/client/src/pages/Dashboard.tsx` - Main application interface
-- `colabvibe/server/services/` - Business logic services (14 modules including terminal management)
+- `server/src/server.ts` - Main Express server with Socket.io setup
+- `server/src/routes/` - API route handlers (agents, auth, github, ide, layout, preview, team, terminal, vm, workspace)
+- `server/prisma/schema.prisma` - Database schema with 7 models (agents, teams, users, messages, container_instances, preview_deployments, terminal_history)
+- `client/src/App.tsx` - Main React application component
+- `client/src/components/features/` - Feature-based component organization
+- `client/src/pages/Dashboard.tsx` - Main application interface
+- `server/services/` - Business logic services (14 modules including terminal management)
 
 ### Configuration Files
-- `colabvibe/server/package.json` - Backend dependencies and scripts (Node.js >=18.0.0)
-- `colabvibe/client/package.json` - Frontend dependencies and scripts (React 19.1.1, Vite 5.4.19)
-- `colabvibe/client/vite.config.ts` - Vite build configuration with proxy setup
-- `colabvibe/client/tailwind.config.js` - Tailwind CSS 3.4.17 configuration
-- `colabvibe/docker-compose.yml` - Local development services
+- `server/package.json` - Backend dependencies and scripts (Node.js >=18.0.0)
+- `client/package.json` - Frontend dependencies and scripts (React 19.1.1, Vite 5.4.19)
+- `client/vite.config.ts` - Vite build configuration with proxy setup
+- `client/tailwind.config.js` - Tailwind CSS 3.4.17 configuration
+- `docker-compose.yml` - Local development services
 - `docker/` - Docker infrastructure configurations
 
 ### Testing Infrastructure
-- `colabvibe/server/tests/` - Backend unit and integration tests (organized by type)
-- `colabvibe/client/src/test/` - Frontend unit tests with Vitest and React Testing Library
+- `server/tests/` - Backend unit and integration tests (organized by type)
+- `client/src/test/` - Frontend unit tests with Vitest and React Testing Library
 - `tests/` - Comprehensive E2E testing with Playwright
 - `tests/playwright/` - Organized test suites (agents/, auth/, preview/, collaboration/, etc.)
 - `tests/utils/health-checks/` - System health verification utilities
@@ -438,7 +498,7 @@ These patterns come from real debugging sessions and production issues. The data
 
 ## Key Service Architecture
 
-### Business Logic Services (`colabvibe/server/services/`)
+### Business Logic Services (`server/services/`)
 - **universal-preview-service.ts** - Database-backed preview management with health validation
 - **preview-health-check.ts** - Background health monitoring (30-second intervals)
 - **agent-chat.ts** - AI agent communication and output streaming
@@ -449,7 +509,7 @@ These patterns come from real debugging sessions and production issues. The data
 - **port-allocator.ts** - Dynamic port management for containers
 - **preview-service.ts** - Legacy preview service (being replaced)
 
-### Terminal Management Services (`colabvibe/server/src/services/`)
+### Terminal Management Services (`server/src/services/`)
 - **terminal-manager-factory.ts** - Factory for creating terminal managers
 - **terminal-manager-interface.ts** - Interface definitions
 - **tmux-pty-manager.ts** - Tmux session management
