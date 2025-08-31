@@ -2,7 +2,7 @@
   "instances": [
     {
       "id": "vm-main-001",
-      "host": "ec2-13-60-242-174.eu-north-1.compute.amazonaws.com",
+      "host": "ec2-13-48-135-139.eu-north-1.compute.amazonaws.com",
       "region": "eu-north-1",
       "instanceType": "t3.medium",
       "status": "available",

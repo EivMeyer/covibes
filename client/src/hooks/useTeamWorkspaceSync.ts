@@ -62,25 +62,25 @@ export const useTeamWorkspaceSync = (token: string | null) => {
   const pendingChangesRef = useRef<Partial<WorkspaceData>>({});
   const currentWorkspaceRef = useRef<WorkspaceData>({ tiles: [], layouts: {}, sidebarWidth: 256 });
 
-  // Event handlers for workspace updates
-  const [onWorkspaceUpdated, setOnWorkspaceUpdated] = useState<((data: WorkspaceUpdateEvent) => void) | null>(null);
-  const [onDragStarted, setOnDragStarted] = useState<((data: DragEvent) => void) | null>(null);
-  const [onDragMoved, setOnDragMoved] = useState<((data: DragMoveEvent) => void) | null>(null);
-  const [onDragStopped, setOnDragStopped] = useState<((data: DragStopEvent) => void) | null>(null);
-  const [onTileAdded, setOnTileAdded] = useState<((data: TileAddEvent) => void) | null>(null);
-  const [onTileRemoved, setOnTileRemoved] = useState<((data: TileRemoveEvent) => void) | null>(null);
+  // Event handlers for workspace updates - use refs to avoid infinite re-renders
+  const onWorkspaceUpdatedRef = useRef<((data: WorkspaceUpdateEvent) => void) | null>(null);
+  const onDragStartedRef = useRef<((data: DragEvent) => void) | null>(null);
+  const onDragMovedRef = useRef<((data: DragMoveEvent) => void) | null>(null);
+  const onDragStoppedRef = useRef<((data: DragStopEvent) => void) | null>(null);
+  const onTileAddedRef = useRef<((data: TileAddEvent) => void) | null>(null);
+  const onTileRemovedRef = useRef<((data: TileRemoveEvent) => void) | null>(null);
 
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
     const handleWorkspaceUpdated = (data: WorkspaceUpdateEvent) => {
-      onWorkspaceUpdated?.(data);
+      onWorkspaceUpdatedRef.current?.(data);
     };
 
     const handleDragStarted = (data: DragEvent) => {
       setActiveDrags(prev => new Map(prev.set(data.tileId, { draggedBy: data.draggedBy, position: data.position })));
-      onDragStarted?.(data);
+      onDragStartedRef.current?.(data);
     };
 
     const handleDragMoved = (data: DragMoveEvent) => {
@@ -92,7 +92,7 @@ export const useTeamWorkspaceSync = (token: string | null) => {
         }
         return newMap;
       });
-      onDragMoved?.(data);
+      onDragMovedRef.current?.(data);
     };
 
     const handleDragStopped = (data: DragStopEvent) => {
@@ -101,15 +101,15 @@ export const useTeamWorkspaceSync = (token: string | null) => {
         newMap.delete(data.tileId);
         return newMap;
       });
-      onDragStopped?.(data);
+      onDragStoppedRef.current?.(data);
     };
 
     const handleTileAdded = (data: TileAddEvent) => {
-      onTileAdded?.(data);
+      onTileAddedRef.current?.(data);
     };
 
     const handleTileRemoved = (data: TileRemoveEvent) => {
-      onTileRemoved?.(data);
+      onTileRemovedRef.current?.(data);
     };
 
     // Register event listeners
@@ -129,7 +129,7 @@ export const useTeamWorkspaceSync = (token: string | null) => {
       socket.off('workspace-tile-added', handleTileAdded);
       socket.off('workspace-tile-removed', handleTileRemoved);
     };
-  }, [socket, onWorkspaceUpdated, onDragStarted, onDragMoved, onDragStopped, onTileAdded, onTileRemoved]);
+  }, [socket]);
 
   // Load workspace from server
   const loadWorkspace = useCallback(async (retryCount = 0): Promise<WorkspaceData | null> => {
@@ -319,12 +319,12 @@ export const useTeamWorkspaceSync = (token: string | null) => {
     onTileAdded?: (data: TileAddEvent) => void;
     onTileRemoved?: (data: TileRemoveEvent) => void;
   }) => {
-    setOnWorkspaceUpdated(() => handlers.onWorkspaceUpdated || null);
-    setOnDragStarted(() => handlers.onDragStarted || null);
-    setOnDragMoved(() => handlers.onDragMoved || null);
-    setOnDragStopped(() => handlers.onDragStopped || null);
-    setOnTileAdded(() => handlers.onTileAdded || null);
-    setOnTileRemoved(() => handlers.onTileRemoved || null);
+    onWorkspaceUpdatedRef.current = handlers.onWorkspaceUpdated || null;
+    onDragStartedRef.current = handlers.onDragStarted || null;
+    onDragMovedRef.current = handlers.onDragMoved || null;
+    onDragStoppedRef.current = handlers.onDragStopped || null;
+    onTileAddedRef.current = handlers.onTileAdded || null;
+    onTileRemovedRef.current = handlers.onTileRemoved || null;
   }, []);
 
   return {

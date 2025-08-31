@@ -67,7 +67,7 @@ async function main() {
   console.log('Demo Users (password: demo123):');
   console.log('  - alice@demo.com (Alice) - EC2 VM assigned');
   console.log('  - bob@demo.com (Bob) - EC2 VM assigned');
-  console.log('\nEC2 Instance: ubuntu@ec2-13-60-242-174.eu-north-1.compute.amazonaws.com');
+  console.log('\nEC2 Instance: ubuntu@ec2-13-48-135-139.eu-north-1.compute.amazonaws.com');
   console.log('SSH Key: ~/.ssh/ec2.pem');
 }
 

@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "node-fetch": "^3.3.2",
+    "puppeteer": "^24.17.1",
     "ws": "^8.18.3"
   }
 }

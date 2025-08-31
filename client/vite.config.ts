@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0', // Allow external connections (needed for Docker)
       strictPort: true, // Fail if port is already in use
-      allowedHosts: ['ec2-13-60-242-174.eu-north-1.compute.amazonaws.com'],
+      allowedHosts: 'all',
       cors: {
         origin: true, // Allow all origins for development
         credentials: true
@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
         // Use the actual hostname for WebSocket connections
         host: env.VITE_FRONTEND_URL ? 
           new URL(env.VITE_FRONTEND_URL).hostname : 
-          'ec2-13-60-242-174.eu-north-1.compute.amazonaws.com'
+          'ec2-13-48-135-139.eu-north-1.compute.amazonaws.com'
       },
       proxy: {
         '/api': {

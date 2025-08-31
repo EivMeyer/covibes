@@ -183,7 +183,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     
     // Call the load function
     loadWorkspaceData();
-  }, [user?.id, token, loadWorkspace, addNotification, workspaceLoaded]); // Trigger on user.id change
+  }, [user?.id, token, loadWorkspace, addNotification]); // Trigger on user.id change
 
   // Expose layout save function to window for DynamicDashboard
   useEffect(() => {
@@ -248,7 +248,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         });
       }
     });
-  }, [registerEventHandlers, addNotification, setGridTiles, setSidebarWidth]);
+  }, [registerEventHandlers, addNotification]);
 
   // VM status is handled by the server - agents auto-assign VMs as needed
   const hasVMConfig = true; // Server auto-assigns default VM to users

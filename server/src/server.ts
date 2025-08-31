@@ -116,6 +116,11 @@ if (!BASE_HOST) {
   throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
 }
 
+// Debug: Log CORS configuration
+console.log('🌐 BASE_HOST:', BASE_HOST);
+const corsOrigins = getCorsOrigins();
+console.log('🌐 CORS Origins:', corsOrigins);
+
 // ES module equivalent (commented out as unused)
 // const __filename = fileURLToPath(import.meta.url);
 
@@ -128,7 +133,7 @@ server.setMaxListeners(50);
 
 const io = new SocketIOServer(server, {
   cors: {
-    origin: getCorsOrigins(),
+    origin: true, // Allow all origins temporarily
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -146,13 +151,27 @@ const io = new SocketIOServer(server, {
 // Initialize Prisma client (needed for authentication middleware)
 const prisma = new PrismaClient();
 
+// Socket.io connection debugging
+io.engine.on('initial_headers', (headers, req) => {
+  console.log('🔍 Socket.io initial headers:', req.url);
+});
+
+io.engine.on('connection_error', (err) => {
+  console.log('🚨 Socket.io connection error:', err);
+});
+
 // Socket.io authentication middleware
 io.use(async (socket: any, next) => {
   try {
     console.log('🔐 Socket.io authentication middleware triggered for connection');
     
     // Extract token from handshake auth or query parameters
+    console.log('🔍 Socket.io handshake auth:', socket.handshake.auth);
+    console.log('🔍 Socket.io handshake query:', socket.handshake.query);
+    console.log('🔍 Socket.io handshake headers:', socket.handshake.headers);
+    
     let token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    console.log('🔍 Extracted token:', token ? `${token.substring(0, 20)}...` : 'null');
     
     if (!token) {
       console.log('❌ No authentication token provided for Socket.io connection');
@@ -331,9 +350,9 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required. This is critical for authentication security.');
 }
 
-// CORS configuration - must match Socket.IO CORS settings
+// CORS configuration - TEMPORARY: Allow all origins for debugging
 app.use(cors({
-  origin: getCorsOrigins(),
+  origin: true, // Allow all origins temporarily
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -523,6 +542,203 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Pitch deck endpoint
+app.get('/pitch', (_req, res) => {
+  const pdfPath = path.join(__dirname, '../../ColabVibe-Pitch-Deck.pdf');
+  console.log(`📄 Serving pitch deck from: ${pdfPath}`);
+  
+  if (!fs.existsSync(pdfPath)) {
+    console.error(`❌ Pitch deck not found at: ${pdfPath}`);
+    return res.status(404).json({ error: 'Pitch deck not found' });
+  }
+  
+  // Set proper headers for PDF viewing
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline; filename="ColabVibe-Pitch-Deck.pdf"');
+  res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+  
+  // Stream the PDF file
+  const fileStream = fs.createReadStream(pdfPath);
+  fileStream.pipe(res);
+  
+  fileStream.on('error', (error) => {
+    console.error('Error streaming pitch deck:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to serve pitch deck' });
+    }
+  });
+});
+
+// Pitch deck viewer endpoint (HTML page with embedded PDF)
+app.get('/pitch/viewer', (_req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColabVibe Pitch Deck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0b;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #333;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .nav a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .nav a:hover {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .pdf-container {
+            height: calc(100vh - 80px);
+            width: 100%;
+            position: relative;
+        }
+        
+        .pdf-embed {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #fff;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #94a3b8;
+        }
+        
+        .spinner {
+            border: 3px solid #333;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #ef4444;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .logo {
+                font-size: 1.2rem;
+            }
+            
+            .nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">ColabVibe</div>
+        <nav class="nav">
+            <a href="/">← Back to App</a>
+            <a href="/pitch" target="_blank">Download PDF</a>
+            <a href="https://github.com/colabvibe/colabvibe" target="_blank">GitHub</a>
+        </nav>
+    </div>
+    
+    <div class="pdf-container">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading pitch deck...</p>
+        </div>
+        <embed 
+            class="pdf-embed" 
+            src="/pitch#toolbar=1&navpanes=0&scrollbar=1" 
+            type="application/pdf"
+            onload="document.getElementById('loading').style.display='none'"
+            onerror="showError()"
+        />
+    </div>
+
+    <script>
+        function showError() {
+            document.getElementById('loading').innerHTML = 
+                '<div class="error">Failed to load PDF. <a href="/pitch" target="_blank">Click here to download</a></div>';
+        }
+        
+        // Hide loading after 5 seconds if PDF hasn't loaded
+        setTimeout(() => {
+            const loading = document.getElementById('loading');
+            if (loading.style.display !== 'none') {
+                loading.style.display = 'none';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
+  `;
+  
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', authenticateToken, agentRoutes);
@@ -563,7 +779,7 @@ const globalSSHSessions = new Map<string, GlobalSSHSession>();
 const agentSockets = new Map<string, Set<string>>();
 
 io.on('connection', (socket: Socket) => {
-  console.log(`Client connected: ${socket.id}`);
+  console.log(`🔗 Client connected: ${socket.id}`);
   
   // Prevent EventEmitter memory leaks
   socket.setMaxListeners(50);

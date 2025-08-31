@@ -25,7 +25,7 @@ const prisma = new PrismaClient();
 
 // Real EC2 instance
 const VM_INSTANCES = [
-  { id: 'vm-001', host: 'ec2-13-60-242-174.eu-north-1.compute.amazonaws.com', status: 'available' }
+  { id: 'vm-001', host: 'ec2-13-48-135-139.eu-north-1.compute.amazonaws.com', status: 'available' }
 ];
 
 // Apply JWT authentication middleware to all routes

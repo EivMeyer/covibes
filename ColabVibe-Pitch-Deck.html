@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColabVibe: Embrace Exponentials - Pitch Deck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+            position: relative;
+        }
+
+        .slide:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 20%, rgba(74, 144, 226, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Title Slide */
+        .slide.title {
+            text-align: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .title h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title .tagline {
+            font-size: 1.8rem;
+            color: #a0a0a0;
+            margin-bottom: 60px;
+            font-weight: 300;
+        }
+
+        .hero-image {
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(74, 144, 226, 0.3);
+        }
+
+        /* Content Slides */
+        .slide h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #4a90e2;
+        }
+
+        .slide h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+        .slide p {
+            font-size: 1.3rem;
+            color: #e0e0e0;
+            margin-bottom: 25px;
+            line-height: 1.7;
+        }
+
+        .slide ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .slide li {
+            font-size: 1.3rem;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .slide li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #4a90e2;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .highlight {
+            color: #4a90e2;
+            font-weight: 600;
+        }
+
+        .metric {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.2) 0%, rgba(123, 104, 238, 0.2) 100%);
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .metric h3 {
+            font-size: 2.5rem;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .metric p {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            height: 100%;
+        }
+
+        .three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .feature-box {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(123, 104, 238, 0.15) 100%);
+            border: 1px solid rgba(74, 144, 226, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-5px);
+        }
+
+        .screenshot {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(74, 144, 226, 0.2);
+        }
+
+        .mobile-demo {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .cta {
+            background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .problem-item {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.15) 0%, rgba(220, 53, 69, 0.05) 100%);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .problem-item h4 {
+            color: #dc3545;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .solution-item {
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(40, 167, 69, 0.05) 100%);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .solution-item h4 {
+            color: #28a745;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            left: 80px;
+            right: 80px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media print {
+            .slide {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Slide 1: Title -->
+    <div class="slide title">
+        <h1>ColabVibe</h1>
+        <p class="tagline">Embrace Exponentials</p>
+        <p class="tagline" style="font-size: 1.4rem; margin-bottom: 80px;">Collaborative AI Development Platform</p>
+        <img src="tests/screenshots/colabvibe-04-main-app.png" alt="ColabVibe Dashboard" class="hero-image">
+        <div class="footer">
+            The future of collaborative software development
+        </div>
+    </div>
+
+    <!-- Slide 2: The Problem -->
+    <div class="slide">
+        <h2>The Problem</h2>
+        <p>Software development is becoming increasingly complex, yet teams are working in isolation</p>
+        
+        <div class="problem-grid">
+            <div class="problem-item">
+                <h4>Workflow Fragmentation</h4>
+                <p>Developers juggle 15+ different tools daily - IDEs, terminals, chat apps, project managers, code reviewers</p>
+            </div>
+            <div class="problem-item">
+                <h4>AI in Isolation</h4>
+                <p>AI coding assistants are single-user experiences, missing the collaborative nature of modern development</p>
+            </div>
+            <div class="problem-item">
+                <h4>Remote Team Friction</h4>
+                <p>Screen sharing, async communication, and context switching create massive productivity losses</p>
+            </div>
+            <div class="problem-item">
+                <h4>Context Loss</h4>
+                <p>Knowledge scattered across platforms - code, discussions, decisions, and AI interactions exist in silos</p>
+            </div>
+        </div>
+        
+        <div class="cta" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+            Result: 40% of developer time lost to tool switching and context rebuilding
+        </div>
+    </div>
+
+    <!-- Slide 3: Market Opportunity -->
+    <div class="slide">
+        <h2>Market Opportunity</h2>
+        <p>The developer tools market is experiencing unprecedented growth driven by AI adoption</p>
+        
+        <div class="three-column">
+            <div class="metric">
+                <h3>$26B+</h3>
+                <p>Developer tools market size</p>
+                <p><strong>25% YoY growth</strong></p>
+            </div>
+            <div class="metric">
+                <h3>100M+</h3>
+                <p>Developers worldwide</p>
+                <p><strong>70% remote/hybrid</strong></p>
+            </div>
+            <div class="metric">
+                <h3>87%</h3>
+                <p>Teams using AI tools</p>
+                <p><strong>But in isolation</strong></p>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px;">
+            <h3>Key Market Drivers</h3>
+            <ul>
+                <li><span class="highlight">AI-First Development:</span> 92% of developers now use AI coding assistants</li>
+                <li><span class="highlight">Remote Collaboration:</span> Permanent shift to distributed teams</li>
+                <li><span class="highlight">Speed Requirements:</span> Faster deployment cycles demand better collaboration</li>
+                <li><span class="highlight">Tool Consolidation:</span> Teams seeking unified platforms to reduce complexity</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 4: Solution -->
+    <div class="slide">
+        <h2>Solution</h2>
+        <h3>Real-time collaboration between humans and AI agents</h3>
+        <p>ColabVibe creates the first truly collaborative AI development environment where teams and AI work together seamlessly</p>
+        
+        <div class="solution-grid">
+            <div class="solution-item">
+                <h4>🤖 AI Agents</h4>
+                <p>Spawn multiple AI agents for different tasks - each with persistent memory and specialized skills</p>
+            </div>
+            <div class="solution-item">
+                <h4>💬 Live Collaboration</h4>
+                <p>Real-time chat, code sharing, and synchronized workspaces across all team members</p>
+            </div>
+            <div class="solution-item">
+                <h4>🔄 Instant Previews</h4>
+                <p>Live application previews that update as AI agents and humans make changes</p>
+            </div>
+            <div class="solution-item">
+                <h4>📱 Mobile-Ready</h4>
+                <p>Full mobile interface for reviewing, discussing, and approving changes on the go</p>
+            </div>
+            <div class="solution-item">
+                <h4>🖥️ Integrated IDE</h4>
+                <p>Monaco editor with syntax highlighting, IntelliSense, and collaborative editing</p>
+            </div>
+            <div class="solution-item">
+                <h4>🔒 Enterprise Security</h4>
+                <p>VM isolation, encrypted communications, and role-based access controls</p>
+            </div>
+        </div>
+
+        <div class="cta">
+            One platform. Humans + AI. Exponential productivity.
+        </div>
+    </div>
+
+    <!-- Slide 5: Product Demo -->
+    <div class="slide">
+        <h2>Product Demo</h2>
+        <div class="two-column">
+            <div>
+                <h3>Desktop Experience</h3>
+                <p>Full-featured dashboard with AI agents building authentication systems, React components, and API endpoints in real-time</p>
+                <ul style="margin-top: 20px;">
+                    <li>Multiple AI agents working simultaneously</li>
+                    <li>Live terminal output and progress tracking</li>
+                    <li>Team chat integrated with code context</li>
+                    <li>Instant preview deployment</li>
+                </ul>
+                <img src="tests/screenshots/colabvibe-04-main-app.png" alt="Desktop Dashboard" class="screenshot" style="margin-top: 30px;">
+            </div>
+            <div>
+                <h3>Mobile Excellence</h3>
+                <p>Native mobile experience for reviewing progress, managing agents, and staying connected with your team</p>
+                <div class="mobile-demo">
+                    <img src="tests/screenshots/mobile/mobile-02-agents.png" alt="Mobile Interface" class="screenshot">
+                </div>
+                <p style="margin-top: 20px; font-size: 1.1rem; color: #a0a0a0;">
+                    "Finally, I can review and approve AI changes from anywhere" - Beta User
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Why Now -->
+    <div class="slide">
+        <h2>Why Now?</h2>
+        <p>Three converging trends create a perfect storm for collaborative AI development</p>
+        
+        <div class="feature-box" style="margin-top: 40px;">
+            <h3>🚀 AI Adoption Accelerating</h3>
+            <p>GitHub Copilot: 1M+ users in 12 months. ChatGPT: 100M users in 2 months. Developers are ready for AI-first workflows.</p>
+        </div>
+
+        <div class="feature-box" style="margin-top: 30px;">
+            <h3>🌍 Remote Work Permanent</h3>
+            <p>87% of developers work remotely. Traditional in-person collaboration methods are obsolete. Teams need new ways to build together.</p>
+        </div>
+
+        <div class="feature-box" style="margin-top: 30px;">
+            <h3>⚡ Speed is Everything</h3>
+            <p>Deployment frequency increased 10x in 5 years. Teams shipping daily need real-time collaboration tools that match their pace.</p>
+        </div>
+
+        <div class="two-column" style="margin-top: 60px;">
+            <div>
+                <h3>Market Validation</h3>
+                <ul>
+                    <li>500+ beta users in first month</li>
+                    <li>40% weekly active usage</li>
+                    <li>4.8/5 user satisfaction score</li>
+                    <li>12 enterprise pilots scheduled</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Competitive Advantage</h3>
+                <ul>
+                    <li>First-mover in collaborative AI development</li>
+                    <li>Mobile-first approach</li>
+                    <li>Enterprise-ready from day one</li>
+                    <li>Platform-agnostic architecture</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Vision & Next Steps -->
+    <div class="slide">
+        <h2>Vision & Next Steps</h2>
+        <h3>"The future of collaborative software development"</h3>
+        
+        <div class="two-column">
+            <div>
+                <h3>Our Vision</h3>
+                <p>Transform how teams build software by making AI a true collaborative partner, not just a coding assistant.</p>
+                
+                <div class="feature-box" style="margin-top: 30px;">
+                    <h4>Every development team has AI agents as permanent team members</h4>
+                </div>
+                
+                <div class="feature-box" style="margin-top: 20px;">
+                    <h4>Complex software built through natural conversation</h4>
+                </div>
+                
+                <div class="feature-box" style="margin-top: 20px;">
+                    <h4>Ideas to deployment in minutes, not weeks</h4>
+                </div>
+            </div>
+            <div>
+                <img src="tests/screenshots/preview-e2e-05-with-preview.png" alt="Clean Interface" class="screenshot">
+                
+                <div class="cta" style="margin-top: 30px;">
+                    <h3>Ready for a Demo?</h3>
+                    <p>See ColabVibe transform your development workflow</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer" style="font-size: 1.1rem; color: #4a90e2;">
+            Contact us: demo@colabvibe.com | colabvibe.com
+        </div>
+    </div>
+</body>
+</html>
