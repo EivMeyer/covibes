@@ -46,10 +46,10 @@ covibes/
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `VITE_API_URL` | `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001` | Production API URL |
-| `VITE_BACKEND_URL` | `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001` | Production backend URL |
-| `VITE_FRONTEND_URL` | `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000` | Production frontend URL |
-| `VITE_WS_URL` | `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001` | Production WebSocket URL |
+| `VITE_API_URL` | `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001` | Production API URL |
+| `VITE_BACKEND_URL` | `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001` | Production backend URL |
+| `VITE_FRONTEND_URL` | `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000` | Production frontend URL |
+| `VITE_WS_URL` | `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001` | Production WebSocket URL |
 | `VITE_BASE_PATH` | `/` | Base path for routing |
 | `VITE_NODE_ENV` | `production` | Environment flag |
 
@@ -71,8 +71,8 @@ covibes/
 |----------|-------|-------------|
 | `NODE_ENV` | `production` | Node.js environment |
 | `PORT` | `3001` | Server port |
-| `BASE_HOST` | `ec2-13-60-242-174.eu-north-1.compute.amazonaws.com` | Production hostname |
-| `ALLOWED_ORIGINS` | `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000,...` | Production CORS origins |
+| `BASE_HOST` | `ec2-13-48-135-139.eu-north-1.compute.amazonaws.com` | Production hostname |
+| `ALLOWED_ORIGINS` | `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000,...` | Production CORS origins |
 | `USE_MOCK_AGENTS` | `false` | Disable mock agents in production |
 
 ## 📜 Available Scripts
@@ -166,15 +166,15 @@ The backend server automatically configures CORS based on the `BASE_HOST` enviro
 - `http://127.0.0.1:3001`
 
 **Production CORS Origins:**
-- `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000`
-- `http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001`
+- `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000`
+- `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001`
 
 ## 🌐 WebSocket Configuration
 
 WebSocket connections are now properly configured with environment-specific URLs:
 
 - **Development**: `ws://localhost:3001`
-- **Production**: `ws://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001`
+- **Production**: `ws://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001`
 
 ## 🔍 Environment Detection
 
@@ -241,8 +241,8 @@ npm run build:production
 
 ### 3. Verify
 
-- Frontend: http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
-- Backend API: http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001/api/health
+- Frontend: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
+- Backend API: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001/api/health
 - WebSocket: Should connect automatically via frontend
 
 ## 🐛 Troubleshooting

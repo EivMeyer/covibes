@@ -12,7 +12,7 @@ console.log('🔥🔥🔥 PREVIEW ROUTES FILE LOADED!!! 🔥🔥🔥');
 
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
 import http from 'http';
 import { authenticateToken } from '../middleware/auth.js';
 import { createAuthHandler } from '../types/express.js';
@@ -69,7 +69,7 @@ router.get('/proxy/:teamId/:branch/*', async (req, res) => {
     console.log(`🔄 Proxying to http://localhost:${proxyPort}`);
     
     // Get the rest of the path after /proxy/:teamId/:branch/
-    const restPath = req.params[0] || '/';
+    const restPath = (req.params as any)[0] || '/';
     const fullPath = restPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
     
     // Create a simple proxy using node's http module

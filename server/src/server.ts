@@ -152,7 +152,7 @@ const io = new SocketIOServer(server, {
 const prisma = new PrismaClient();
 
 // Socket.io connection debugging
-io.engine.on('initial_headers', (headers, req) => {
+io.engine.on('initial_headers', (_headers, req) => {
   console.log('🔍 Socket.io initial headers:', req.url);
 });
 
@@ -395,8 +395,17 @@ app.use('/api', (_req, res, next) => {
 // Serve static files from public directory (for testing pages)
 app.use('/test', express.static(path.join(__dirname, '../public')));
 
+// Serve CSS files for pitch deck
+app.use('/css', express.static(path.join(__dirname, '../../../css')));
+
+// Serve test screenshots for pitch deck
+app.use('/tests', express.static(path.join(__dirname, '../../../tests')));
+
+// Serve JS files for pitch deck
+app.use('/js', express.static(path.join(__dirname, '../../../js')));
+
 // Serve static files from React build
-app.use(express.static(path.join(__dirname, '../../client/dist'), {
+app.use(express.static(path.join(process.cwd(), 'client/dist'), {
   setHeaders: (res) => {
     if (process.env['NODE_ENV'] === 'development') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -544,28 +553,155 @@ app.get('/api/health', (_req, res) => {
 
 // Pitch deck endpoint
 app.get('/pitch', (_req, res) => {
-  const pdfPath = path.join(__dirname, '../../ColabVibe-Pitch-Deck.pdf');
-  console.log(`📄 Serving pitch deck from: ${pdfPath}`);
+  const markdownPath = path.join(__dirname, '../../../pitch.md');
+  console.log(`📄 Serving pitch deck from: ${markdownPath}`);
   
-  if (!fs.existsSync(pdfPath)) {
-    console.error(`❌ Pitch deck not found at: ${pdfPath}`);
+  if (!fs.existsSync(markdownPath)) {
+    console.error(`❌ Pitch deck not found at: ${markdownPath}`);
     return res.status(404).json({ error: 'Pitch deck not found' });
   }
   
-  // Set proper headers for PDF viewing
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'inline; filename="ColabVibe-Pitch-Deck.pdf"');
-  res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-  
-  // Stream the PDF file
-  const fileStream = fs.createReadStream(pdfPath);
-  fileStream.pipe(res);
-  
-  fileStream.on('error', (error) => {
-    console.error('Error streaming pitch deck:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to serve pitch deck' });
+  fs.readFile(markdownPath, 'utf8', (error, markdown) => {
+    if (error) {
+      console.error('Error reading pitch deck:', error);
+      return res.status(500).json({ error: 'Failed to read pitch deck' });
     }
+
+    // Convert markdown to HTML with professional styling
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColabVibe: AI Workforce Management Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.7;
+            color: #1a202c;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .content {
+            padding: 40px;
+        }
+        h1 {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 0.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .tagline {
+            font-size: 1.4em;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        h2 {
+            color: #2d3748;
+            font-size: 2.2em;
+            font-weight: 600;
+            margin: 50px 0 30px;
+            border-left: 4px solid #667eea;
+            padding-left: 20px;
+        }
+        h3 {
+            color: #4a5568;
+            font-size: 1.6em;
+            font-weight: 600;
+            margin: 30px 0 20px;
+        }
+        h4 {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 1.2em;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 1.5em;
+            font-size: 1.1em;
+        }
+        ul, ol {
+            margin: 0 0 1.5em 1.5em;
+        }
+        li {
+            margin-bottom: 0.8em;
+            font-size: 1.05em;
+        }
+        strong {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        hr {
+            border: none;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 50px 0;
+            border-radius: 2px;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+        @media (max-width: 768px) {
+            .container { margin: 0; }
+            .header { padding: 40px 20px; }
+            .content { padding: 30px 20px; }
+            h1 { font-size: 2.2em; }
+            h2 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ColabVibe</h1>
+            <p class="tagline">AI Workforce Management Platform</p>
+        </div>
+        <div class="content">
+            ${markdown
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/# (.*)/g, '<h1>$1</h1>')
+              .replace(/## (.*)/g, '<h2>$1</h2>')
+              .replace(/### (.*)/g, '<h3>$1</h3>')
+              .replace(/#### (.*)/g, '<h4>$1</h4>')
+              .replace(/---/g, '<hr>')
+              .replace(/^- (.*)/gm, '<li>$1</li>')
+              .replace(/^\d+\. (.*)/gm, '<li>$1</li>')
+              .replace(/((?:<li>.*<\/li>\s*)+)/g, '<ul>$1</ul>')
+              .replace(/\n\n/g, '</p><p>')
+              .replace(/^\*\*(.*)\*\*$/gm, '<p><strong>$1</strong></p>')
+              .replace(/^([^<].*)$/gm, '<p>$1</p>')
+              .replace(/<p><\/p>/g, '')
+              .replace(/<p>(<h[1-6]>)/g, '$1')
+              .replace(/(<\/h[1-6]>)<\/p>/g, '$1')
+              .replace(/<p>(<hr>)<\/p>/g, '$1')
+              .replace(/<p>(<ul>)/g, '$1')
+              .replace(/(<\/ul>)<\/p>/g, '$1')
+            }
+        </div>
+    </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+    res.send(htmlContent);
   });
 });
 
@@ -752,8 +888,18 @@ app.use('/api/layout', authenticateToken, layoutRoutes); // Layout persistence r
 app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace persistence requires authentication
 
 // Catch-all route - serve React app for all non-API routes
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+app.get('*', (req, res) => {
+  // Check if it's a mobile device
+  const userAgent = req.headers['user-agent'] || '';
+  const isMobile = /android|blackberry|iemobile|ipad|iphone|ipod|opera mini|webos|mobile/i.test(userAgent);
+  
+  // Redirect mobile users to the mobile-friendly preview instead of the complex workspace
+  if (isMobile && req.path === '/') {
+    console.log('📱 Mobile user detected, redirecting to preview:', userAgent);
+    return res.redirect('/api/preview/proxy/demo-team-001/main/');
+  }
+  
+  res.sendFile(path.join(process.cwd(), 'client/dist/index.html'));
 });
 
 // WebSocket connection handling

@@ -119,8 +119,8 @@ fi
 echo ""
 echo "🌐 Environment URLs:"
 if [ "$ENVIRONMENT" = "production" ]; then
-    echo "   - Frontend: http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000"
-    echo "   - Backend:  http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001"
+    echo "   - Frontend: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000"
+    echo "   - Backend:  http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001"
 else
     echo "   - Frontend: http://localhost:3000"
     echo "   - Backend:  http://localhost:3001"

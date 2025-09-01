@@ -16,14 +16,9 @@ import { promisify } from 'util';
 import { randomUUID } from 'crypto';
 import { dedicatedPreviewProxy } from './dedicated-preview-proxy.js';
 import { PrismaClient } from '@prisma/client';
+import { BASE_HOST } from '../config/deployment.js';
 
 const execAsync = promisify(exec);
-
-// Get the base host from environment - FAIL if not configured
-const BASE_HOST = process.env['BASE_HOST'];
-if (!BASE_HOST) {
-  throw new Error('BASE_HOST environment variable is required. Set it to your production domain.');
-}
 
 interface PreviewInfo {
   running: boolean;
@@ -349,6 +344,7 @@ export default defineConfig({
       host: '${BASE_HOST}'
     },
     cors: true,
+    allowedHosts: "all",
     origin: 'http://${BASE_HOST}:${containerPort}',
     // Ensure proper file serving
     fs: {
@@ -359,7 +355,7 @@ export default defineConfig({
 })`;
   }
 
-  private async updateViteConfigWithProxy(teamId: string, proxyPort: number): Promise<void> {
+  private async updateViteConfigWithProxy(teamId: string, _proxyPort: number): Promise<void> {
     const projectDir = path.join(this.workspaceDir, teamId);
     const viteConfigPath = path.join(projectDir, 'vite.config.js');
     

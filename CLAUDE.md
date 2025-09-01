@@ -169,7 +169,7 @@ covibes/
 ```bash
 cd server
 # Set required environment variables first:
-export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
 export EC2_USERNAME=ubuntu
 
 npm run dev          # Start development server on port 3001 with hot reload
@@ -185,15 +185,30 @@ npm run prisma:studio     # Open database admin interface
 ```bash
 cd client
 # Set REQUIRED environment variables first - NO FALLBACKS:
-export VITE_BACKEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001
-export VITE_FRONTEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
+export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
 
 npm run dev          # Start Vite development server on port 3000
-npm run build        # Build for production
+npm run build        # Build for production (REQUIRED for server static file serving)
 npm run lint         # Run ESLint
 npm run test         # Run Vitest unit tests
 npm run type-check   # TypeScript type checking
 ```
+
+#### ⚠️ **CRITICAL: Client Build Requirement**
+**The client MUST be built before starting the server in production or when serving static files:**
+
+```bash
+# ALWAYS build client first
+cd client
+npm run build
+
+# Then start server (it serves from client/dist/)
+cd ../server 
+npm run dev  # or npm start for production
+```
+
+**Why**: The server serves static files from `client/dist/` directory. Without building first, you'll get "ENOENT: no such file or directory, stat 'client/dist/index.html'" errors.
 
 ### Database Management
 ```bash
@@ -232,7 +247,7 @@ npx playwright test
 #### Server Environment Variables:
 ```bash
 # EC2 Configuration (REQUIRED - NO FALLBACKS)
-export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
 export EC2_USERNAME=ubuntu
 
 # Database Configuration (REQUIRED - NO FALLBACKS)
@@ -254,8 +269,8 @@ export NODE_ENV="development"
 #### Client Environment Variables:
 ```bash
 # Frontend/Backend URLs (REQUIRED - NO FALLBACKS)
-export VITE_BACKEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001
-export VITE_FRONTEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
+export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
 ```
 
 ### Complete Environment Setup Script
@@ -263,15 +278,15 @@ Run ALL these commands before starting any services (NO FALLBACKS):
 
 ```bash
 # Server environment variables (REQUIRED)
-export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
 export EC2_USERNAME=ubuntu
 export JWT_SECRET="development-jwt-secret-key"
 export ENCRYPTION_KEY="32-character-development-encrypt-key!"
 export NODE_ENV="development"
 
 # Client environment variables (REQUIRED)
-export VITE_BACKEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3001
-export VITE_FRONTEND_URL=http://ec2-13-60-242-174.eu-north-1.compute.amazonaws.com:3000
+export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
 
 # Start servers
 cd server && npm run dev &
@@ -282,7 +297,7 @@ cd ../client && npm run dev
 Common startup failures and their fixes:
 
 1. **"EC2_HOST environment variable is required"**
-   - Fix: `export EC2_HOST=ec2-13-60-242-174.eu-north-1.compute.amazonaws.com`
+   - Fix: `export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com`
 
 2. **"EC2_USERNAME environment variable is required"**
    - Fix: `export EC2_USERNAME=ubuntu`
@@ -468,6 +483,15 @@ model terminal_history {
 
 ## Troubleshooting Common Issues
 
+### ⚠️ **Client Build Missing (ENOENT index.html Error)**
+**Error**: `ENOENT: no such file or directory, stat 'client/dist/index.html'`
+**Cause**: Server tries to serve static files from `client/dist/` but directory doesn't exist
+**Solution**:
+```bash
+cd client && npm run build
+```
+**Prevention**: Always build client before starting server. Added to docs above.
+
 ### Database Connection Issues
 - Ensure PostgreSQL is running: `docker-compose ps`
 - Check connection string in `.env` files
@@ -604,6 +628,243 @@ These patterns come from real debugging sessions and production issues. The data
 - **Tests**: Organized by type in `tests/playwright/` with utility helpers
 - **Docker**: Infrastructure containers in `docker/` directory
 
+# Production Deployment Guide
+
+## 🚀 Production Deployment Process
+
+### Prerequisites
+- EC2 instance with Node.js 20+, PM2, Nginx, PostgreSQL, Docker
+- Environment variables configured in `.env.production` files
+- SSH keys and GitHub OAuth tokens set up
+
+### Step-by-Step Deployment
+
+#### 1. Environment Setup
+```bash
+# CRITICAL: Set these EXACT environment variables (NO FALLBACKS)
+export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
+export EC2_USERNAME=ubuntu
+export NODE_ENV=production
+
+# Client environment variables
+export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
+export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
+```
+
+#### 2. Clean Existing Processes
+**CRITICAL**: Always clean up development processes before production deployment:
+```bash
+# Kill ALL existing development servers (common cause of port conflicts)
+pkill -f nodemon
+pkill -f "vite.*dev"
+pm2 delete all
+pm2 kill
+
+# Check for any remaining node processes
+ps aux | grep node
+# Kill any remaining processes: kill -9 <pid>
+```
+
+#### 3. Build Applications
+```bash
+# Server build
+cd server
+npm run build
+
+# Client build  
+cd ../client
+npm run build
+```
+
+#### 4. Static File Conflicts Resolution
+**CRITICAL ISSUE**: Static files can override API routes!
+
+- **Problem**: If you have both `/pitch` route AND `/pitch.html` file, Express static middleware serves the file first
+- **Solution**: Remove/rename conflicting static files:
+```bash
+# Example: Move conflicting files before deployment
+mv pitch.html pitch.html.backup
+mv any-conflicting-static-file.html backup/
+```
+
+#### 5. PM2 Production Start
+```bash
+# Start with ecosystem config (contains all environment variables)
+pm2 start ecosystem.config.js
+
+# Verify both services are running
+pm2 status
+
+# Check logs for any issues
+pm2 logs --lines 20
+```
+
+#### 6. Nginx Configuration
+Ensure nginx.conf is configured and active:
+```bash
+# Test nginx config
+sudo nginx -t
+
+# Reload nginx
+sudo systemctl reload nginx
+```
+
+## ⚠️ Common Deployment Issues & Solutions
+
+### 1. Route Not Working - Static File Conflict
+**Symptoms**: API route returns static HTML instead of expected JSON/content
+**Cause**: Express static middleware serving file with same name as route
+**Solution**: 
+```bash
+# Find conflicting files
+ls -la | grep "route-name"
+# Move or rename: mv conflicting-file.html backup/
+```
+
+### 2. Old Development Processes Still Running
+**Symptoms**: Changes not reflected, port conflicts, old behavior persists
+**Cause**: Multiple nodemon/vite processes running simultaneously
+**Solution**:
+```bash
+# Find all node processes
+ps aux | grep node
+# Kill development processes
+pkill -f nodemon
+pkill -f "vite.*dev"
+# Kill specific PIDs if needed
+kill -9 <pid1> <pid2> <pid3>
+```
+
+### 3. PM2 Process Using Cached Code
+**Symptoms**: Server shows old behavior despite new build
+**Cause**: PM2 not reloading new compiled code
+**Solution**:
+```bash
+# Force complete PM2 restart
+pm2 delete all
+pm2 kill
+pm2 start ecosystem.config.js
+```
+
+### 4. Environment Variables Not Applied
+**Symptoms**: Server using default values instead of production config
+**Cause**: Environment variables not set or PM2 not loading them
+**Solution**:
+```bash
+# Verify environment file exists
+ls -la server/.env.production client/.env.production
+# Check ecosystem.config.js has correct env_file path
+# Restart with --update-env flag
+pm2 restart all --update-env
+```
+
+### 5. Database Connection Issues
+**Symptoms**: Server crashes or database errors
+**Solution**:
+```bash
+# Verify PostgreSQL is running
+sudo systemctl status postgresql
+# Check DATABASE_URL in .env.production
+# Run migrations
+cd server && npm run prisma:migrate
+```
+
+### 6. Port Conflicts
+**Symptoms**: "EADDRINUSE" errors
+**Solution**:
+```bash
+# Find what's using the ports
+sudo lsof -i:3000
+sudo lsof -i:3001
+# Kill conflicting processes
+sudo kill -9 <pid>
+```
+
+## 🛠 Troubleshooting Commands
+
+### Process Management
+```bash
+# Check all running processes
+pm2 status
+ps aux | grep node
+
+# PM2 logs
+pm2 logs --lines 50
+pm2 logs colabvibe-server --lines 20
+
+# Kill specific processes
+pm2 delete <app-name>
+kill -9 <pid>
+```
+
+### Service Health Checks
+```bash
+# Test endpoints
+curl -I http://ec2-host:3001/health
+curl -s http://ec2-host:3001/api/test
+
+# Check port usage
+sudo lsof -i:3001
+sudo netstat -tlnp | grep 3001
+
+# Nginx status
+sudo systemctl status nginx
+sudo nginx -t
+```
+
+### File System Checks
+```bash
+# Check build outputs
+ls -la server/dist/src/
+ls -la client/dist/
+
+# Check for static file conflicts
+ls -la | grep -E "\.(html|pdf)$"
+
+# Verify environment files
+cat server/.env.production
+cat client/.env.production
+```
+
+## 📝 Deployment Checklist
+
+Before deploying to production, verify:
+
+- [ ] All development processes killed (`pkill -f nodemon`)
+- [ ] Environment variables set correctly
+- [ ] No static file conflicts with API routes
+- [ ] Both server and client built successfully
+- [ ] Database migrations applied
+- [ ] PM2 ecosystem.config.js updated with correct hostname
+- [ ] Nginx configuration updated and reloaded
+- [ ] All ports available (3000, 3001)
+
+## 🔄 Safe Deployment Process
+
+To avoid issues, always follow this order:
+
+1. **Clean environment** (kill old processes)
+2. **Set environment variables** (export all required vars)
+3. **Build applications** (npm run build for both)
+4. **Resolve file conflicts** (move/rename conflicting static files)
+5. **Start PM2** (pm2 start ecosystem.config.js)
+6. **Verify services** (pm2 status, curl tests)
+7. **Check logs** (pm2 logs for any errors)
+
+## 🎯 Production vs Development Differences
+
+### Development
+- Uses `nodemon` with TypeScript source files
+- Vite dev server on port 3000 with HMR
+- Environment variables loaded from `.env` files
+- Auto-restart on file changes
+
+### Production  
+- Uses compiled JavaScript from `dist/` directories
+- Static file serving via `serve` package
+- Environment variables from `.env.production` and ecosystem config
+- PM2 process management with restart policies
+
 This context provides comprehensive guidance for LLM agents working on ColabVibe. The codebase follows database-backed state management patterns with comprehensive Docker containerization and organized testing infrastructure.
 
-**Important**: Don't restart servers unless explicitly asked - they auto-reload on file changes.
+**Important**: Don't restart servers unless explicitly asked - they auto-reload on file changes (development mode only).

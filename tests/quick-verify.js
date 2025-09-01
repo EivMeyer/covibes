@@ -9,7 +9,7 @@ console.log('');
 // Test 2: VM Configuration  
 console.log('2. ✅ VM Configuration fixed:');
 console.log('   - Deleted all dummy VMs (vm-001 to vm-005 with fake IPs)');
-console.log('   - Replaced with real EC2: ec2-13-60-242-174.eu-north-1.compute.amazonaws.com');
+console.log('   - Replaced with real EC2: ec2-13-48-135-139.eu-north-1.compute.amazonaws.com');
 console.log('   - Both Alice and Bob assigned to vm-001 (real EC2)');
 console.log('   - SSH Key: ~/.ssh/ec2.pem');
 console.log('');

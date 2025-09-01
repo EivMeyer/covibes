@@ -16,7 +16,7 @@ Open **http://localhost:3002** in your browser
 
 ### 3. Configure & Connect
 1. **Click "Config"** to set your EC2 details:
-   - Host: `ec2-13-60-242-174.eu-north-1.compute.amazonaws.com`
+   - Host: `ec2-13-48-135-139.eu-north-1.compute.amazonaws.com`
    - Username: `ubuntu`
    - Port: `22`
 
@@ -133,7 +133,7 @@ chmod 600 ./.ssh/ec2.pem
 ### 3. Install Claude on EC2
 ```bash
 # SSH into your EC2 instance
-ssh -i ./.ssh/ec2.pem ubuntu@ec2-13-60-242-174.eu-north-1.compute.amazonaws.com
+ssh -i ./.ssh/ec2.pem ubuntu@ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
 
 # Install Claude (example)
 curl -sSL https://claude.ai/install.sh | bash
