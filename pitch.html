@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoVibes: The AI Workforce Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral & Tech Blue -->
+    <!-- Application Structure Plan: The pitch deck's linear format was transformed into a thematic, single-page scrolling experience. This structure (Hero, Opportunity, Product, Market, Vision) allows non-linear exploration via the navigation bar, enabling a user to jump directly to the section most relevant to them (e.g., an investor might go straight to 'Market' or 'The Ask'). This is more user-centric than a forced, slide-by-slide presentation, facilitating better information discovery and comprehension. -->
+    <!-- Visualization & Content Choices: Market Size -> Goal: Inform -> Bar Chart (Chart.js) -> Hover for details -> Justification: Visually impressive and makes a large number like $26B tangible. Use of Funds -> Goal: Inform -> Donut Chart (Chart.js) -> Hover for details -> Justification: Intuitively shows proportional allocation of capital. Roadmap -> Goal: Show Change -> Interactive Timeline (HTML/JS) -> Click to reveal details -> Justification: More engaging than a static list, encouraging user exploration of the future vision. Pricing Tiers -> Goal: Compare -> Interactive Cards (HTML/JS) -> Hover to highlight -> Justification: Draws user attention to the different options and makes comparison easy. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #2563eb; /* blue-600 */
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #3b82f6; /* blue-500 */
+        }
+        .timeline-path {
+            position: absolute;
+            left: -21px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dbeafe; /* blue-100 */
+        }
+        
+        /* Print-specific styles to control page breaks */
+        @media print {
+            /* Hide navigation for print */
+            header {
+                display: none !important;
+            }
+            
+            /* Each section should start on a new page */
+            section {
+                page-break-before: always;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* First section shouldn't have page break before */
+            section:first-of-type {
+                page-break-before: auto;
+            }
+            
+            /* Keep grid items together */
+            .grid > div {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Keep pricing cards together */
+            .pricing-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Keep timeline items together */
+            .timeline-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Adjust padding for print */
+            section {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            /* Ensure two-column layouts stay as columns */
+            .md\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            .lg\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            /* Keep charts from breaking */
+            .chart-container {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0">
+                    <a href="#hero" class="flex items-center space-x-2">
+                        <span class="text-2xl font-bold text-slate-800">CoVibes</span>
+                    </a>
+                </div>
+                <nav class="hidden md:flex md:space-x-8">
+                    <a href="#opportunity" class="nav-link font-medium text-slate-600">The Opportunity</a>
+                    <a href="#product" class="nav-link font-medium text-slate-600">Product</a>
+                    <a href="#features" class="nav-link font-medium text-slate-600">Features</a>
+                    <a href="#market" class="nav-link font-medium text-slate-600">Market</a>
+                    <a href="#vision" class="nav-link font-medium text-slate-600">Vision</a>
+                    <a href="#team" class="nav-link font-medium text-slate-600">Team</a>
+                    <a href="#contact" class="nav-link font-medium text-slate-600">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="pt-24 md:pt-32 pb-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tighter text-slate-800">The AI Workforce Platform</h1>
+                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600">From single-player AI assistants to a multi-player AI workforce, managed from anywhere.</p>
+                <p class="mt-4 text-sm text-slate-500">Tromsø, September 2025</p>
+            </div>
+        </section>
+
+        <section id="opportunity" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">The Paradigm Shift</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Software development is having its "Google Docs" moment. The era of isolated, single-player AI tools is over.</p>
+                </div>
+
+                <div class="mt-12 grid md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-2xl font-bold text-center text-slate-800">Today: AI-Assisted</h3>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">👨‍💻</p>
+                            <p class="text-lg font-semibold">Human-Driven</p>
+                            <p class="text-slate-500">Developer must be at their desk.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">💡</p>
+                            <p class="text-lg font-semibold">AI Assists</p>
+                            <p class="text-slate-500">Tools like Copilot provide autocomplete.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">⏳</p>
+                            <p class="text-lg font-semibold">Sequential & Slow</p>
+                            <p class="text-slate-500">Work is bottlenecked by one person's availability.</p>
+                        </div>
+                    </div>
+                    <div class="bg-blue-600 text-white p-8 rounded-lg shadow-2xl border border-blue-700">
+                        <h3 class="text-2xl font-bold text-center">With CoVibes: AI Workforce</h3>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">📱</p>
+                            <p class="text-lg font-semibold">Human-Directed</p>
+                            <p class="text-white/80">PM spawns agents from their phone.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">🤖</p>
+                            <p class="text-lg font-semibold">AI Acts</p>
+                            <p class="text-white/80">Agents autonomously fix bugs and build features.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">⚡️</p>
+                            <p class="text-lg font-semibold">Parallel & Fast</p>
+                            <p class="text-white/80">Multiple tasks are completed simultaneously.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="product" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Multi-Agent Collaboration in Action</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">This isn't a concept. It's a functional platform. See how our AI agents work together in a shared workspace, directed by a human team.</p>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">📹 Watch Demo: Multi-User Collaboration</h3>
+                        <p class="text-slate-600 mb-3">Two developers working together in real-time with AI agents</p>
+                        <a href="https://www.youtube.com/watch?v=xiDsllZ3SrA" target="_blank" class="inline-block text-blue-600 font-semibold hover:text-blue-700">▶️ Play Video</a>
+                    </div>
+                    
+                    <div class="mt-6 bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">📱 Watch Demo: Mobile Agent Control</h3>
+                        <p class="text-slate-600 mb-3">Controlling AI agents from mobile with live preview</p>
+                        <a href="https://www.youtube.com/shorts/uFm28pklYKE" target="_blank" class="inline-block text-blue-600 font-semibold hover:text-blue-700">▶️ Play Video</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Key Platform Features</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">How CoVibes enables true parallel development</p>
+                </div>
+
+                <div class="mt-16 grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">⚡</div>
+                            <h3 class="text-xl font-bold text-slate-800">Parallel Work</h3>
+                        </div>
+                        <p class="text-slate-600">Multiple AI agents work simultaneously on different parts of your codebase. While Agent A refactors the frontend, Agent B updates the backend API, and Agent C writes tests - all in parallel, not sequential.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">👁️</div>
+                            <h3 class="text-xl font-bold text-slate-800">Real-Time Visibility</h3>
+                        </div>
+                        <p class="text-slate-600">See exactly what each agent is doing in real-time. Live terminal output, code changes, test results, and progress updates are visible to the entire team through a unified dashboard.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">🎯</div>
+                            <h3 class="text-xl font-bold text-slate-800">Human-in-the-Loop</h3>
+                        </div>
+                        <p class="text-slate-600">Maintain control and quality through strategic oversight. Review agent work, provide guidance, merge changes, and make deployment decisions while the AI handles the execution.</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center">
+                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 max-w-4xl mx-auto">
+                        <p class="text-lg text-slate-700 font-medium">
+                            <span class="text-blue-600 font-bold">The Result:</span> What used to take a development team weeks of sequential work can now be completed in days through parallel AI execution, with humans focusing on architecture decisions and quality oversight.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="market" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Creating a New Category</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">We sit at the intersection of three massive trends: AI adoption, remote work, and the need for always-on development cycles.</p>
+                </div>
+                <div class="mt-12 grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-8">
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                            <h3 class="font-bold text-2xl text-blue-600">$26B+</h3>
+                            <p class="mt-1 font-semibold text-slate-800">Developer Tools Market<span class="text-xs text-slate-400 ml-1">¹ Gartner 2024</span></p>
+                            <p class="mt-1 text-slate-600">Growing at 25% year-over-year.</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                             <h3 class="font-bold text-2xl text-blue-600">100M+</h3>
+                            <p class="mt-1 font-semibold text-slate-800">Developers Worldwide<span class="text-xs text-slate-400 ml-1">² GitHub Octoverse 2024</span></p>
+                            <p class="mt-1 text-slate-600">70% of whom work in a remote or hybrid model.</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                             <h3 class="font-bold text-2xl text-blue-600">92%</h3>
+                            <p class="mt-1 font-semibold text-slate-800">Of Developers Use AI<span class="text-xs text-slate-400 ml-1">³ Stack Overflow Survey 2024</span></p>
+                            <p class="mt-1 text-slate-600">But almost all are using isolated, single-player tools.</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                            <h3 class="font-bold text-2xl text-blue-600">3x Growth</h3>
+                            <p class="mt-1 font-semibold text-slate-800">In AI Startup Formation<span class="text-xs text-slate-400 ml-1">⁴ PitchBook 2024</span></p>
+                            <p class="mt-1 text-slate-600">2024 saw record venture funding in AI-first companies.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-center font-bold text-xl text-slate-800 mb-4">Market Size & Potential</h3>
+                        <div class="chart-container">
+                            <canvas id="marketChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <p class="text-lg text-slate-600">The dramatic reduction in development friction through AI is catalyzing an unprecedented wave of startup formation. Teams that once needed 10 engineers can now build with 2-3 people directing AI agents. CoVibes is the collaboration platform enabling this new generation of lean, AI-powered startups.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">AI Workforce-as-a-Service (WaaS)</h2>
+                    <p class="mt-4 text-lg text-slate-600">From free starter to enterprise scale - choose the plan that fits your team.</p>
+                </div>
+                <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                    <!-- Free Tier - Visually Distinct -->
+                    <div class="pricing-card bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-lg shadow-md border-2 border-green-400 transition-all duration-300 hover:border-green-500 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <div class="absolute top-0 -translate-y-1/2 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">FREE</div>
+                        <h4 class="text-xl font-bold text-slate-800">Founders</h4>
+                        <p class="mt-2 text-slate-500">Perfect for getting started.</p>
+                        <p class="mt-6 text-4xl font-bold text-green-600">Free</p>
+                        <p class="text-slate-500">Always</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Bring your own VM</li>
+                            <li>✓ Bring your own AI keys</li>
+                            <li>✓ Up to 2 team members</li>
+                            <li>✓ Community support</li>
+                        </ul>
+                    </div>
+                    <!-- Startup Tier -->
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">Startup</h4>
+                        <p class="mt-2 text-slate-500">For growing teams.</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">$49</p>
+                        <p class="text-slate-500">/ month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Bring your own VM</li>
+                            <li>✓ Managed AI agents included</li>
+                            <li>✓ Up to 10 team members</li>
+                            <li>✓ Priority support</li>
+                        </ul>
+                    </div>
+                    <!-- Scale Tier - Popular -->
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-blue-500 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <p class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</p>
+                        <h4 class="text-xl font-bold text-slate-800">Scale</h4>
+                        <p class="mt-2 text-slate-500">For scaling businesses.</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">$199</p>
+                        <p class="text-slate-500">/ month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Managed VM infrastructure</li>
+                            <li>✓ Unlimited AI agents</li>
+                            <li>✓ Unlimited team members</li>
+                            <li>✓ 24/7 dedicated support</li>
+                        </ul>
+                    </div>
+                    <!-- Enterprise Tier -->
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">Enterprise</h4>
+                        <p class="mt-2 text-slate-500">For large-scale needs.</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">Custom</p>
+                        <p class="text-slate-500">Contact us for pricing</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Private cloud deployment</li>
+                            <li>✓ Custom integrations</li>
+                            <li>✓ SLA guarantees</li>
+                            <li>✓ White-glove onboarding</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vision" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Building the Future of Development</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Our vision is to enable AI development teams that work while you sleep, with humans providing high-level orchestration.</p>
+                </div>
+                <div class="mt-16 grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-8">Our Roadmap</h3>
+                        <div class="relative pl-8">
+                            <div class="timeline-path"></div>
+                            <div class="timeline-item relative mb-10">
+                                <h4 class="font-bold text-lg text-blue-600">Now</h4>
+                                <p class="text-slate-600">Any team member can spawn AI agents with full workspace access.</p>
+                            </div>
+                            <div class="timeline-item relative mb-10">
+                                <h4 class="font-bold text-lg text-blue-600">12 Months</h4>
+                                <p class="text-slate-600">Agents begin to collaborate with each other on complex tasks.</p>
+                            </div>
+                            <div class="timeline-item relative">
+                                <h4 class="font-bold text-lg text-blue-600">24 Months+</h4>
+                                <p class="text-slate-600">Fully autonomous AI teams managed by human orchestration from mobile devices.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-100 p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-center font-bold text-xl text-slate-800 mb-4">Funding & Use of Funds</h3>
+                        <div class="chart-container">
+                            <canvas id="fundsChart"></canvas>
+                        </div>
+                        <p class="text-center mt-6 text-slate-600">We are raising funding to hire key engineering and marketing roles in Tromsø, Norway to achieve our 12-month milestones.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="team" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">The Team</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Building the future of AI-powered development from Tromsø, Norway</p>
+                </div>
+                <div class="mt-16 grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6">
+                            <img src="founders/eivind_meyer.png" alt="Eivind Meyer" class="w-24 h-24 rounded-full object-cover border-2 border-blue-200">
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">Eivind Meyer</h3>
+                        <p class="mt-2 text-blue-600 font-semibold">Machine Learning Developer</p>
+                        <p class="mt-4 text-slate-600">Leading the technical development of CoVibes' AI workforce platform, bringing expertise in machine learning and distributed systems.</p>
+                        <div class="mt-6">
+                            <a href="https://www.linkedin.com/in/eivind-meyer/" target="_blank" class="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+                                <span>LinkedIn</span>
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12l-2-2m0 0l2-2m-2 2h8m-8 0H4a2 2 0 01-2-2V6a2 2 0 012-2h4m4 0V2a2 2 0 012 2v2"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6">
+                            <img src="founders/michael_eichelbeck.png" alt="Michael Eichelbeck" class="w-24 h-24 rounded-full object-cover border-2 border-green-200">
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">Michael Eichelbeck</h3>
+                        <p class="mt-2 text-green-600 font-semibold">Strategic Partner, Investor</p>
+                        <p class="mt-4 text-slate-600">Bringing strategic guidance and investment expertise to scale CoVibes' vision of autonomous AI development teams.</p>
+                        <div class="mt-6">
+                            <a href="https://www.linkedin.com/in/michael-eichelbeck-016b87171/" target="_blank" class="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+                                <span>LinkedIn</span>
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12l-2-2m0 0l2-2m-2 2h8m-8 0H4a2 2 0 01-2-2V6a2 2 0 012-2h4m4 0V2a2 2 0 012 2v2"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="contact" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                 <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Ready to Transform Your Development?</h2>
+                 <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">Join the AI workforce revolution and start building while you sleep.</p>
+                <div class="mt-8">
+                    <a href="mailto:contact@covibes.com" class="inline-block bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 text-lg">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const marketCtx = document.getElementById('marketChart').getContext('2d');
+            new Chart(marketCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dev Tools Market', 'Global Developers', 'AI Adoption'],
+                    datasets: [{
+                        label: 'Market Metrics',
+                        data: [26, 100, 92],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(37, 99, 235, 0.7)',
+                            'rgba(29, 78, 216, 0.7)',
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(37, 99, 235, 1)',
+                            'rgba(29, 78, 216, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.label === 'Dev Tools Market') {
+                                           label = `$${context.parsed.y} Billion+`;
+                                        } else if (context.label === 'Global Developers') {
+                                            label = `${context.parsed.y} Million+`;
+                                        } else {
+                                            label = `${context.parsed.y}%`;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + ' M/$B/%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const fundsCtx = document.getElementById('fundsChart').getContext('2d');
+            new Chart(fundsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Product & Engineering (60%)', 'Go-to-Market (25%)', 'Operations (15%)'],
+                    datasets: [{
+                        label: 'Use of Funds',
+                        data: [60, 25, 15],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(96, 165, 250, 0.8)',
+                            'rgba(147, 197, 253, 0.8)'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                       legend: {
+                            position: 'bottom',
+                       },
+                       tooltip: {
+                           callbacks: {
+                               label: function(context) {
+                                   return `${context.label}: ${context.parsed}%`;
+                               }
+                           }
+                       }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
