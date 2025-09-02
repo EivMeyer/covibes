@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="{{meta.lang}}" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{meta.title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral & Tech Blue -->
+    <!-- Application Structure Plan: The pitch deck's linear format was transformed into a thematic, single-page scrolling experience. This structure (Hero, Opportunity, Product, Market, Vision) allows non-linear exploration via the navigation bar, enabling a user to jump directly to the section most relevant to them (e.g., an investor might go straight to 'Market' or 'The Ask'). This is more user-centric than a forced, slide-by-slide presentation, facilitating better information discovery and comprehension. -->
+    <!-- Visualization & Content Choices: Market Size -> Goal: Inform -> Bar Chart (Chart.js) -> Hover for details -> Justification: Visually impressive and makes a large number like $26B tangible. Use of Funds -> Goal: Inform -> Donut Chart (Chart.js) -> Hover for details -> Justification: Intuitively shows proportional allocation of capital. Roadmap -> Goal: Show Change -> Interactive Timeline (HTML/JS) -> Click to reveal details -> Justification: More engaging than a static list, encouraging user exploration of the future vision. Pricing Tiers -> Goal: Compare -> Interactive Cards (HTML/JS) -> Hover to highlight -> Justification: Draws user attention to the different options and makes comparison easy. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #2563eb; /* blue-600 */
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #3b82f6; /* blue-500 */
+        }
+        .timeline-path {
+            position: absolute;
+            left: -21px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dbeafe; /* blue-100 */
+        }
+        
+        /* Karpathy Tweet Slide Styles */
+        .tweet-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+        
+        .tweet-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tweet-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .tweet-author {
+            flex-grow: 1;
+        }
+        
+        .tweet-name {
+            color: #f1f5f9;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .tweet-handle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        
+        .tweet-content {
+            color: #e2e8f0;
+            font-size: 1.125rem;
+            line-height: 1.8;
+        }
+        
+        .tweet-content .highlight-vibe {
+            color: #60a5fa;
+            font-weight: 600;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tweet-content .highlight-key {
+            color: #fbbf24;
+            font-weight: 500;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .transition-text {
+            color: #64748b;
+            font-size: 1.125rem;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .tweet-card {
+                padding: 2rem;
+                margin: 0 1rem;
+            }
+            
+            .tweet-content {
+                font-size: 1rem;
+            }
+            
+            .section-title-overlay h2 {
+                font-size: 2rem;
+            }
+            
+            .tweet-avatar {
+                width: 50px;
+                height: 50px;
+            }
+        }
+        
+        /* Print-specific styles to control page breaks */
+        @media print {
+            /* Hide navigation for print */
+            header {
+                display: none !important;
+            }
+            
+            /* Each section should start on a new page */
+            section {
+                page-break-before: always;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* First section shouldn't have page break before */
+            section:first-of-type {
+                page-break-before: auto;
+            }
+            
+            /* Keep grid items together */
+            .grid > div {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Keep pricing cards together */
+            .pricing-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Keep timeline items together */
+            .timeline-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Adjust padding for print */
+            section {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            /* Ensure two-column layouts stay as columns */
+            .md\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            .lg\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            /* Keep charts from breaking */
+            .chart-container {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+
+    <main>
+        <!-- Karpathy Tweet Slide -->
+        <section id="vibe-intro" class="py-20 tweet-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-100">{{vibeIntro.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-300">{{vibeIntro.subtitle}}</p>
+                </div>
+                
+                <div class="tweet-card">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar">{{tweet.avatar}}</div>
+                        <div class="tweet-author">
+                            <div class="tweet-name">{{tweet.authorName}}</div>
+                            <div class="tweet-handle">{{tweet.handle}}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tweet-content">
+                        {{tweet.content}}
+                    </div>
+                </div>
+                
+                <div class="transition-text">{{vibeIntro.transition}}</div>
+            </div>
+        </section>
+
+        <section id="hero" class="pt-16 md:pt-20 pb-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tighter text-slate-800">{{hero.title}}</h1>
+                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600">{{hero.subtitle}}</p>
+                <p class="mt-4 text-sm text-slate-500">{{hero.location}}</p>
+            </div>
+        </section>
+
+        <section id="opportunity" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{opportunity.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{opportunity.subtitle}}</p>
+                </div>
+
+                <div class="mt-12 grid md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-2xl font-bold text-center text-slate-800">{{opportunity.todayCard.title}}</h3>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">{{opportunity.todayCard.humanIcon}}</p>
+                            <p class="text-lg font-semibold">{{opportunity.todayCard.humanTitle}}</p>
+                            <p class="text-slate-500">{{opportunity.todayCard.humanDesc}}</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">{{opportunity.todayCard.aiIcon}}</p>
+                            <p class="text-lg font-semibold">{{opportunity.todayCard.aiTitle}}</p>
+                            <p class="text-slate-500">{{opportunity.todayCard.aiDesc}}</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">{{opportunity.todayCard.timeIcon}}</p>
+                            <p class="text-lg font-semibold">{{opportunity.todayCard.timeTitle}}</p>
+                            <p class="text-slate-500">{{opportunity.todayCard.timeDesc}}</p>
+                        </div>
+                    </div>
+                    <div class="bg-blue-600 text-white p-8 rounded-lg shadow-2xl border border-blue-700">
+                        <h3 class="text-2xl font-bold text-center">{{opportunity.covibesCard.title}}</h3>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">{{opportunity.covibesCard.humanIcon}}</p>
+                            <p class="text-lg font-semibold">{{opportunity.covibesCard.humanTitle}}</p>
+                            <p class="text-white/80">{{opportunity.covibesCard.humanDesc}}</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">{{opportunity.covibesCard.aiIcon}}</p>
+                            <p class="text-lg font-semibold">{{opportunity.covibesCard.aiTitle}}</p>
+                            <p class="text-white/80">{{opportunity.covibesCard.aiDesc}}</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">{{opportunity.covibesCard.timeIcon}}</p>
+                            <p class="text-lg font-semibold">{{opportunity.covibesCard.timeTitle}}</p>
+                            <p class="text-white/80">{{opportunity.covibesCard.timeDesc}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="product" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{product.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{product.subtitle}}</p>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">{{product.demo1.title}}</h3>
+                        <p class="text-slate-600 mb-3">{{product.demo1.description}}</p>
+                        <a href="{{product.demo1.url}}" target="_blank" class="inline-block text-blue-600 font-semibold hover:text-blue-700">{{product.demo1.cta}}</a>
+                    </div>
+                    
+                    <div class="mt-6 bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">{{product.demo2.title}}</h3>
+                        <p class="text-slate-600 mb-3">{{product.demo2.description}}</p>
+                        <a href="{{product.demo2.url}}" target="_blank" class="inline-block text-blue-600 font-semibold hover:text-blue-700">{{product.demo2.cta}}</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{features.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{features.subtitle}}</p>
+                </div>
+
+                <div class="mt-16 grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">{{features.codeAnywhere.icon}}</div>
+                            <h3 class="text-xl font-bold text-slate-800">{{features.codeAnywhere.title}}</h3>
+                        </div>
+                        <p class="text-slate-600">{{features.codeAnywhere.description}}</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">{{features.multiplayerAI.icon}}</div>
+                            <h3 class="text-xl font-bold text-slate-800">{{features.multiplayerAI.title}}</h3>
+                        </div>
+                        <p class="text-slate-600">{{features.multiplayerAI.description}}</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">{{features.deployYourWay.icon}}</div>
+                            <h3 class="text-xl font-bold text-slate-800">{{features.deployYourWay.title}}</h3>
+                        </div>
+                        <div class="text-left space-y-3">
+                            <div class="border-l-4 border-blue-500 pl-3">
+                                <p class="font-semibold text-slate-700">{{features.deployYourWay.selfHosted.title}}</p>
+                                <p class="text-sm text-slate-600">{{features.deployYourWay.selfHosted.description}}</p>
+                            </div>
+                            <div class="border-l-4 border-green-500 pl-3">
+                                <p class="font-semibold text-slate-700">{{features.deployYourWay.fullyManaged.title}}</p>
+                                <p class="text-sm text-slate-600">{{features.deployYourWay.fullyManaged.description}}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">{{features.flexibleAI.icon}}</div>
+                            <h3 class="text-xl font-bold text-slate-800">{{features.flexibleAI.title}}</h3>
+                        </div>
+                        <div class="text-left space-y-3">
+                            <div class="border-l-4 border-purple-500 pl-3">
+                                <p class="font-semibold text-slate-700">{{features.flexibleAI.bringYourOwn.title}}</p>
+                                <p class="text-sm text-slate-600">{{features.flexibleAI.bringYourOwn.description}}</p>
+                            </div>
+                            <div class="border-l-4 border-orange-500 pl-3">
+                                <p class="font-semibold text-slate-700">{{features.flexibleAI.weProvide.title}}</p>
+                                <p class="text-sm text-slate-600">{{features.flexibleAI.weProvide.description}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center">
+                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 max-w-4xl mx-auto">
+                        <p class="text-lg text-slate-700 font-medium">
+                            <span class="text-blue-600 font-bold">{{features.tldr.prefix}}</span> {{features.tldr.content}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{architecture.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{architecture.subtitle}}</p>
+                </div>
+
+                <!-- Shared Dashboard UI -->
+                <div class="mt-12 bg-gradient-to-r from-indigo-50 to-blue-50 p-8 rounded-lg border border-indigo-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">{{architecture.sharedDashboard.title}}</h3>
+                    <p class="text-center text-slate-600 mb-8">{{architecture.sharedDashboard.description}}</p>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">{{architecture.sharedDashboard.agentTerminals.icon}}</div>
+                            <h4 class="font-bold text-slate-800">{{architecture.sharedDashboard.agentTerminals.title}}</h4>
+                            <p class="text-sm text-slate-600 mt-2">{{architecture.sharedDashboard.agentTerminals.description}}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">{{architecture.sharedDashboard.ideEditor.icon}}</div>
+                            <h4 class="font-bold text-slate-800">{{architecture.sharedDashboard.ideEditor.title}}</h4>
+                            <p class="text-sm text-slate-600 mt-2">{{architecture.sharedDashboard.ideEditor.description}}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">{{architecture.sharedDashboard.livePreview.icon}}</div>
+                            <h4 class="font-bold text-slate-800">{{architecture.sharedDashboard.livePreview.title}}</h4>
+                            <p class="text-sm text-slate-600 mt-2">{{architecture.sharedDashboard.livePreview.description}}</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">{{architecture.sharedDashboard.teamChat.icon}}</div>
+                            <h4 class="font-bold text-slate-800">{{architecture.sharedDashboard.teamChat.title}}</h4>
+                            <p class="text-sm text-slate-600 mt-2">{{architecture.sharedDashboard.teamChat.description}}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-sm font-semibold text-indigo-700">{{architecture.sharedDashboard.bottomText}}</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 grid lg:grid-cols-2 gap-12 items-start">
+                    <div class="bg-slate-50 p-8 rounded-lg">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6">{{architecture.deploymentOptions.title}}</h3>
+                        
+                        <!-- Self-Hosted Option -->
+                        <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="font-bold text-blue-800 mb-3">{{architecture.deploymentOptions.selfHosted.title}}</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">1.</span>
+                                    <span>{{architecture.deploymentOptions.selfHosted.step1}}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">2.</span>
+                                    <span>{{architecture.deploymentOptions.selfHosted.step2}}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">3.</span>
+                                    <span>{{architecture.deploymentOptions.selfHosted.step3}}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">4.</span>
+                                    <span>{{architecture.deploymentOptions.selfHosted.step4}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Managed Option -->
+                        <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <h4 class="font-bold text-purple-800 mb-3">{{architecture.deploymentOptions.fullyManaged.title}}</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">1.</span>
+                                    <span>{{architecture.deploymentOptions.fullyManaged.step1}}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">2.</span>
+                                    <span>{{architecture.deploymentOptions.fullyManaged.step2}}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">3.</span>
+                                    <span>{{architecture.deploymentOptions.fullyManaged.step3}}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">4.</span>
+                                    <span>{{architecture.deploymentOptions.fullyManaged.step4}}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-8 border-t border-slate-200">
+                            <h4 class="font-semibold text-slate-800 mb-4">{{architecture.supportedAI.title}}</h4>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">{{architecture.supportedAI.claude}}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">{{architecture.supportedAI.gemini}}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">{{architecture.supportedAI.gpt}}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">{{architecture.supportedAI.future}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                            <h3 class="font-bold text-green-800 mb-3">{{architecture.keyInnovation.title}}</h3>
+                            <ul class="space-y-2 text-slate-700">
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span>{{architecture.keyInnovation.gitBacked}}</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span>{{architecture.keyInnovation.liveSync}}</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span>{{architecture.keyInnovation.noConflicts}}</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <h3 class="font-bold text-blue-800 mb-3">{{architecture.universalPreview.title}}</h3>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>{{architecture.universalPreview.web}}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>{{architecture.universalPreview.mobile}}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>{{architecture.universalPreview.desktop}}</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>{{architecture.universalPreview.anyGui}}</span>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-600">{{architecture.universalPreview.description}}</p>
+                        </div>
+
+                        <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                            <h3 class="font-bold text-purple-800 mb-3">{{architecture.whyThisWins.title}}</h3>
+                            <ul class="space-y-2 text-slate-700 text-sm">
+                                <li><strong>{{architecture.whyThisWins.noLockIn.title}}:</strong> {{architecture.whyThisWins.noLockIn.description}}</li>
+                                <li><strong>{{architecture.whyThisWins.trueIsolation.title}}:</strong> {{architecture.whyThisWins.trueIsolation.description}}</li>
+                                <li><strong>{{architecture.whyThisWins.privacy.title}}:</strong> {{architecture.whyThisWins.privacy.description}}</li>
+                                <li><strong>{{architecture.whyThisWins.scalable.title}}:</strong> {{architecture.whyThisWins.scalable.description}}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- AI-Specific Innovations -->
+                    <div class="mt-12 bg-gradient-to-r from-purple-50 to-indigo-50 p-8 rounded-lg border border-purple-200">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">{{architecture.aiInnovations.title}}</h3>
+                        
+                        <div class="grid lg:grid-cols-2 gap-8">
+                            <!-- Cross-Agent Context Injection -->
+                            <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                                <h4 class="font-bold text-lg text-purple-800 mb-3">{{architecture.aiInnovations.crossAgent.title}}</h4>
+                                <p class="text-sm text-slate-600 mb-4">{{architecture.aiInnovations.crossAgent.description}}</p>
+                                <div class="bg-slate-50 p-3 rounded text-xs font-mono">
+                                    <div class="text-slate-700">{{architecture.aiInnovations.crossAgent.example.agentA}}</div>
+                                    <div class="text-blue-600">{{architecture.aiInnovations.crossAgent.example.agentB}}</div>
+                                    <div class="text-green-600">{{architecture.aiInnovations.crossAgent.example.result}}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hierarchical Agents -->
+                            <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                                <h4 class="font-bold text-lg text-purple-800 mb-3">{{architecture.aiInnovations.hierarchical.title}}</h4>
+                                <p class="text-sm text-slate-600 mb-4">{{architecture.aiInnovations.hierarchical.description}}</p>
+                                <div class="space-y-2 text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        <span>{{architecture.aiInnovations.hierarchical.workers}}</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        <span>{{architecture.aiInnovations.hierarchical.supervisors}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 text-center">
+                            <p class="text-sm font-semibold text-purple-700">{{architecture.aiInnovations.bottomText}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="market" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{market.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{market.subtitle}}</p>
+                </div>
+                <div class="mt-12 grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-8">
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                            <h3 class="font-bold text-2xl text-blue-600">{{market.stats.devTools.value}}</h3>
+                            <p class="mt-1 font-semibold text-slate-800">{{market.stats.devTools.title}}</p>
+                            <p class="mt-1 text-slate-600">{{market.stats.devTools.description}}</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                             <h3 class="font-bold text-2xl text-blue-600">{{market.stats.developers.value}}</h3>
+                            <p class="mt-1 font-semibold text-slate-800">{{market.stats.developers.title}}</p>
+                            <p class="mt-1 text-slate-600">{{market.stats.developers.description}}</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                             <h3 class="font-bold text-2xl text-blue-600">{{market.stats.aiAdoption.value}}</h3>
+                            <p class="mt-1 font-semibold text-slate-800">{{market.stats.aiAdoption.title}}</p>
+                            <p class="mt-1 text-slate-600">{{market.stats.aiAdoption.description}}</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                            <h3 class="font-bold text-2xl text-blue-600">{{market.stats.aiGrowth.value}}</h3>
+                            <p class="mt-1 font-semibold text-slate-800">{{market.stats.aiGrowth.title}}</p>
+                            <p class="mt-1 text-slate-600">{{market.stats.aiGrowth.description}}</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-center font-bold text-xl text-slate-800 mb-4">{{market.chartTitle}}</h3>
+                        <div class="chart-container">
+                            <canvas id="marketChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg border border-blue-200 mb-8">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">{{market.unbundling.title}}</h3>
+                        <p class="text-lg text-slate-700 mb-4">{{market.unbundling.paragraph1}}</p>
+                        <p class="text-lg text-slate-700 mb-4">{{market.unbundling.paragraph2}}</p>
+                        <p class="text-lg font-semibold text-blue-700">{{market.unbundling.paragraph3}}</p>
+                    </div>
+                    <p class="text-lg text-slate-600">{{market.conclusion}}</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{competition.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{competition.subtitle}}</p>
+                </div>
+                
+                <div class="mt-12 overflow-x-auto">
+                    <table class="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+                        <thead class="bg-slate-800 text-white">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">{{competition.table.headers.feature}}</th>
+                                <th class="px-4 py-3 text-center font-semibold bg-blue-600">{{competition.table.headers.covibes}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.cursor}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.windsurf}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.bolt}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.lovable}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.v0}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.replit}}</th>
+                                <th class="px-4 py-3 text-center font-semibold">{{competition.table.headers.base44}}</th>
+                                <th class="px-4 py-3 text-center font-semibold text-xs">{{competition.table.headers.others}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.codeAnywhere.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.codeAnywhere.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.codeAnywhere.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.codeAnywhere.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.codeAnywhere.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.codeAnywhere.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.codeAnywhere.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.codeAnywhere.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.codeAnywhere.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.codeAnywhere.others}}</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.multiplayerAI.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.multiplayerAI.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.multiplayerAI.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.multiplayerAI.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.multiplayerAI.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.multiplayerAI.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.multiplayerAI.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.multiplayerAI.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.multiplayerAI.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.multiplayerAI.others}}</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.deploymentFlexibility.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.deploymentFlexibility.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.deploymentFlexibility.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.deploymentFlexibility.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.deploymentFlexibility.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.deploymentFlexibility.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.deploymentFlexibility.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.deploymentFlexibility.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.deploymentFlexibility.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.deploymentFlexibility.others}}</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.ownInfrastructure.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.ownInfrastructure.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.ownInfrastructure.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.ownInfrastructure.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.ownInfrastructure.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.ownInfrastructure.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.ownInfrastructure.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.ownInfrastructure.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.ownInfrastructure.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.ownInfrastructure.others}}</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.livePreview.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.livePreview.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.livePreview.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.livePreview.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.livePreview.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.livePreview.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.livePreview.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.livePreview.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.livePreview.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.livePreview.others}}</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.parallelAI.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.parallelAI.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.parallelAI.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.parallelAI.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.parallelAI.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.parallelAI.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.parallelAI.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.parallelAI.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.parallelAI.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.parallelAI.others}}</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.aiPricing.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.aiPricing.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">{{competition.table.rows.aiPricing.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.aiPricing.others}}</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">{{competition.table.rows.freeTier.feature}}</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">{{competition.table.rows.freeTier.covibes}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.cursor}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.windsurf}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.bolt}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.lovable}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.v0}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.replit}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">{{competition.table.rows.freeTier.base44}}</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">{{competition.table.rows.freeTier.others}}</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="flexibility" class="py-20 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{flexibility.title}}</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">{{flexibility.subtitle}}</p>
+                </div>
+                
+                <div class="mt-16 grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                    <!-- Self-Hosted Benefits -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-blue-100">
+                        <div class="flex items-center mb-6">
+                            <div class="text-4xl mr-4">{{flexibility.selfHosted.icon}}</div>
+                            <h3 class="text-2xl font-bold text-slate-800">{{flexibility.selfHosted.title}}</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.selfHosted.security.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.selfHosted.security.description}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.selfHosted.regulated.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.selfHosted.regulated.description}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.selfHosted.costConscious.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.selfHosted.costConscious.description}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.selfHosted.customWorkflows.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.selfHosted.customWorkflows.description}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fully Managed Benefits -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-purple-100">
+                        <div class="flex items-center mb-6">
+                            <div class="text-4xl mr-4">{{flexibility.fullyManaged.icon}}</div>
+                            <h3 class="text-2xl font-bold text-slate-800">{{flexibility.fullyManaged.title}}</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.fullyManaged.fastStartups.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.fullyManaged.fastStartups.description}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.fullyManaged.smallTeams.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.fullyManaged.smallTeams.description}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.fullyManaged.proofOfConcepts.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.fullyManaged.proofOfConcepts.description}}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">{{flexibility.fullyManaged.agencies.title}}</p>
+                                    <p class="text-sm text-slate-500">{{flexibility.fullyManaged.agencies.description}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{pricing.title}}</h2>
+                    <p class="mt-4 text-lg text-slate-600">{{pricing.subtitle}}</p>
+                </div>
+                
+                <!-- Self-Hosted Pricing Section -->
+                <div class="mt-16">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center bg-blue-100 text-blue-800 px-6 py-3 rounded-full">
+                            <span class="text-2xl mr-3">{{pricing.selfHosted.icon}}</span>
+                            <h3 class="text-xl font-bold">{{pricing.selfHosted.title}}</h3>
+                            <span class="ml-3 text-sm font-medium">{{pricing.selfHosted.subtitle}}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                    <div class="pricing-card bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-lg shadow-md border-2 border-green-400 transition-all duration-300 hover:border-green-500 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <div class="absolute top-0 -translate-y-1/2 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">{{pricing.selfHosted.founders.badge}}</div>
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.selfHosted.founders.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.selfHosted.founders.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-green-600">{{pricing.selfHosted.founders.price}}</p>
+                        <p class="text-slate-500">{{pricing.selfHosted.founders.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.selfHosted.founders.features.infrastructure}}</li>
+                            <li>✓ {{pricing.selfHosted.founders.features.aiKeys}}</li>
+                            <li>✓ {{pricing.selfHosted.founders.features.teamMembers}}</li>
+                            <li>✓ {{pricing.selfHosted.founders.features.support}}</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.selfHosted.startup.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.selfHosted.startup.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">{{pricing.selfHosted.startup.price}}</p>
+                        <p class="text-slate-500">{{pricing.selfHosted.startup.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.selfHosted.startup.features.infrastructure}}</li>
+                            <li>✓ {{pricing.selfHosted.startup.features.aiKeys}}</li>
+                            <li>✓ {{pricing.selfHosted.startup.features.teamMembers}}</li>
+                            <li>✓ {{pricing.selfHosted.startup.features.support}}</li>
+                            <li>✓ {{pricing.selfHosted.startup.features.advanced}}</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-blue-500 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <p class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">{{pricing.selfHosted.scale.badge}}</p>
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.selfHosted.scale.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.selfHosted.scale.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">{{pricing.selfHosted.scale.price}}</p>
+                        <p class="text-slate-500">{{pricing.selfHosted.scale.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.selfHosted.scale.features.infrastructure}}</li>
+                            <li>✓ {{pricing.selfHosted.scale.features.aiKeys}}</li>
+                            <li>✓ {{pricing.selfHosted.scale.features.members}}</li>
+                            <li>✓ {{pricing.selfHosted.scale.features.support}}</li>
+                            <li>✓ {{pricing.selfHosted.scale.features.compliance}}</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.selfHosted.enterprise.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.selfHosted.enterprise.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">{{pricing.selfHosted.enterprise.price}}</p>
+                        <p class="text-slate-500">{{pricing.selfHosted.enterprise.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.selfHosted.enterprise.features.onPremise}}</li>
+                            <li>✓ {{pricing.selfHosted.enterprise.features.airGapped}}</li>
+                            <li>✓ {{pricing.selfHosted.enterprise.features.integrations}}</li>
+                            <li>✓ {{pricing.selfHosted.enterprise.features.sla}}</li>
+                            <li>✓ {{pricing.selfHosted.enterprise.features.setup}}</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Fully Managed Pricing Section -->
+                <div class="mt-20 pt-16 border-t-4 border-slate-200">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center bg-purple-100 text-purple-800 px-6 py-3 rounded-full">
+                            <span class="text-2xl mr-3">{{pricing.fullyManaged.icon}}</span>
+                            <h3 class="text-xl font-bold">{{pricing.fullyManaged.title}}</h3>
+                            <span class="ml-3 text-sm font-medium">{{pricing.fullyManaged.subtitle}}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                    <div class="pricing-card bg-gradient-to-br from-purple-50 to-indigo-50 p-8 rounded-lg shadow-md border-2 border-purple-400 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <div class="absolute top-0 -translate-y-1/2 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">{{pricing.fullyManaged.starter.badge}}</div>
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.fullyManaged.starter.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.fullyManaged.starter.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-purple-600">{{pricing.fullyManaged.starter.price}}</p>
+                        <p class="text-slate-500">{{pricing.fullyManaged.starter.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.fullyManaged.starter.features.infrastructure}}</li>
+                            <li>✓ {{pricing.fullyManaged.starter.features.tokens}}</li>
+                            <li>✓ {{pricing.fullyManaged.starter.features.agents}}</li>
+                            <li>✓ {{pricing.fullyManaged.starter.features.setup}}</li>
+                            <li>✓ {{pricing.fullyManaged.starter.features.support}}</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.fullyManaged.team.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.fullyManaged.team.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">{{pricing.fullyManaged.team.price}}</p>
+                        <p class="text-slate-500">{{pricing.fullyManaged.team.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.fullyManaged.team.features.infrastructure}}</li>
+                            <li>✓ {{pricing.fullyManaged.team.features.tokens}}</li>
+                            <li>✓ {{pricing.fullyManaged.team.features.agents}}</li>
+                            <li>✓ {{pricing.fullyManaged.team.features.members}}</li>
+                            <li>✓ {{pricing.fullyManaged.team.features.support}}</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-blue-500 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <p class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">{{pricing.fullyManaged.business.badge}}</p>
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.fullyManaged.business.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.fullyManaged.business.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">{{pricing.fullyManaged.business.price}}</p>
+                        <p class="text-slate-500">{{pricing.fullyManaged.business.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.fullyManaged.business.features.infrastructure}}</li>
+                            <li>✓ {{pricing.fullyManaged.business.features.tokens}}</li>
+                            <li>✓ {{pricing.fullyManaged.business.features.agents}}</li>
+                            <li>✓ {{pricing.fullyManaged.business.features.members}}</li>
+                            <li>✓ {{pricing.fullyManaged.business.features.support}}</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">{{pricing.fullyManaged.enterprise.name}}</h4>
+                        <p class="mt-2 text-slate-500">{{pricing.fullyManaged.enterprise.description}}</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">{{pricing.fullyManaged.enterprise.price}}</p>
+                        <p class="text-slate-500">{{pricing.fullyManaged.enterprise.period}}</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ {{pricing.fullyManaged.enterprise.features.infrastructure}}</li>
+                            <li>✓ {{pricing.fullyManaged.enterprise.features.tokens}}</li>
+                            <li>✓ {{pricing.fullyManaged.enterprise.features.everything}}</li>
+                            <li>✓ {{pricing.fullyManaged.enterprise.features.sla}}</li>
+                            <li>✓ {{pricing.fullyManaged.enterprise.features.manager}}</li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="team" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">{{team.title}}</h2>
+                </div>
+                <div class="mt-16 grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6">
+                            <img src="{{team.eivind.photo}}" alt="{{team.eivind.name}}" class="w-24 h-24 rounded-full object-cover border-2 border-blue-200">
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">{{team.eivind.name}}</h3>
+                        <p class="mt-2 text-blue-600 font-semibold">{{team.eivind.role}}</p>
+                        <p class="text-sm text-slate-500">{{team.eivind.location}}</p>
+                        <div class="mt-6 flex justify-center">
+                            <a href="{{team.eivind.linkedinUrl}}" target="_blank" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 font-medium">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                                <span>{{team.eivind.linkedinText}}</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6">
+                            <img src="{{team.michael.photo}}" alt="{{team.michael.name}}" class="w-24 h-24 rounded-full object-cover border-2 border-green-200">
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">{{team.michael.name}}</h3>
+                        <p class="mt-2 text-green-600 font-semibold">{{team.michael.role}}</p>
+                        <p class="text-sm text-slate-500">{{team.michael.location}}</p>
+                        <div class="mt-6 flex justify-center">
+                            <a href="{{team.michael.linkedinUrl}}" target="_blank" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 font-medium">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                                <span>{{team.michael.linkedinText}}</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Planned Hires -->
+                <div class="mt-12 text-center">
+                    <h4 class="text-lg font-semibold text-slate-800 mb-4">{{team.hiring.title}}</h4>
+                    <div class="flex justify-center space-x-8 text-slate-600">
+                        <span>• {{team.hiring.backend}}</span>
+                        <span>• {{team.hiring.growth}}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4">{{team.hiring.condition}}</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const marketCtx = document.getElementById('marketChart').getContext('2d');
+            new Chart(marketCtx, {
+                type: 'bar',
+                data: {
+                    labels: [{{chart.labels}}],
+                    datasets: [{
+                        label: '{{chart.datasetLabel}}',
+                        data: [{{chart.data}}],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(37, 99, 235, 0.7)',
+                            'rgba(29, 78, 216, 0.7)',
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(37, 99, 235, 1)',
+                            'rgba(29, 78, 216, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.label === '{{chart.tooltips.devTools.label}}') {
+                                           label = '{{chart.tooltips.devTools.format}}' + context.parsed.y + '{{chart.tooltips.devTools.suffix}}';
+                                        } else if (context.label === '{{chart.tooltips.developers.label}}') {
+                                            label = context.parsed.y + '{{chart.tooltips.developers.suffix}}';
+                                        } else {
+                                            label = context.parsed.y + '{{chart.tooltips.percentage.suffix}}';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + '{{chart.yAxisSuffix}}';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
+
+</body>
+</html>

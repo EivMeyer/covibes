@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left side - Brand and team info */}
         <div className="flex items-center space-x-4">
           <div>
-            <h1 className="text-xl font-bold text-white">CoVibes</h1>
+            <h1 className="text-xl font-bold text-white">Covibes</h1>
             {team && (
               <p className="text-sm text-gray-400">
                 {team.name}

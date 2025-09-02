@@ -1,0 +1,574 @@
+{
+  "lang": "en",
+  "meta": {
+    "title": "Covibes: The AI Workforce Platform",
+    "description": "Where teams and AI agents code together, from anywhere, on your infrastructure."
+  },
+  "vibeIntro": {
+    "title": "Karpathy called it. We built it.",
+    "subtitle": "December 2024: The tweet that changed everything",
+    "transition": "We read this. Then built exactly that."
+  },
+  "tweet": {
+    "avatar": "AK",
+    "authorName": "Andrej Karpathy",
+    "handle": "@karpathy",
+    "content": "There's a new kind of coding I call <span class=\"highlight-vibe\">\"vibe coding\"</span>, where you <span class=\"highlight-key\">fully give in to the vibes</span>, embrace exponentials, and <span class=\"highlight-key\">forget that the code even exists</span>. It's possible because the LLMs (e.g. Cursor Composer w Sonnet) are getting too good. Also I just talk to Composer with SuperWhisper so I <span class=\"highlight-key\">barely even touch the keyboard</span>. I ask for the dumbest things like \"decrease the padding on the sidebar by half\" because I'm too lazy to find it. I \"Accept All\" always, I don't read the diffs anymore. When I get error messages I just copy paste them in with no comment, usually that fixes it. The code grows beyond my usual comprehension, I'd have to really read through it for a while. Sometimes the LLMs can't fix a bug so I just work around it or ask for random changes until it goes away. It's not too bad for throwaway weekend projects, but still quite amusing. I'm building a project or webapp, but it's not really coding - <span class=\"highlight-key\">I just see stuff, say stuff, run stuff</span>, and copy paste stuff, and it mostly works."
+  },
+  "hero": {
+    "title": "Multiplayer AI Development",
+    "subtitle": "Where teams and AI agents code together, from anywhere, on your infrastructure.",
+    "location": "Tromsø, September 2025"
+  },
+  "opportunity": {
+    "title": "What Changed",
+    "subtitle": "Remember switching from Word to Google Docs? That's happening to code. Right now.",
+    "todayCard": {
+      "title": "Today: AI-Assisted",
+      "humanIcon": "👨‍💻",
+      "humanTitle": "Human-Driven",
+      "humanDesc": "Developer must be at their desk.",
+      "aiIcon": "💡",
+      "aiTitle": "AI Assists",
+      "aiDesc": "AI assists one person at a time.",
+      "timeIcon": "⏳",
+      "timeTitle": "Sequential & Slow",
+      "timeDesc": "Work is bottlenecked by one person's availability."
+    },
+    "covibesCard": {
+      "title": "With Covibes: AI Workforce",
+      "humanIcon": "📱",
+      "humanTitle": "Human-Directed",
+      "humanDesc": "Fix production from the beach.",
+      "aiIcon": "🤖",
+      "aiTitle": "AI Acts",
+      "aiDesc": "5 agents working on 5 different tasks.",
+      "timeIcon": "⚡️",
+      "timeTitle": "Parallel & Fast",
+      "timeDesc": "Everything happens at once."
+    }
+  },
+  "product": {
+    "title": "Watch it work",
+    "subtitle": "This isn't a concept. We already have a functional version. Watch our AI agents coordinate in shared workspaces with real-time team collaboration.",
+    "demo1": {
+      "title": "📹 Watch Demo: Multi-User Collaboration",
+      "description": "Two developers working together in real-time with AI agents",
+      "url": "https://www.youtube.com/watch?v=xiDsllZ3SrA",
+      "cta": "▶️ Play Video"
+    },
+    "demo2": {
+      "title": "📱 Watch Demo: Mobile Live Preview",
+      "description": "Desktop agent development with real-time mobile preview tracking",
+      "url": "https://www.youtube.com/shorts/uFm28pklYKE",
+      "cta": "▶️ Play Video"
+    }
+  },
+  "features": {
+    "title": "What makes this different",
+    "subtitle": "The <strong>only</strong> platform that combines all four capabilities",
+    "codeAnywhere": {
+      "icon": "📱",
+      "title": "Code From Anywhere",
+      "description": "Turn dead time into dev time. Fix critical bugs from the metro. Ship features while waiting at the airport. Be as productive hiking in the mountains as sitting at your workstation. Because deadlines don't wait for you to get back to your desk."
+    },
+    "multiplayerAI": {
+      "icon": "👥",
+      "title": "Multiplayer AI Coding",
+      "description": "A shared workspace where multiple developers and AI agents work simultaneously. Everyone sees the same code, the same terminals, the same output. No merge conflicts because everyone's working in the same environment. No coordination meetings because everyone can see what's happening."
+    },
+    "deployYourWay": {
+      "icon": "🎯",
+      "title": "Host it yourself or let us handle it",
+      "selfHosted": {
+        "title": "Self-Hosted",
+        "description": "Your infrastructure, your control. AWS, Azure, on-premise - you choose."
+      },
+      "fullyManaged": {
+        "title": "Fully Managed",
+        "description": "We handle everything. Zero DevOps, instant setup, just code."
+      }
+    },
+    "flexibleAI": {
+      "icon": "🤖",
+      "title": "Bring your AI or use ours",
+      "bringYourOwn": {
+        "title": "Bring Your Own",
+        "description": "Use your AI keys. Zero markup. Direct provider pricing."
+      },
+      "weProvide": {
+        "title": "We Provide",
+        "description": "AI included. Simple pricing. No API key management."
+      }
+    },
+    "tldr": {
+      "prefix": "TLDR:",
+      "content": "We're Google Docs for code. Multiple people. Multiple AI agents. One codebase."
+    }
+  },
+  "architecture": {
+    "title": "Under the Hood",
+    "subtitle": "",
+    "sharedDashboard": {
+      "title": "📊 The Shared Dashboard Experience",
+      "description": "A shared workspace where all team members see the same view. Everyone sees the same screen. Like screen-sharing, but better.",
+      "agentTerminals": {
+        "icon": "💻",
+        "title": "Agent Terminals",
+        "description": "Live output from all active agents. Monitor their work, send commands, intervene when needed."
+      },
+      "ideEditor": {
+        "icon": "📝",
+        "title": "IDE Editor",
+        "description": "Monaco editor with IntelliSense and visible teammate cursors."
+      },
+      "livePreview": {
+        "icon": "🔥",
+        "title": "Live Preview",
+        "description": "Hot-reload preview visible to the entire team instantly."
+      },
+      "teamChat": {
+        "icon": "💬",
+        "title": "Team Chat",
+        "description": "Shared channel for humans <strong>and</strong> supervisor agents. Agents can read and respond to team discussions."
+      },
+      "bottomText": "All panels synchronize across team members instantly."
+    },
+    "deploymentOptions": {
+      "title": "Deployment Options",
+      "selfHosted": {
+        "title": "🔧 Self-Hosted Mode",
+        "step1": "Deploy on your infrastructure (AWS, Azure, on-prem)",
+        "step2": "Use your AI API keys directly",
+        "step3": "Your data stays on your servers",
+        "step4": "Integrate with existing tools"
+      },
+      "fullyManaged": {
+        "title": "☁️ Fully Managed Mode",
+        "step1": "We handle all infrastructure",
+        "step2": "AI credits included in pricing",
+        "step3": "Instant setup, zero DevOps",
+        "step4": "Automatic scaling & updates"
+      }
+    },
+    "supportedAI": {
+      "title": "Supported AI Agents",
+      "claude": "Claude Code",
+      "gemini": "Gemini CLI",
+      "gpt": "GPT-4/Cursor",
+      "future": "Any Future AI"
+    },
+    "keyInnovation": {
+      "title": "🎯 Key Innovation: Shared Reality",
+      "gitBacked": "<strong>Git-backed</strong> - every change creates a commit checkpoint",
+      "liveSync": "<strong>Live synchronization</strong> - all team members see the same code, terminals, and output",
+      "noConflicts": "<strong>No merge conflicts</strong> - everyone works in the same workspace"
+    },
+    "universalPreview": {
+      "title": "🚀 Preview anything with a screen",
+      "web": "Web applications",
+      "mobile": "Mobile apps",
+      "desktop": "Desktop software",
+      "anyGui": "Any GUI interface",
+      "description": "Preview any GUI application with instant visual feedback"
+    },
+    "whyThisWins": {
+      "title": "💡 Why this actually works in practice",
+      "noLockIn": {
+        "title": "No vendor lock-in",
+        "description": "Your code, your servers, your AI keys"
+      },
+      "trueIsolation": {
+        "title": "True isolation",
+        "description": "Each agent in secure Docker container"
+      },
+      "privacy": {
+        "title": "Privacy",
+        "description": "We never see your code or keys"
+      },
+      "scalable": {
+        "title": "Scalable",
+        "description": "Add VMs as you grow"
+      }
+    },
+    "aiInnovations": {
+      "title": "🧠 AI-Specific Innovations",
+      "crossAgent": {
+        "title": "🔄 Cross-Agent Context Injection",
+        "description": "Agents broadcast their actions to prevent conflicts and duplicate work.",
+        "example": {
+          "agentA": "Agent-A: \"Refactoring auth.js to JWT\"",
+          "agentB": "Agent-B: \"I see JWT change. Updating user-service\"",
+          "result": "→ Zero conflicts, zero duplicated work"
+        }
+      },
+      "hierarchical": {
+        "title": "🏗️ Hierarchical Agent Architecture",
+        "description": "Supervisor agents monitor team chat and spawn workers based on discussions.",
+        "workers": "<strong>Workers:</strong> Execute specific tasks (available now)",
+        "supervisors": "<strong>Supervisors:</strong> Monitor chat, spawn workers (6 months)"
+      },
+      "bottomText": "Not individual AI assistants, but coordinated teams of agents"
+    }
+  },
+  "market": {
+    "title": "Why Now",
+    "subtitle": "",
+    "stats": {
+      "devTools": {
+        "value": "$26.3B",
+        "title": "Developer Tools Market<span class=\"text-xs text-slate-400 ml-1\">¹ Gartner 2024</span>",
+        "description": "Growing at 25.7% year-over-year."
+      },
+      "developers": {
+        "value": "103M",
+        "title": "Developers Worldwide<span class=\"text-xs text-slate-400 ml-1\">² GitHub Octoverse 2024</span>",
+        "description": "70% of whom work in a remote or hybrid model."
+      },
+      "aiAdoption": {
+        "value": "92%",
+        "title": "Of Developers Use AI<span class=\"text-xs text-slate-400 ml-1\">³ Stack Overflow Survey 2024</span>",
+        "description": "But they can't see each other's screens."
+      },
+      "aiGrowth": {
+        "value": "3x Growth",
+        "title": "In AI Startup Formation<span class=\"text-xs text-slate-400 ml-1\">⁴ PitchBook 2024</span>",
+        "description": "$25.2B invested in AI-first companies in 2024 alone."
+      }
+    },
+    "chartTitle": "Why the timing is perfect",
+    "unbundling": {
+      "title": "What's really happening:",
+      "paragraph1": "When a senior developer gets laid off because AI can do 70% of their job, they don't go looking for another job. They realize they can now build an entire SaaS product in a weekend. They grab their designer friend who also got laid off, and maybe a sales person who's tired of selling someone else's dream.",
+      "paragraph2": "A 3-person team with AI can ship what used to take a 20-person team six months. But here's the catch: these micro-teams need to move at light speed. They're racing against thousands of other micro-teams with the same AI access.",
+      "paragraph3": "The winners are whoever can prototype, test with users, and iterate the fastest. Every laid-off developer with ChatGPT is now a potential founder. Every downsized team of 3 can now compete with companies of 30. The barrier to starting something has gone from $100k and 6 months to $20 and a weekend."
+    },
+    "conclusion": "These micro-startups all need the same thing: the ability to build and iterate faster than their competition, as a team. Covibes is the multiplayer development environment for the thousands of new 2-3 person teams emerging from the AI disruption."
+  },
+  "competition": {
+    "title": "How we compare",
+    "subtitle": "We're the only multiplayer option",
+    "table": {
+      "headers": {
+        "feature": "Feature",
+        "covibes": "Covibes",
+        "cursor": "Cursor",
+        "windsurf": "Windsurf",
+        "bolt": "Bolt.new",
+        "lovable": "Lovable",
+        "v0": "v0",
+        "replit": "Replit",
+        "base44": "Base44",
+        "others": "Claude Code/Gemini CLI/Codex/Copilot"
+      },
+      "rows": {
+        "codeAnywhere": {
+          "feature": "Code From Anywhere",
+          "covibes": "✅ Full App",
+          "cursor": "⚠️ Web Pro+",
+          "windsurf": "❌ Desktop",
+          "bolt": "⚠️ Browser",
+          "lovable": "⚠️ Browser",
+          "v0": "⚠️ Browser",
+          "replit": "✅ Full App",
+          "base44": "⚠️ Browser",
+          "others": "⚠️ Mixed"
+        },
+        "multiplayerAI": {
+          "feature": "Multiplayer AI Workspace",
+          "covibes": "✅ Multi-User",
+          "cursor": "❌ Single",
+          "windsurf": "⚠️ Share",
+          "bolt": "⚠️ View Only",
+          "lovable": "⚠️ Handoff",
+          "v0": "❌ Fork",
+          "replit": "⚠️ Code Only",
+          "base44": "⚠️ Teams",
+          "others": "❌ Isolated"
+        },
+        "deploymentFlexibility": {
+          "feature": "Deployment Flexibility",
+          "covibes": "✅ Full flexibility",
+          "cursor": "❌ Local Only",
+          "windsurf": "⚠️ Limited",
+          "bolt": "❌ Managed Only",
+          "lovable": "❌ Managed Only",
+          "v0": "❌ Vercel Only",
+          "replit": "❌ Replit Only",
+          "base44": "❌ Wix Only",
+          "others": "⚠️ Varies"
+        },
+        "ownInfrastructure": {
+          "feature": "Own Infrastructure",
+          "covibes": "✅ Optional",
+          "cursor": "❌ Local Only",
+          "windsurf": "✅ Flexible",
+          "bolt": "⚠️ bolt.diy",
+          "lovable": "✅ Export",
+          "v0": "❌ Vercel Only",
+          "replit": "❌ Replit Only",
+          "base44": "❌ Wix Cloud",
+          "others": "✅ Local/BYO"
+        },
+        "livePreview": {
+          "feature": "Live Preview",
+          "covibes": "✅ Integrated",
+          "cursor": "❌ External",
+          "windsurf": "✅ Click-Edit",
+          "bolt": "✅ Built-in",
+          "lovable": "✅ Real-time",
+          "v0": "✅ Built-in",
+          "replit": "✅ Built-in",
+          "base44": "✅ Instant",
+          "others": "⚠️ Limited"
+        },
+        "parallelAI": {
+          "feature": "Parallel AI Tasks",
+          "covibes": "✅ Multi-Agent",
+          "cursor": "⚠️ Workarounds",
+          "windsurf": "✅ Cascade",
+          "bolt": "❌ Single",
+          "lovable": "❌ Single",
+          "v0": "❌ Single",
+          "replit": "❌ Sequential",
+          "base44": "❌ Single",
+          "others": "❌ Single"
+        },
+        "aiPricing": {
+          "feature": "AI Pricing Flexibility",
+          "covibes": "✅ Both Options",
+          "cursor": "❌ Built-in",
+          "windsurf": "❌ Built-in",
+          "bolt": "❌ Marked up",
+          "lovable": "❌ Marked up",
+          "v0": "❌ Marked up",
+          "replit": "❌ Built-in",
+          "base44": "❌ Marked up",
+          "others": "✅ BYO"
+        },
+        "freeTier": {
+          "feature": "Free Tier Available",
+          "covibes": "✅ Generous",
+          "cursor": "✅ Limited",
+          "windsurf": "✅ 50/mo",
+          "bolt": "✅ 1M tokens",
+          "lovable": "✅ 5/day",
+          "v0": "✅ Credits",
+          "replit": "✅ Starter",
+          "base44": "✅ 200/mo",
+          "others": "⚠️ Limited"
+        }
+      }
+    }
+  },
+  "flexibility": {
+    "title": "Why Flexibility Matters",
+    "subtitle": "",
+    "selfHosted": {
+      "icon": "🔒",
+      "title": "Who Chooses Self-Hosted",
+      "security": {
+        "title": "Security-First Enterprises",
+        "description": "Your code never touches our servers. Ever."
+      },
+      "regulated": {
+        "title": "Regulated Industries",
+        "description": "Healthcare, finance, government - meet compliance requirements."
+      },
+      "costConscious": {
+        "title": "Cost-Conscious Teams",
+        "description": "Already have infrastructure? Use it. Already have AI subscriptions? Keep them."
+      },
+      "customWorkflows": {
+        "title": "Custom Workflows",
+        "description": "Integrate with your existing CI/CD, monitoring, and security tools."
+      }
+    },
+    "fullyManaged": {
+      "icon": "⚡",
+      "title": "Who Chooses Fully Managed",
+      "fastStartups": {
+        "title": "Fast-Moving Startups",
+        "description": "Sign up. Start coding. 30 seconds."
+      },
+      "smallTeams": {
+        "title": "Small Teams",
+        "description": "Focus on building, not managing infrastructure."
+      },
+      "proofOfConcepts": {
+        "title": "Proof-of-Concepts",
+        "description": "Test ideas quickly without infrastructure commitment."
+      },
+      "agencies": {
+        "title": "Agencies & Consultants",
+        "description": "Spin up environments for clients instantly."
+      }
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Choose self-hosted for control, or fully managed for convenience.",
+    "selfHosted": {
+      "icon": "🔧",
+      "title": "Self-Hosted Plans",
+      "subtitle": "(Your Infrastructure, Your AI Keys)",
+      "founders": {
+        "badge": "FREE FOREVER",
+        "name": "Founders",
+        "description": "Perfect for side projects",
+        "price": "$0",
+        "period": "forever",
+        "features": {
+          "infrastructure": "Your infrastructure",
+          "aiKeys": "Your AI keys",
+          "teamMembers": "2 team members",
+          "support": "Community support"
+        }
+      },
+      "startup": {
+        "name": "Startup",
+        "description": "Teams of 3-10",
+        "price": "$31",
+        "period": "per seat/month",
+        "features": {
+          "infrastructure": "Your infrastructure",
+          "aiKeys": "Your AI keys",
+          "teamMembers": "10 team members",
+          "support": "Priority support",
+          "advanced": "Advanced features"
+        }
+      },
+      "scale": {
+        "badge": "POPULAR",
+        "name": "Scale",
+        "description": "Established companies",
+        "price": "$99",
+        "period": "per seat/month",
+        "features": {
+          "infrastructure": "Your infrastructure",
+          "aiKeys": "Your AI keys",
+          "members": "Unlimited members",
+          "support": "24/7 support",
+          "compliance": "SSO & compliance"
+        }
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Custom needs",
+        "price": "Custom",
+        "period": "Let's talk",
+        "features": {
+          "onPremise": "On-premise deploy",
+          "airGapped": "Air-gapped option",
+          "integrations": "Custom integrations",
+          "sla": "SLA guarantees",
+          "setup": "We'll set it up for you"
+        }
+      }
+    },
+    "fullyManaged": {
+      "icon": "☁️",
+      "title": "Fully Managed Plans",
+      "subtitle": "(We Provide Infrastructure & AI)",
+      "starter": {
+        "badge": "NO SETUP",
+        "name": "Starter",
+        "description": "Individual developers",
+        "price": "$49",
+        "period": "per month",
+        "features": {
+          "infrastructure": "Managed infrastructure",
+          "tokens": "1M AI tokens/month",
+          "agents": "1 concurrent agent",
+          "setup": "Instant setup",
+          "support": "Email support"
+        }
+      },
+      "team": {
+        "name": "Team",
+        "description": "Small teams",
+        "price": "$199",
+        "period": "per month",
+        "features": {
+          "infrastructure": "Managed infrastructure",
+          "tokens": "10M AI tokens/month",
+          "agents": "5 concurrent agents",
+          "members": "5 team members",
+          "support": "Priority support"
+        }
+      },
+      "business": {
+        "badge": "BEST VALUE",
+        "name": "Business",
+        "description": "Growing companies",
+        "price": "$599",
+        "period": "per month",
+        "features": {
+          "infrastructure": "Managed infrastructure",
+          "tokens": "50M AI tokens/month",
+          "agents": "Unlimited agents",
+          "members": "20 team members",
+          "support": "24/7 support"
+        }
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Large organizations",
+        "price": "Custom",
+        "period": "Volume pricing",
+        "features": {
+          "infrastructure": "Dedicated infrastructure",
+          "tokens": "Unlimited AI tokens",
+          "everything": "Unlimited everything",
+          "sla": "SLA guarantees",
+          "manager": "Account manager"
+        }
+      }
+    }
+  },
+  "team": {
+    "title": "Who's building this",
+    "eivind": {
+      "name": "Eivind Meyer",
+      "role": "Technical Founder",
+      "location": "Tromsø, Norway",
+      "photo": "founders/eivind_meyer.png",
+      "linkedinUrl": "https://www.linkedin.com/in/eivind-meyer/",
+      "linkedinText": "LinkedIn"
+    },
+    "michael": {
+      "name": "Michael Eichelbeck",
+      "role": "Strategic Partner, Investor",
+      "location": "Munich, Germany",
+      "photo": "founders/michael_eichelbeck.png",
+      "linkedinUrl": "https://www.linkedin.com/in/michael-eichelbeck-016b87171/",
+      "linkedinText": "LinkedIn"
+    },
+    "hiring": {
+      "title": "Who we're hiring",
+      "backend": "2-3 Senior Backend Developers",
+      "growth": "Growth Marketing Lead",
+      "condition": "If we raise"
+    }
+  },
+  "chart": {
+    "labels": "'Dev Tools Market', 'Global Developers', 'AI Adoption'",
+    "datasetLabel": "Market Metrics",
+    "data": "26, 100, 92",
+    "tooltips": {
+      "devTools": {
+        "label": "Dev Tools Market",
+        "format": "$",
+        "suffix": " Billion+"
+      },
+      "developers": {
+        "label": "Global Developers",
+        "suffix": " Million+"
+      },
+      "percentage": {
+        "suffix": "%"
+      }
+    },
+    "yAxisSuffix": " M/$B/%"
+  }
+}
