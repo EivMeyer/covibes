@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Covibes: The AI Workforce Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral & Tech Blue -->
+    <!-- Application Structure Plan: The pitch deck's linear format was transformed into a thematic, single-page scrolling experience. This structure (Hero, Opportunity, Product, Market, Vision) allows non-linear exploration via the navigation bar, enabling a user to jump directly to the section most relevant to them (e.g., an investor might go straight to 'Market' or 'The Ask'). This is more user-centric than a forced, slide-by-slide presentation, facilitating better information discovery and comprehension. -->
+    <!-- Visualization & Content Choices: Market Size -> Goal: Inform -> Bar Chart (Chart.js) -> Hover for details -> Justification: Visually impressive and makes a large number like $26B tangible. Use of Funds -> Goal: Inform -> Donut Chart (Chart.js) -> Hover for details -> Justification: Intuitively shows proportional allocation of capital. Roadmap -> Goal: Show Change -> Interactive Timeline (HTML/JS) -> Click to reveal details -> Justification: More engaging than a static list, encouraging user exploration of the future vision. Pricing Tiers -> Goal: Compare -> Interactive Cards (HTML/JS) -> Hover to highlight -> Justification: Draws user attention to the different options and makes comparison easy. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #2563eb; /* blue-600 */
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #3b82f6; /* blue-500 */
+        }
+        .timeline-path {
+            position: absolute;
+            left: -21px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dbeafe; /* blue-100 */
+        }
+        
+        /* Karpathy Tweet Slide Styles */
+        .tweet-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+        
+        .tweet-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tweet-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .tweet-author {
+            flex-grow: 1;
+        }
+        
+        .tweet-name {
+            color: #f1f5f9;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .tweet-handle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+        
+        .tweet-content {
+            color: #e2e8f0;
+            font-size: 1.125rem;
+            line-height: 1.8;
+        }
+        
+        .tweet-content .highlight-vibe {
+            color: #60a5fa;
+            font-weight: 600;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tweet-content .highlight-key {
+            color: #fbbf24;
+            font-weight: 500;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .transition-text {
+            color: #64748b;
+            font-size: 1.125rem;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .tweet-card {
+                padding: 2rem;
+                margin: 0 1rem;
+            }
+            
+            .tweet-content {
+                font-size: 1rem;
+            }
+            
+            .section-title-overlay h2 {
+                font-size: 2rem;
+            }
+            
+            .tweet-avatar {
+                width: 50px;
+                height: 50px;
+            }
+        }
+        
+        /* Print-specific styles to control page breaks */
+        @media print {
+            /* Hide navigation for print */
+            header {
+                display: none !important;
+            }
+            
+            /* Each section should start on a new page */
+            section {
+                page-break-before: always;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* First section shouldn't have page break before */
+            section:first-of-type {
+                page-break-before: auto;
+            }
+            
+            /* Keep grid items together */
+            .grid > div {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Keep pricing cards together */
+            .pricing-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Keep timeline items together */
+            .timeline-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Adjust padding for print */
+            section {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            /* Ensure two-column layouts stay as columns */
+            .md\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            .lg\:grid-cols-2 {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            
+            /* Keep charts from breaking */
+            .chart-container {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+
+    <main>
+        <!-- Karpathy Tweet Slide -->
+        <section id="vibe-intro" class="py-20 tweet-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-100">Vibe Coding Is Real</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-300">Software development is changing fundamentally</p>
+                </div>
+                
+                <div class="tweet-card">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar">AK</div>
+                        <div class="tweet-author">
+                            <div class="tweet-name">Andrej Karpathy</div>
+                            <div class="tweet-handle">@karpathy</div>
+                        </div>
+                    </div>
+                    
+                    <div class="tweet-content">
+                        There's a new kind of coding I call <span class="highlight-vibe">"vibe coding"</span>, where you <span class="highlight-key">fully give in to the vibes</span>, embrace exponentials, and <span class="highlight-key">forget that the code even exists</span>. It's possible because the LLMs (e.g. Cursor Composer w Sonnet) are getting too good. Also I just talk to Composer with SuperWhisper so I <span class="highlight-key">barely even touch the keyboard</span>. I ask for the dumbest things like "decrease the padding on the sidebar by half" because I'm too lazy to find it. I "Accept All" always, I don't read the diffs anymore. When I get error messages I just copy paste them in with no comment, usually that fixes it. The code grows beyond my usual comprehension, I'd have to really read through it for a while. Sometimes the LLMs can't fix a bug so I just work around it or ask for random changes until it goes away. It's not too bad for throwaway weekend projects, but still quite amusing. I'm building a project or webapp, but it's not really coding - <span class="highlight-key">I just see stuff, say stuff, run stuff</span>, and copy paste stuff, and it mostly works.
+                    </div>
+                </div>
+                
+                <div class="transition-text">But what if multiple humans and AI agents could vibe together?</div>
+            </div>
+        </section>
+
+        <section id="hero" class="pt-16 md:pt-20 pb-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tighter text-slate-800">Multiplayer AI Development</h1>
+                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600">Where teams and AI agents code together, from anywhere, on your infrastructure.</p>
+                <p class="mt-4 text-sm text-slate-500">Tromsø, September 2025</p>
+            </div>
+        </section>
+
+        <section id="opportunity" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">The Paradigm Shift</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Current AI tools make individual developers more productive. But teams need different tools - ones built for collective work. The same transition that took us from Microsoft Word to Google Docs is now happening in software development.</p>
+                </div>
+
+                <div class="mt-12 grid md:grid-cols-2 gap-8 items-center">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-2xl font-bold text-center text-slate-800">Today: AI-Assisted</h3>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">👨‍💻</p>
+                            <p class="text-lg font-semibold">Human-Driven</p>
+                            <p class="text-slate-500">Developer must be at their desk.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">💡</p>
+                            <p class="text-lg font-semibold">AI Assists</p>
+                            <p class="text-slate-500">Tools like Copilot provide autocomplete.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">⏳</p>
+                            <p class="text-lg font-semibold">Sequential & Slow</p>
+                            <p class="text-slate-500">Work is bottlenecked by one person's availability.</p>
+                        </div>
+                    </div>
+                    <div class="bg-blue-600 text-white p-8 rounded-lg shadow-2xl border border-blue-700">
+                        <h3 class="text-2xl font-bold text-center">With Covibes: AI Workforce</h3>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">📱</p>
+                            <p class="text-lg font-semibold">Human-Directed</p>
+                            <p class="text-white/80">PM spawns agents from their phone.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">🤖</p>
+                            <p class="text-lg font-semibold">AI Acts</p>
+                            <p class="text-white/80">Agents autonomously fix bugs and build features.</p>
+                        </div>
+                        <div class="mt-6 space-y-4 text-center">
+                            <p class="text-5xl">⚡️</p>
+                            <p class="text-lg font-semibold">Parallel & Fast</p>
+                            <p class="text-white/80">Multiple tasks are completed simultaneously.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="product" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">See the Prototype in Action</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">This isn't a concept. We have a functional implementation already. Watch our AI agents coordinate in shared workspaces with real-time team collaboration.</p>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">📹 Watch Demo: Multi-User Collaboration</h3>
+                        <p class="text-slate-600 mb-3">Two developers working together in real-time with AI agents</p>
+                        <a href="https://www.youtube.com/watch?v=xiDsllZ3SrA" target="_blank" class="inline-block text-blue-600 font-semibold hover:text-blue-700">▶️ Play Video</a>
+                    </div>
+                    
+                    <div class="mt-6 bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">📱 Watch Demo: Mobile Live Preview</h3>
+                        <p class="text-slate-600 mb-3">Desktop agent development with real-time mobile preview tracking</p>
+                        <a href="https://www.youtube.com/shorts/uFm28pklYKE" target="_blank" class="inline-block text-blue-600 font-semibold hover:text-blue-700">▶️ Play Video</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">What Makes Covibes Different</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">The <strong>only</strong> platform that combines all four capabilities</p>
+                </div>
+
+                <div class="mt-16 grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">📱</div>
+                            <h3 class="text-xl font-bold text-slate-800">Code From Anywhere</h3>
+                        </div>
+                        <p class="text-slate-600">Turn dead time into dev time. Fix critical bugs from the metro. Ship features while waiting at the airport. Be as productive hiking in the mountains as sitting at your workstation. Because deadlines don't wait for you to get back to your desk.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">👥</div>
+                            <h3 class="text-xl font-bold text-slate-800">Multiplayer AI Coding</h3>
+                        </div>
+                        <p class="text-slate-600">A shared workspace where multiple developers and AI agents work simultaneously. Everyone sees the same code, the same terminals, the same output. No merge conflicts because everyone's working in the same environment. No coordination meetings because everyone can see what's happening.</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">🎯</div>
+                            <h3 class="text-xl font-bold text-slate-800">Deploy Your Way</h3>
+                        </div>
+                        <div class="text-left space-y-3">
+                            <div class="border-l-4 border-blue-500 pl-3">
+                                <p class="font-semibold text-slate-700">Self-Hosted</p>
+                                <p class="text-sm text-slate-600">Your infrastructure, your control. AWS, Azure, on-premise - you choose.</p>
+                            </div>
+                            <div class="border-l-4 border-green-500 pl-3">
+                                <p class="font-semibold text-slate-700">Fully Managed</p>
+                                <p class="text-sm text-slate-600">We handle everything. Zero DevOps, instant setup, just code.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center hover:shadow-xl transition-shadow duration-300">
+                        <div class="mb-6">
+                            <div class="text-5xl mb-4">🤖</div>
+                            <h3 class="text-xl font-bold text-slate-800">Flexible AI Options</h3>
+                        </div>
+                        <div class="text-left space-y-3">
+                            <div class="border-l-4 border-purple-500 pl-3">
+                                <p class="font-semibold text-slate-700">Bring Your Own</p>
+                                <p class="text-sm text-slate-600">Use your AI keys. Zero markup. Direct provider pricing.</p>
+                            </div>
+                            <div class="border-l-4 border-orange-500 pl-3">
+                                <p class="font-semibold text-slate-700">We Provide</p>
+                                <p class="text-sm text-slate-600">AI included. Simple pricing. No API key management.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center">
+                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200 max-w-4xl mx-auto">
+                        <p class="text-lg text-slate-700 font-medium">
+                            <span class="text-blue-600 font-bold">TLDR:</span> AI development that adapts to how you work. Manage agents from mobile during your commute. Collaborate with distributed teams. Keep everything on your infrastructure. We didn't make the AI smarter - we made it work for teams.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">How It Actually Works</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">The architecture behind multiplayer AI development</p>
+                </div>
+
+                <!-- Shared Dashboard UI -->
+                <div class="mt-12 bg-gradient-to-r from-indigo-50 to-blue-50 p-8 rounded-lg border border-indigo-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">📊 The Shared Dashboard Experience</h3>
+                    <p class="text-center text-slate-600 mb-8">A shared workspace where all team members see the same view. Think Google Docs, but for your entire development environment.</p>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">💻</div>
+                            <h4 class="font-bold text-slate-800">Agent Terminals</h4>
+                            <p class="text-sm text-slate-600 mt-2">Live output from all active agents. Monitor their work, send commands, intervene when needed.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">📝</div>
+                            <h4 class="font-bold text-slate-800">IDE Editor</h4>
+                            <p class="text-sm text-slate-600 mt-2">Monaco editor with IntelliSense and visible teammate cursors.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">🔥</div>
+                            <h4 class="font-bold text-slate-800">Live Preview</h4>
+                            <p class="text-sm text-slate-600 mt-2">Hot-reload preview visible to the entire team instantly.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">💬</div>
+                            <h4 class="font-bold text-slate-800">Team Chat</h4>
+                            <p class="text-sm text-slate-600 mt-2">Shared channel for humans <strong>and</strong> supervisor agents. Agents can read and respond to team discussions.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-sm font-semibold text-indigo-700">All panels synchronize across team members instantly. This is multiplayer development.</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 grid lg:grid-cols-2 gap-12 items-start">
+                    <div class="bg-slate-50 p-8 rounded-lg">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6">Deployment Options</h3>
+                        
+                        <!-- Self-Hosted Option -->
+                        <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="font-bold text-blue-800 mb-3">🔧 Self-Hosted Mode</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">1.</span>
+                                    <span>Deploy on your infrastructure (AWS, Azure, on-prem)</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">2.</span>
+                                    <span>Use your AI API keys directly</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">3.</span>
+                                    <span>Complete data sovereignty</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">4.</span>
+                                    <span>Integrate with existing tools</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Managed Option -->
+                        <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <h4 class="font-bold text-purple-800 mb-3">☁️ Fully Managed Mode</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">1.</span>
+                                    <span>We handle all infrastructure</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">2.</span>
+                                    <span>AI credits included in pricing</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">3.</span>
+                                    <span>Instant setup, zero DevOps</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">4.</span>
+                                    <span>Automatic scaling & updates</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-8 border-t border-slate-200">
+                            <h4 class="font-semibold text-slate-800 mb-4">Supported AI Agents</h4>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">Claude Code</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">Gemini CLI</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">GPT-4/Cursor</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">Any Future AI</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                            <h3 class="font-bold text-green-800 mb-3">🎯 Key Innovation: Shared Reality</h3>
+                            <ul class="space-y-2 text-slate-700">
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span><strong>Git-backed</strong> - every change creates a commit checkpoint</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span><strong>Live synchronization</strong> - all team members see the same code, terminals, and output</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span><strong>No merge conflicts</strong> - everyone works in the same workspace</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <h3 class="font-bold text-blue-800 mb-3">🚀 Universal GUI Preview</h3>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>Web applications</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>Mobile apps</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>Desktop software</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>Any GUI interface</span>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-600">Preview any GUI application with instant visual feedback</p>
+                        </div>
+
+                        <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                            <h3 class="font-bold text-purple-800 mb-3">💡 Why This Architecture Wins</h3>
+                            <ul class="space-y-2 text-slate-700 text-sm">
+                                <li><strong>No vendor lock-in:</strong> Your code, your servers, your AI keys</li>
+                                <li><strong>True isolation:</strong> Each agent in secure Docker container</li>
+                                <li><strong>Privacy:</strong> We never see your code or keys</li>
+                                <li><strong>Scalable:</strong> Add VMs as you grow</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- AI-Specific Innovations -->
+                    <div class="mt-12 bg-gradient-to-r from-purple-50 to-indigo-50 p-8 rounded-lg border border-purple-200">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">🧠 AI-Specific Innovations</h3>
+                        
+                        <div class="grid lg:grid-cols-2 gap-8">
+                            <!-- Cross-Agent Context Injection -->
+                            <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                                <h4 class="font-bold text-lg text-purple-800 mb-3">🔄 Cross-Agent Context Injection</h4>
+                                <p class="text-sm text-slate-600 mb-4">Agents broadcast their actions to prevent conflicts and duplicate work.</p>
+                                <div class="bg-slate-50 p-3 rounded text-xs font-mono">
+                                    <div class="text-slate-700">Agent-A: "Refactoring auth.js to JWT"</div>
+                                    <div class="text-blue-600">Agent-B: "I see JWT change. Updating user-service"</div>
+                                    <div class="text-green-600">→ Perfect coordination</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hierarchical Agents -->
+                            <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                                <h4 class="font-bold text-lg text-purple-800 mb-3">🏗️ Hierarchical Agent Architecture</h4>
+                                <p class="text-sm text-slate-600 mb-4">Supervisor agents monitor team chat and spawn workers based on discussions.</p>
+                                <div class="space-y-2 text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        <span><strong>Workers:</strong> Execute specific tasks (available now)</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        <span><strong>Supervisors:</strong> Monitor chat, spawn workers (6 months)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 text-center">
+                            <p class="text-sm font-semibold text-purple-700">Not individual AI assistants, but coordinated teams of agents</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="market" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Creating a New Category</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Four market forces are converging: universal AI adoption, distributed teams, continuous deployment, and the unbundling of traditional employment.</p>
+                </div>
+                <div class="mt-12 grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-8">
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                            <h3 class="font-bold text-2xl text-blue-600">$26B+</h3>
+                            <p class="mt-1 font-semibold text-slate-800">Developer Tools Market<span class="text-xs text-slate-400 ml-1">¹ Gartner 2024</span></p>
+                            <p class="mt-1 text-slate-600">Growing at 25% year-over-year.</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                             <h3 class="font-bold text-2xl text-blue-600">100M+</h3>
+                            <p class="mt-1 font-semibold text-slate-800">Developers Worldwide<span class="text-xs text-slate-400 ml-1">² GitHub Octoverse 2024</span></p>
+                            <p class="mt-1 text-slate-600">70% of whom work in a remote or hybrid model.</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                             <h3 class="font-bold text-2xl text-blue-600">92%</h3>
+                            <p class="mt-1 font-semibold text-slate-800">Of Developers Use AI<span class="text-xs text-slate-400 ml-1">³ Stack Overflow Survey 2024</span></p>
+                            <p class="mt-1 text-slate-600">But almost all are using isolated, single-player tools.</p>
+                        </div>
+                        <div class="p-6 bg-white rounded-lg shadow-md border border-slate-200">
+                            <h3 class="font-bold text-2xl text-blue-600">3x Growth</h3>
+                            <p class="mt-1 font-semibold text-slate-800">In AI Startup Formation<span class="text-xs text-slate-400 ml-1">⁴ PitchBook 2024</span></p>
+                            <p class="mt-1 text-slate-600">2024 saw record venture funding in AI-first companies.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-center font-bold text-xl text-slate-800 mb-4">Market Size & Potential</h3>
+                        <div class="chart-container">
+                            <canvas id="marketChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg border border-blue-200 mb-8">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">The Great Unbundling of Employment</h3>
+                        <p class="text-lg text-slate-700 mb-4">When a senior developer gets laid off because AI can do 70% of their job, they don't go looking for another job. They realize they can now build an entire SaaS product in a weekend. They grab their designer friend who also got laid off, and maybe a sales person who's tired of selling someone else's dream.</p>
+                        <p class="text-lg text-slate-700 mb-4">A 3-person team with AI can ship what used to take a 20-person team six months. But here's the catch: these micro-teams need to move at light speed. They're racing against thousands of other micro-teams with the same AI access.</p>
+                        <p class="text-lg font-semibold text-blue-700">The winners are whoever can prototype, test with users, and iterate the fastest. Every laid-off developer with ChatGPT is now a potential founder. Every downsized team of 3 can now compete with companies of 30. The barrier to starting something has gone from $100k and 6 months to $20 and a weekend.</p>
+                    </div>
+                    <p class="text-lg text-slate-600">These micro-startups all need the same thing: the ability to build and iterate faster than their competition, as a team. Covibes is the multiplayer development environment for the thousands of new 2-3 person teams emerging from the AI disruption.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Competitive Landscape</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">How Covibes shifts from AI assistants to AI workforce</p>
+                </div>
+                
+                <div class="mt-12 overflow-x-auto">
+                    <table class="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+                        <thead class="bg-slate-800 text-white">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">Feature</th>
+                                <th class="px-4 py-3 text-center font-semibold bg-blue-600">Covibes</th>
+                                <th class="px-4 py-3 text-center font-semibold">Cursor</th>
+                                <th class="px-4 py-3 text-center font-semibold">Windsurf</th>
+                                <th class="px-4 py-3 text-center font-semibold">Bolt.new</th>
+                                <th class="px-4 py-3 text-center font-semibold">Lovable</th>
+                                <th class="px-4 py-3 text-center font-semibold">v0</th>
+                                <th class="px-4 py-3 text-center font-semibold">Replit</th>
+                                <th class="px-4 py-3 text-center font-semibold">Base44</th>
+                                <th class="px-4 py-3 text-center font-semibold text-xs">Claude Code/Gemini CLI/Codex/Copilot</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Code From Anywhere</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Full App</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Web Pro+</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Desktop</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Browser</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Browser</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Browser</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Full App</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Browser</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Mixed</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Multiplayer AI Workspace</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Multi-User</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Single</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Share</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ View Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Handoff</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Fork</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Code Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Teams</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Isolated</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Deployment Flexibility</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Both Options</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Local Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Limited</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Managed Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Managed Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Vercel Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Replit Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Wix Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Varies</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Own Infrastructure</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Optional</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Local Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Flexible</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ bolt.diy</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Export</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Vercel Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Replit Only</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Wix Cloud</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Local/BYO</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Live Preview</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Integrated</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ External</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Click-Edit</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Built-in</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Real-time</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Built-in</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Built-in</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Instant</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Limited</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Parallel AI Tasks</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Multi-Agent</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Workarounds</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Cascade</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Single</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Single</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Single</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Sequential</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Single</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Single</span></td>
+                            </tr>
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">AI Pricing Flexibility</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Both Options</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Built-in</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Built-in</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Marked up</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Marked up</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Marked up</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Built-in</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-red-500 text-xs">❌ Marked up</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ BYO</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-700">Free Tier Available</td>
+                                <td class="px-4 py-3 text-center bg-blue-50"><span class="text-green-600 font-bold text-xs">✅ Generous</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Limited</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ 50/mo</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ 1M tokens</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ 5/day</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Credits</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ Starter</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-green-600 text-xs">✅ 200/mo</span></td>
+                                <td class="px-4 py-3 text-center"><span class="text-yellow-600 text-xs">⚠️ Limited</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="flexibility" class="py-20 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Why Flexibility Matters</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Different teams need different solutions. We meet you where you are.</p>
+                </div>
+                
+                <div class="mt-16 grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                    <!-- Self-Hosted Benefits -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-blue-100">
+                        <div class="flex items-center mb-6">
+                            <div class="text-4xl mr-4">🔒</div>
+                            <h3 class="text-2xl font-bold text-slate-800">Who Chooses Self-Hosted</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Security-First Enterprises</p>
+                                    <p class="text-sm text-slate-500">Code never leaves your infrastructure. Complete data sovereignty.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Regulated Industries</p>
+                                    <p class="text-sm text-slate-500">Healthcare, finance, government - meet compliance requirements.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Cost-Conscious Teams</p>
+                                    <p class="text-sm text-slate-500">Already have infrastructure? Use it. Already have AI subscriptions? Keep them.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Custom Workflows</p>
+                                    <p class="text-sm text-slate-500">Integrate with your existing CI/CD, monitoring, and security tools.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fully Managed Benefits -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 border border-purple-100">
+                        <div class="flex items-center mb-6">
+                            <div class="text-4xl mr-4">⚡</div>
+                            <h3 class="text-2xl font-bold text-slate-800">Who Chooses Fully Managed</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Fast-Moving Startups</p>
+                                    <p class="text-sm text-slate-500">Start coding in 30 seconds. No DevOps required.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Small Teams</p>
+                                    <p class="text-sm text-slate-500">Focus on building, not managing infrastructure.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Proof-of-Concepts</p>
+                                    <p class="text-sm text-slate-500">Test ideas quickly without infrastructure commitment.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-purple-500 mt-1 mr-3">▸</span>
+                                <div>
+                                    <p class="font-semibold text-slate-700">Agencies & Consultants</p>
+                                    <p class="text-sm text-slate-500">Spin up environments for clients instantly.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Flexible Pricing for Every Team</h2>
+                    <p class="mt-4 text-lg text-slate-600">Choose self-hosted for control, or fully managed for convenience.</p>
+                </div>
+                
+                <!-- Self-Hosted Pricing Section -->
+                <div class="mt-16">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center bg-blue-100 text-blue-800 px-6 py-3 rounded-full">
+                            <span class="text-2xl mr-3">🔧</span>
+                            <h3 class="text-xl font-bold">Self-Hosted Plans</h3>
+                            <span class="ml-3 text-sm font-medium">(Your Infrastructure, Your AI Keys)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                    <div class="pricing-card bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-lg shadow-md border-2 border-green-400 transition-all duration-300 hover:border-green-500 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <div class="absolute top-0 -translate-y-1/2 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">FREE FOREVER</div>
+                        <h4 class="text-xl font-bold text-slate-800">Founders</h4>
+                        <p class="mt-2 text-slate-500">Perfect for side projects</p>
+                        <p class="mt-6 text-4xl font-bold text-green-600">$0</p>
+                        <p class="text-slate-500">forever</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Your infrastructure</li>
+                            <li>✓ Your AI keys</li>
+                            <li>✓ 2 team members</li>
+                            <li>✓ Community support</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">Startup</h4>
+                        <p class="mt-2 text-slate-500">Growing teams</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">$29</p>
+                        <p class="text-slate-500">per seat/month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Your infrastructure</li>
+                            <li>✓ Your AI keys</li>
+                            <li>✓ 10 team members</li>
+                            <li>✓ Priority support</li>
+                            <li>✓ Advanced features</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-blue-500 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <p class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">POPULAR</p>
+                        <h4 class="text-xl font-bold text-slate-800">Scale</h4>
+                        <p class="mt-2 text-slate-500">Established companies</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">$99</p>
+                        <p class="text-slate-500">per seat/month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Your infrastructure</li>
+                            <li>✓ Your AI keys</li>
+                            <li>✓ Unlimited members</li>
+                            <li>✓ 24/7 support</li>
+                            <li>✓ SSO & compliance</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">Enterprise</h4>
+                        <p class="mt-2 text-slate-500">Custom needs</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">Custom</p>
+                        <p class="text-slate-500">Let's talk</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ On-premise deploy</li>
+                            <li>✓ Air-gapped option</li>
+                            <li>✓ Custom integrations</li>
+                            <li>✓ SLA guarantees</li>
+                            <li>✓ White-glove setup</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Fully Managed Pricing Section -->
+                <div class="mt-20 pt-16 border-t-4 border-slate-200">
+                    <div class="text-center mb-8">
+                        <div class="inline-flex items-center bg-purple-100 text-purple-800 px-6 py-3 rounded-full">
+                            <span class="text-2xl mr-3">☁️</span>
+                            <h3 class="text-xl font-bold">Fully Managed Plans</h3>
+                            <span class="ml-3 text-sm font-medium">(We Provide Infrastructure & AI)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                    <div class="pricing-card bg-gradient-to-br from-purple-50 to-indigo-50 p-8 rounded-lg shadow-md border-2 border-purple-400 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <div class="absolute top-0 -translate-y-1/2 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">NO SETUP</div>
+                        <h4 class="text-xl font-bold text-slate-800">Starter</h4>
+                        <p class="mt-2 text-slate-500">Individual developers</p>
+                        <p class="mt-6 text-4xl font-bold text-purple-600">$49</p>
+                        <p class="text-slate-500">per month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Managed infrastructure</li>
+                            <li>✓ 1M AI tokens/month</li>
+                            <li>✓ 1 concurrent agent</li>
+                            <li>✓ Instant setup</li>
+                            <li>✓ Email support</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">Team</h4>
+                        <p class="mt-2 text-slate-500">Small teams</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">$199</p>
+                        <p class="text-slate-500">per month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Managed infrastructure</li>
+                            <li>✓ 10M AI tokens/month</li>
+                            <li>✓ 5 concurrent agents</li>
+                            <li>✓ 5 team members</li>
+                            <li>✓ Priority support</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-blue-500 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 relative">
+                        <p class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">BEST VALUE</p>
+                        <h4 class="text-xl font-bold text-slate-800">Business</h4>
+                        <p class="mt-2 text-slate-500">Growing companies</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">$599</p>
+                        <p class="text-slate-500">per month</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Managed infrastructure</li>
+                            <li>✓ 50M AI tokens/month</li>
+                            <li>✓ Unlimited agents</li>
+                            <li>✓ 20 team members</li>
+                            <li>✓ 24/7 support</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card bg-white p-8 rounded-lg shadow-md border-2 border-slate-200 transition-all duration-300 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2">
+                        <h4 class="text-xl font-bold text-slate-800">Enterprise</h4>
+                        <p class="mt-2 text-slate-500">Large organizations</p>
+                        <p class="mt-6 text-4xl font-bold text-slate-900">Custom</p>
+                        <p class="text-slate-500">Volume pricing</p>
+                        <ul class="mt-6 space-y-3 text-slate-600">
+                            <li>✓ Dedicated infrastructure</li>
+                            <li>✓ Unlimited AI tokens</li>
+                            <li>✓ Unlimited everything</li>
+                            <li>✓ SLA guarantees</li>
+                            <li>✓ Account manager</li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        
+
+    </main>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const marketCtx = document.getElementById('marketChart').getContext('2d');
+            new Chart(marketCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dev Tools Market', 'Global Developers', 'AI Adoption'],
+                    datasets: [{
+                        label: 'Market Metrics',
+                        data: [26, 100, 92],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(37, 99, 235, 0.7)',
+                            'rgba(29, 78, 216, 0.7)',
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(37, 99, 235, 1)',
+                            'rgba(29, 78, 216, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.label === 'Dev Tools Market') {
+                                           label = '$' + context.parsed.y + ' Billion+';
+                                        } else if (context.label === 'Global Developers') {
+                                            label = context.parsed.y + ' Million+';
+                                        } else {
+                                            label = context.parsed.y + '%';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + ' M/$B/%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
+
+</body>
+</html>
