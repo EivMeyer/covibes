@@ -401,6 +401,9 @@ app.use('/css', express.static(path.join(__dirname, '../../../css')));
 // Serve test screenshots for pitch deck
 app.use('/tests', express.static(path.join(__dirname, '../../../tests')));
 
+// Serve founder images for pitch deck
+app.use('/founders', express.static(path.join(__dirname, '../../../pitch/output/founders')));
+
 // Serve JS files for pitch deck
 app.use('/js', express.static(path.join(__dirname, '../../../js')));
 
@@ -551,10 +554,52 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Pitch deck endpoint
+// HTML Pitch deck endpoint (English)
 app.get('/pitch', (_req, res) => {
+  const htmlPath = '/home/ubuntu/covibes/pitch/output/pitch-en.html';
+  console.log(`📄 Serving HTML pitch deck from: ${htmlPath}`);
+  
+  if (!fs.existsSync(htmlPath)) {
+    console.error(`❌ HTML pitch deck not found at: ${htmlPath}`);
+    return res.status(404).json({ error: 'HTML pitch deck not found' });
+  }
+  
+  fs.readFile(htmlPath, 'utf8', (error, html) => {
+    if (error) {
+      console.error('Error reading HTML pitch deck:', error);
+      return res.status(500).json({ error: 'Failed to read HTML pitch deck' });
+    }
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
+// HTML Pitch deck endpoint (Norwegian)
+app.get('/pitch/no', (_req, res) => {
+  const htmlPath = '/home/ubuntu/covibes/pitch/output/pitch-no.html';
+  console.log(`📄 Serving Norwegian HTML pitch deck from: ${htmlPath}`);
+  
+  if (!fs.existsSync(htmlPath)) {
+    console.error(`❌ Norwegian HTML pitch deck not found at: ${htmlPath}`);
+    return res.status(404).json({ error: 'Norwegian HTML pitch deck not found' });
+  }
+  
+  fs.readFile(htmlPath, 'utf8', (error, html) => {
+    if (error) {
+      console.error('Error reading Norwegian HTML pitch deck:', error);
+      return res.status(500).json({ error: 'Failed to read Norwegian HTML pitch deck' });
+    }
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
+// Legacy markdown pitch deck endpoint  
+app.get('/pitch/md', (_req, res) => {
   const markdownPath = path.join(__dirname, '../../../pitch.md');
-  console.log(`📄 Serving pitch deck from: ${markdownPath}`);
+  console.log(`📄 Serving markdown pitch deck from: ${markdownPath}`);
   
   if (!fs.existsSync(markdownPath)) {
     console.error(`❌ Pitch deck not found at: ${markdownPath}`);

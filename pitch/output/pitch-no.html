@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="no" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Covibes: AI-Arbeidsplattformen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #2563eb;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #3b82f6;
+        }
+        .timeline-path {
+            position: absolute;
+            left: -21px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #dbeafe;
+        }
+        
+        /* Karpathy Tweet Slide Styles */
+        .tweet-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+        
+        .tweet-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tweet-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .tweet-author {
+            flex-grow: 1;
+        }
+        
+        .tweet-author-name {
+            font-weight: 600;
+            color: white;
+            font-size: 1.125rem;
+        }
+        
+        .tweet-handle {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        .tweet-content {
+            color: #e2e8f0;
+            font-size: 1.125rem;
+            line-height: 1.75;
+        }
+        
+        .highlight-vibe {
+            color: #fbbf24;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .highlight-key {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+        
+        .tweet-transition {
+            margin-top: 3rem;
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 1.5rem;
+            font-weight: 300;
+        }
+        
+        .tweet-transition strong {
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Architecture Diagram */
+        .architecture-box {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .architecture-box:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.2);
+        }
+        
+        .architecture-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .architecture-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .architecture-description {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        /* Connector Line */
+        .connector {
+            position: absolute;
+            background: #cbd5e1;
+            z-index: -1;
+        }
+        
+        .connector-horizontal {
+            height: 2px;
+            top: 50%;
+        }
+        
+        .connector-vertical {
+            width: 2px;
+            left: 50%;
+        }
+    </style>
+</head>
+<body class="antialiased text-slate-700">
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 backdrop-blur-sm bg-opacity-90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <span class="text-xl font-bold text-slate-800">Covibes: AI-Arbeidsplattformen</span>
+                <div class="hidden md:flex space-x-6 text-sm">
+                    <a href="#hero" class="nav-link text-slate-600 hover:text-slate-900">Hjem</a>
+                    <a href="#opportunity" class="nav-link text-slate-600 hover:text-slate-900">Mulighet</a>
+                    <a href="#product" class="nav-link text-slate-600 hover:text-slate-900">Produkt</a>
+                    <a href="#market" class="nav-link text-slate-600 hover:text-slate-900">Marked</a>
+                    <a href="#marketSize" class="nav-link text-slate-600 hover:text-slate-900">Markedsstørrelse</a>
+                    <a href="#goToMarket" class="nav-link text-slate-600 hover:text-slate-900">Vekststrategi</a>
+                    <a href="#growthRoadmap" class="nav-link text-slate-600 hover:text-slate-900">Roadmap</a>
+                    <a href="#pricing" class="nav-link text-slate-600 hover:text-slate-900">Priser</a>
+                    <a href="#team" class="nav-link text-slate-600 hover:text-slate-900">Team</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        
+        <section id="vibe-intro" class="py-20 tweet-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h1 class="text-5xl md:text-6xl font-bold text-white mb-4">Karpathy sa det. Vi bygde det.</h1>
+                    <p class="text-xl text-slate-300"></p>
+                </div>
+                
+                <div class="tweet-card">
+                    <div class="tweet-header">
+                        <div class="tweet-avatar">AK</div>
+                        <div class="tweet-author">
+                            <div class="tweet-author-name">Andrej Karpathy</div>
+                            <div class="tweet-handle">@karpathy</div>
+                        </div>
+                    </div>
+                    <div class="tweet-content">Det finnes en ny type koding jeg kaller <span class="highlight-vibe">"vibe-koding"</span>, der du <span class="highlight-key">gir deg helt hen til vibesa</span>, omfavner eksponentialer, og <span class="highlight-key">glemmer at koden i det hele tatt eksisterer</span>. Det er mulig fordi LLM-ene (f.eks. Cursor Composer m/ Sonnet) blir for gode. Jeg snakker også til Composer med SuperWhisper så jeg <span class="highlight-key">knapt rører tastaturet</span>. Jeg ber om de dummeste tingene som "reduser padding på sidebar med halvparten" fordi jeg er for lat til å finne det. Jeg "Accept All" alltid, jeg leser ikke diff-ene lenger. Når jeg får feilmeldinger kopierer jeg de bare inn uten kommentar, vanligvis fikser det seg. Koden vokser utover min vanlige forståelse, jeg måtte egentlig lest gjennom den en stund. Noen ganger kan ikke LLM-ene fikse en bug så jeg jobber bare rundt det eller ber om tilfeldige endringer til det forsvinner. Det er ikke så verst for engangsprosjekter på helga, men fortsatt ganske morsomt. Jeg bygger et prosjekt eller webapp, men det er ikke egentlig koding - <span class="highlight-key">jeg bare ser ting, sier ting, kjører ting</span>, og kopier og limer ting, og det funker for det meste.</div>
+                </div>
+                
+                <div class="tweet-transition">
+                    
+                </div>
+            </div>
+        </section>
+
+        <section id="hero" class="pt-16 md:pt-20 pb-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-slate-800">Flerspiller AI-Utvikling</h1>
+                <p class="mt-6 text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto">Der team og AI-agenter koder sammen, fra hvor som helst, på din infrastruktur.</p>
+                <p class="mt-4 text-sm text-slate-500">Tromsø, september 2025</p>
+            </div>
+        </section>
+
+        <section id="opportunity" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Hva Som Endret Seg</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Husker du overgangen fra Word til Google Docs? Det skjer med kode akkurat nå.</p>
+                </div>
+                <div class="mt-12 grid lg:grid-cols-2 gap-12">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-8">I dag: AI-Assistert</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start space-x-4">
+                                <span class="text-3xl">👨‍💻</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Menneskestyrt</h4>
+                                    <p class="text-slate-600">Utvikleren må være ved skrivebordet.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <span class="text-3xl">💡</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">AI Assisterer</h4>
+                                    <p class="text-slate-600">AI hjelper én person av gangen.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <span class="text-3xl">⏳</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Sekvensielt & Tregt</h4>
+                                    <p class="text-slate-600">Arbeid begrenses av én persons tilgjengelighet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-lg shadow-lg border-2 border-blue-300">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-8">Med Covibes: AI-Arbeidsstyrke</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start space-x-4">
+                                <span class="text-3xl">📱</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Menneskeledede</h4>
+                                    <p class="text-slate-600">Fiks produksjon fra stranda.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <span class="text-3xl">🤖</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">AI Handler</h4>
+                                    <p class="text-slate-600">5 agenter som jobber med 5 forskjellige oppgaver.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <span class="text-3xl">⚡️</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">Parallelt & Raskt</h4>
+                                    <p class="text-slate-606">Alt skjer samtidig.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="product" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Se Prototypen i Aksjon</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Dette er ikke et konsept. Vi har allerede en fungerende implementasjon. Se våre AI-agenter koordinere i delte arbeidsområder med sanntids teamsamarbeid.</p>
+                </div>
+                
+                <div class="mt-12 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <!-- Demo 1 -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-lg shadow-lg border border-blue-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">📹 Se Demo: Flerspiller Samarbeid</h3>
+                        <p class="text-slate-600 mb-6">To utviklere som jobber sammen i sanntid med AI-agenter</p>
+                        <a href="https://www.youtube.com/watch?v=xiDsllZ3SrA" target="_blank" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <span>▶️ Spill Video</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Demo 2 -->
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-lg shadow-lg border border-purple-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">📱 Se Demo: Mobil Live Forhåndsvisning</h3>
+                        <p class="text-slate-600 mb-6">Desktop agent-utvikling med sanntids mobil forhåndsvisning</p>
+                        <a href="https://www.youtube.com/shorts/uFm28pklYKE" target="_blank" class="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors">
+                            <span>▶️ Spill Video</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Hva Som Gjør Covibes Annerledes</h2>
+                    <p class="mt-4 text-lg text-slate-600">Den <strong>eneste</strong> plattformen som kombinerer alle fire egenskapene</p>
+                </div>
+                
+                <div class="mt-12 grid lg:grid-cols-2 gap-8">
+                    <!-- Code From Anywhere -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">📱</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">Kod Fra Hvor Som Helst</h3>
+                        <p class="text-slate-600">Gjør dødtid til dev-tid. Fiks kritiske bugs på t-banen. Ship features mens du venter på flyplassen. Vær like produktiv på fjellturen som ved arbeidsstasjonen. For deadlines venter ikke på at du kommer tilbake til skrivebordet.</p>
+                    </div>
+                    
+                    <!-- Multiplayer AI Coding -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">👥</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">Flerspiller AI-Koding</h3>
+                        <p class="text-slate-600">Et delt arbeidsområde der flere utviklere og AI-agenter jobber samtidig. Alle ser samme kode, samme terminaler, samme output. Ingen merge-konflikter fordi alle jobber i samme miljø. Ingen koordinasjonsmøter fordi alle kan se hva som skjer.</p>
+                    </div>
+                    
+                    <!-- Deploy Your Way -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">🎯</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">Host det selv eller la oss håndtere det</h3>
+                        <div class="grid md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-2">Selvhostet</h4>
+                                <p class="text-sm text-slate-600">Din infrastruktur, din kontroll. AWS, Azure, on-premise - du velger.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-2">Fullt Administrert</h4>
+                                <p class="text-sm text-slate-600">Vi håndterer alt. Null DevOps, øyeblikkelig oppsett, bare kod.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Flexible AI Options -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">🤖</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">Ta med din AI eller bruk vår</h3>
+                        <div class="grid md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-2">Ta Med Din Egen</h4>
+                                <p class="text-sm text-slate-600">Bruk dine AI-nøkler. Null tillegg. Direkte leverandørpriser.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 mb-2">Vi Leverer</h4>
+                                <p class="text-sm text-slate-600">AI inkludert. Enkle priser. Ingen API-nøkkelhåndtering.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg">
+                    <p class="text-xl font-semibold text-slate-700">
+                        <span class="text-blue-600 font-bold">TL;DR:</span> AI-utvikling som tilpasser seg hvordan du jobber. Administrer agenter fra mobil på pendlerreisen. Samarbeid med distribuerte team. Hold alt på din infrastruktur. Vi gjorde ikke AI-en smartere - vi fikk den til å fungere for team.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Slik Fungerer Det Egentlig</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Arkitekturen bak flerspiller AI-utvikling</p>
+                </div>
+
+                <!-- Shared Dashboard UI -->
+                <div class="mt-12 bg-gradient-to-r from-indigo-50 to-blue-50 p-8 rounded-lg border border-indigo-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">📊 Det Delte Dashboard-Opplevelsen</h3>
+                    <p class="text-center text-slate-600 mb-8">Et delt arbeidsområde der alle teammedlemmer ser samme visning. Tenk Google Docs, men for hele utviklingsmiljøet ditt.</p>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">💻</div>
+                            <h4 class="font-bold text-slate-800">Agentterminaler</h4>
+                            <p class="text-sm text-slate-600 mt-2">Live output fra alle aktive agenter. Overvåk arbeidet deres, send kommandoer, grip inn når nødvendig.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">📝</div>
+                            <h4 class="font-bold text-slate-800">IDE Editor</h4>
+                            <p class="text-sm text-slate-600 mt-2">Monaco editor med IntelliSense og synlige teamkameraters markører.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">🔥</div>
+                            <h4 class="font-bold text-slate-800">Live Forhåndsvisning</h4>
+                            <p class="text-sm text-slate-600 mt-2">Hot-reload forhåndsvisning synlig for hele teamet øyeblikkelig.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                            <div class="text-3xl mb-2">💬</div>
+                            <h4 class="font-bold text-slate-800">Teamchat</h4>
+                            <p class="text-sm text-slate-600 mt-2">Delt kanal for mennesker og supervisor-agenter. Agenter kan lese og svare på teamdiskusjoner.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-sm font-semibold text-indigo-700">Alle paneler synkroniseres på tvers av teammedlemmer øyeblikkelig. Dette er flerspiller utvikling.</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 grid lg:grid-cols-2 gap-12 items-start">
+                    <div class="bg-slate-50 p-8 rounded-lg">
+                        <h3 class="text-xl font-bold text-slate-800 mb-6">Distribusjonsmuligheter</h3>
+                        
+                        <!-- Self-Hosted Option -->
+                        <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="font-bold text-blue-800 mb-3">🔧 Selvhostet Modus</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">1.</span>
+                                    <span>1. Distribuer på din infrastruktur (AWS, Azure, on-prem)</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">2.</span>
+                                    <span>2. Bruk dine AI API-nøkler direkte</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">3.</span>
+                                    <span>3. Komplett datasuverenitet</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-blue-600 mr-2">4.</span>
+                                    <span>4. Integrer med eksisterende verktøy</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Managed Option -->
+                        <div class="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <h4 class="font-bold text-purple-800 mb-3">☁️ Fullt Administrert Modus</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">1.</span>
+                                    <span>1. Vi håndterer all infrastruktur</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">2.</span>
+                                    <span>2. AI-kreditter inkludert i prisen</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">3.</span>
+                                    <span>3. Øyeblikkelig oppsett, null DevOps</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="text-purple-600 mr-2">4.</span>
+                                    <span>4. Automatisk skalering og oppdateringer</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-8 border-t border-slate-200">
+                            <h4 class="font-semibold text-slate-800 mb-4">Støttede AI-Agenter</h4>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">Claude Code</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">Gemini CLI</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">GPT-4/Cursor</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border border-slate-200">
+                                    <span class="font-medium">Enhver Fremtidig AI</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                            <h3 class="font-bold text-green-800 mb-3">🎯 Nøkkelinnovasjon: Delt Realitet</h3>
+                            <ul class="space-y-2 text-slate-700">
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span>✓ Git-basert - hver endring skaper et commit-sjekkpunkt</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span>✓ Live synkronisering - alle teammedlemmer ser samme kode, terminaler og output</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-green-600 mr-2">✓</span>
+                                    <span>✓ Ingen merge-konflikter - alle jobber i samme arbeidsområde</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                            <h3 class="font-bold text-blue-800 mb-3">🚀 Universal GUI Forhåndsvisning</h3>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>• Webapplikasjoner</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>• Mobilapper</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>• Desktopprogramvare</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-600">•</span>
+                                    <span>• Ethvert GUI-grensesnitt</span>
+                                </div>
+                            </div>
+                            <p class="mt-3 text-sm text-slate-600">Forhåndsvis enhver GUI-applikasjon med øyeblikkelig visuell tilbakemelding</p>
+                        </div>
+
+                        <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                            <h3 class="font-bold text-purple-800 mb-3">💡 Hvorfor Denne Arkitekturen Vinner</h3>
+                            <ul class="space-y-2 text-slate-700 text-sm">
+                                <li><strong>Ingen leverandørbinding::</strong> Din kode, dine servere, dine AI-nøkler</li>
+                                <li><strong>Ekte isolasjon::</strong> Hver agent i sikker Docker-container</li>
+                                <li><strong>Personvern::</strong> Vi ser aldri din kode eller nøkler</li>
+                                <li><strong>Skalerbar::</strong> Legg til VM-er etter hvert som du vokser</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Specific Innovations -->
+                <div class="mt-12 bg-gradient-to-r from-purple-50 to-indigo-50 p-8 rounded-lg border border-purple-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">🧠 AI-Spesifikke Innovasjoner</h3>
+                    
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <!-- Cross-Agent Context Injection -->
+                        <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                            <h4 class="font-bold text-lg text-purple-800 mb-3">🔄 Kryss-Agent Kontekstinjeksjon</h4>
+                            <p class="text-sm text-slate-600 mb-4">Agenter kringkaster handlingene sine for å forhindre konflikter og dobbeltarbeid.</p>
+                            <div class="bg-slate-50 p-3 rounded text-xs font-mono">
+                                <div class="text-slate-700">Agent-A: "Refaktorerer auth.js til JWT"</div>
+                                <div class="text-blue-600">Agent-B: "Jeg ser JWT-endring. Oppdaterer user-service"</div>
+                                <div class="text-green-600">→ Perfekt koordinering</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hierarchical Agents -->
+                        <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                            <h4 class="font-bold text-lg text-purple-800 mb-3">🏗️ Hierarkisk Agent-Arkitektur</h4>
+                            <p class="text-sm text-slate-600 mb-4">Supervisor-agenter overvåker teamchat og spawner arbeidere basert på diskusjoner.</p>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    <span>Arbeidere: Utfører spesifikke oppgaver (tilgjengelig nå)</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                    <span>Supervisorer: Overvåker chat, spawner arbeidere (6 måneder)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-sm font-semibold text-purple-700">Ikke individuelle AI-assistenter, men koordinerte team av agenter</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="market" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Hvorfor Nå</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600"></p>
+                </div>
+                <div class="mt-12 max-w-4xl mx-auto">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg border border-blue-200 mb-8">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4"></h3>
+                        <p class="text-lg text-slate-700 mb-4">Når en senior utvikler blir oppsagt fordi AI kan gjøre 70% av jobben deres, leter de ikke etter en ny jobb. De innser at de nå kan bygge et helt SaaS-produkt på en helg. De tar med designer-vennen som også ble oppsagt, og kanskje en salgsmann som er lei av å selge andres drøm.</p>
+                        <p class="text-lg text-slate-700 mb-4">Et 3-manns team med AI kan shippe det som tidligere krevde et 20-manns team i seks måneder. Men her er haken: disse mikro-teamene må bevege seg i lysets hastighet. De konkurrerer med tusenvis av andre mikro-team med samme AI-tilgang.</p>
+                        <p class="text-lg font-semibold text-blue-700">Vinnerne er de som kan prototype, teste med brukere, og iterere raskest. Hver oppsagte utvikler med ChatGPT er nå en potensiell gründer. Hvert nedbemannte team på 3 kan nå konkurrere med selskaper på 30. Barrieren for å starte noe har gått fra $100k og 6 måneder til $20 og en helg.</p>
+                    </div>
+                    <p class="text-lg text-slate-600">Disse mikro-startupene trenger alle det samme: evnen til å bygge og iterere raskere enn konkurrentene, som et team. Covibes er flerspiller utviklingsmiljøet for de tusenvis av nye 2-3 personers team som kommer ut av AI-omveltningen.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="marketSize" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Muligheten</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Et massivt marked som nettopp har begynt</p>
+                </div>
+                
+                <div class="mt-12 grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- TAM Card -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-lg shadow-lg border-2 border-blue-300">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Hele Markedet</h3>
+                        <div class="text-3xl font-bold text-blue-600 mb-2">$5 Milliarder → $30 Milliarder</div>
+                        <div class="text-sm text-slate-600 mb-4">2025 til 2033</div>
+                        <p class="text-slate-700 font-medium mb-2">Globalt AI-kodingsverktøymarked vokser 30% årlig</p>
+                        <p class="text-sm text-slate-600 italic">Hver utvikler på planeten vil til slutt bruke AI. Vi fanger opp den overgangen.</p>
+                    </div>
+                    
+                    <!-- SAM Card -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-8 rounded-lg shadow-lg border-2 border-green-300">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Vårt Mål</h3>
+                        <div class="text-3xl font-bold text-green-600 mb-2">50,000 - 100,000</div>
+                        <div class="text-sm text-slate-600 mb-4">Mikro-SaaS bedrifter globalt</div>
+                        <p class="text-slate-700 font-medium mb-2">Hurtiggående team på 2-5 personer som bygger neste generasjons programvare</p>
+                        <p class="text-sm text-slate-600 italic">Disse teamene beveger seg raskt, adopterer tidlig, og trenger desperat flerspiller AI.</p>
+                    </div>
+                    
+                    <!-- SOM Card -->
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-lg shadow-lg border-2 border-purple-300">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Vårt 3-års Mål</h3>
+                        <div class="text-3xl font-bold text-purple-600 mb-2">5,000 Team</div>
+                        <div class="text-2xl font-semibold text-purple-500 mb-2">$15-20 Millioner</div>
+                        <div class="text-sm text-slate-600 mb-4">årlig omsetning</div>
+                        <p class="text-slate-700 font-medium mb-2">En realistisk del av et massivt marked</p>
+                        <p class="text-sm text-slate-600 italic">Bare 5% av vårt målmarked gir oss bærekraftig vekst.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <p class="text-xl font-semibold text-slate-700">Vi trenger ikke å dominere. Vi trenger bare en liten del av en gigantisk, voksende kake.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="goToMarket" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Slik Når Vi Dit</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Kapitaleffektiv vekst gjennom verktøyene utviklere allerede bruker</p>
+                </div>
+                
+                <div class="mt-12 grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- Product-Led Growth -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">🎯</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Produktledet Vekst</h3>
+                        <p class="text-lg font-semibold text-blue-600 mb-4">Gratis for alltid for gründere (2 plasser)</p>
+                        <p class="text-slate-700 mb-4">Selvhostet versjon. Din infrastruktur. Dine AI-nøkler. Ingen salgssamtaler.</p>
+                        <ul class="space-y-2">
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Null friksjon for sideprosjekter</span>
+                            </li>
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>$31/plass for team på 3-10</span>
+                            </li>
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Naturlig ekspansjon når team vokser</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Community-Led Growth -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">🌱</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Fellesskapsdrevet Vekst</h3>
+                        <p class="text-lg font-semibold text-green-600 mb-4">Gå dit byggere befinner seg</p>
+                        <p class="text-slate-700 mb-4">Reddit (r/SaaS, r/startups), Indie Hackers, Y Combinator fora, X</p>
+                        <ul class="space-y-2">
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Del verdi, ikke annonser</span>
+                            </li>
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Hjelp andre å bygge raskere</span>
+                            </li>
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Bli det åpenbare valget</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Viral Content -->
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-4xl mb-4">🚀</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Viral Innholdsstrategi</h3>
+                        <p class="text-lg font-semibold text-purple-600 mb-4">Vis, ikke fortell</p>
+                        <p class="text-slate-700 mb-4">Live-koding sesjoner som får utviklere til å bli entusiastiske</p>
+                        <ul class="space-y-2">
+                            <li class="text-sm text-slate-606 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>"Bygg en SaaS på 48 timer" livestreams</span>
+                            </li>
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>"Fra oppsagt til gründer på 30 dager" tutorials</span>
+                            </li>
+                            <li class="text-sm text-slate-600 flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>Ekte builds, ekte resultater, ekte raskt</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <p class="text-xl font-semibold text-slate-700">Hver utvikler som ser Covibes i aksjon forstår umiddelbart hvorfor de trenger det.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="growthRoadmap" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Veien Videre</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Fra beta til skalering på 4 år</p>
+                </div>
+                
+                <div class="mt-12 max-w-5xl mx-auto">
+                    <div class="relative">
+                        <div class="timeline-path"></div>
+                        
+                        <!-- Year 1 -->
+                        <div class="relative mb-12 timeline-item">
+                            <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-blue-200 ml-8">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-slate-800">År 1 (2025)</h3>
+                                        <p class="text-lg font-semibold text-blue-600">Lansering & Læring</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold text-slate-700">Pre-omsetning</p>
+                                        <p class="text-sm text-slate-600">Designpartnere & tilbakemelding</p>
+                                    </div>
+                                </div>
+                                <ul class="space-y-2">
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-blue-500 mr-2">•</span>
+                                        <span>Offentlig beta med kjerne flerspiller funksjoner</span>
+                                    </li>
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-blue-500 mr-2">•</span>
+                                        <span>100 aktive team som bruker plattformen</span>
+                                    </li>
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-blue-500 mr-2">•</span>
+                                        <span>Finn produkt-marked tilpasning</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Year 2 -->
+                        <div class="relative mb-12 timeline-item">
+                            <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-green-200 ml-8">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-slate-800">År 2 (2026)</h3>
+                                        <p class="text-lg font-semibold text-green-600">Produkt-Marked Tilpasning</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold text-green-600">$500,000</p>
+                                        <p class="text-sm text-slate-600">årlig omsetning</p>
+                                    </div>
+                                </div>
+                                <ul class="space-y-2">
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-green-500 mr-2">•</span>
+                                        <span>Versjon 1.0 med selvhostet alternativ</span>
+                                    </li>
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-green-500 mr-2">•</span>
+                                        <span>1,000 betalende team</span>
+                                    </li>
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-green-500 mr-2">•</span>
+                                        <span>Innledende AI supervisor-kapasiteter</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Year 3 -->
+                        <div class="relative mb-12 timeline-item">
+                            <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-purple-200 ml-8">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-slate-800">År 3 (2027)</h3>
+                                        <p class="text-lg font-semibold text-purple-600">Skalering</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold text-purple-600">$2.5 Millioner</p>
+                                        <p class="text-sm text-slate-600">årlig omsetning</p>
+                                    </div>
+                                </div>
+                                <ul class="space-y-2">
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-purple-500 mr-2">•</span>
+                                        <span>Full hierarkisk agent-arkitektur</span>
+                                    </li>
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-purple-500 mr-2">•</span>
+                                        <span>5,000 betalende team</span>
+                                    </li>
+                                    <li class="text-slate-600 flex items-start">
+                                        <span class="text-purple-500 mr-2">•</span>
+                                        <span>Første bedriftskunder (SSO, compliance)</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 text-center">
+                        <p class="text-sm text-slate-600 italic"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Slik sammenligner vi</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600"></p>
+                </div>
+                
+                <div class="mt-12 overflow-x-auto">
+                    <table class="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+                        <thead class="bg-slate-800 text-white">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Funksjon</th>
+                                <th class="px-4 py-3 text-center">Covibes</th>
+                                <th class="px-4 py-3 text-center">Cursor</th>
+                                <th class="px-4 py-3 text-center">Windsurf</th>
+                                <th class="px-4 py-3 text-center">Bolt.new</th>
+                                <th class="px-4 py-3 text-center">Lovable</th>
+                                <th class="px-4 py-3 text-center">v0</th>
+                                <th class="px-4 py-3 text-center">Replit</th>
+                                <th class="px-4 py-3 text-center">Base44</th>
+                                <th class="px-4 py-3 text-center">Claude Code/Gemini CLI/Codex/Copilot</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Kod Fra Hvor Som Helst</td>
+                                <td class="px-4 py-3 text-center">✅ Full App</td>
+                                <td class="px-4 py-3 text-center">⚠️ Web Pro+</td>
+                                <td class="px-4 py-3 text-center">❌ Desktop</td>
+                                <td class="px-4 py-3 text-center">⚠️ Nettleser</td>
+                                <td class="px-4 py-3 text-center">⚠️ Nettleser</td>
+                                <td class="px-4 py-3 text-center">⚠️ Nettleser</td>
+                                <td class="px-4 py-3 text-center">✅ Full App</td>
+                                <td class="px-4 py-3 text-center">⚠️ Nettleser</td>
+                                <td class="px-4 py-3 text-center">⚠️ Blandet</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Flerspiller AI Arbeidsområde</td>
+                                <td class="px-4 py-3 text-center">✅ Multi-Bruker</td>
+                                <td class="px-4 py-3 text-center">❌ Enkelt</td>
+                                <td class="px-4 py-3 text-center">⚠️ Del</td>
+                                <td class="px-4 py-3 text-center">⚠️ Kun Visning</td>
+                                <td class="px-4 py-3 text-center">⚠️ Overlevering</td>
+                                <td class="px-4 py-3 text-center">❌ Fork</td>
+                                <td class="px-4 py-3 text-center">⚠️ Kun Kode</td>
+                                <td class="px-4 py-3 text-center">⚠️ Team</td>
+                                <td class="px-4 py-3 text-center">❌ Isolert</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Distribusjonsfleksibilitet</td>
+                                <td class="px-4 py-3 text-center">✅ Full fleksibilitet</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Lokal</td>
+                                <td class="px-4 py-3 text-center">⚠️ Begrenset</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Administrert</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Administrert</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Vercel</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Replit</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Wix</td>
+                                <td class="px-4 py-3 text-center">⚠️ Varierer</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Egen Infrastruktur</td>
+                                <td class="px-4 py-3 text-center">✅ Valgfritt</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Lokal</td>
+                                <td class="px-4 py-3 text-center">✅ Fleksibel</td>
+                                <td class="px-4 py-3 text-center">⚠️ bolt.diy</td>
+                                <td class="px-4 py-3 text-center">✅ Eksporter</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Vercel</td>
+                                <td class="px-4 py-3 text-center">❌ Kun Replit</td>
+                                <td class="px-4 py-3 text-center">❌ Wix Cloud</td>
+                                <td class="px-4 py-3 text-center">✅ Lokal/BYO</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Live Forhåndsvisning</td>
+                                <td class="px-4 py-3 text-center">✅ Integrert</td>
+                                <td class="px-4 py-3 text-center">❌ Ekstern</td>
+                                <td class="px-4 py-3 text-center">✅ Klikk-Rediger</td>
+                                <td class="px-4 py-3 text-center">✅ Innebygd</td>
+                                <td class="px-4 py-3 text-center">✅ Sanntid</td>
+                                <td class="px-4 py-3 text-center">✅ Innebygd</td>
+                                <td class="px-4 py-3 text-center">✅ Innebygd</td>
+                                <td class="px-4 py-3 text-center">✅ Øyeblikkelig</td>
+                                <td class="px-4 py-3 text-center">⚠️ Begrenset</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Parallelle AI-oppgaver</td>
+                                <td class="px-4 py-3 text-center">✅ Multi-Agent</td>
+                                <td class="px-4 py-3 text-center">⚠️ Løsninger</td>
+                                <td class="px-4 py-3 text-center">✅ Cascade</td>
+                                <td class="px-4 py-3 text-center">❌ Enkelt</td>
+                                <td class="px-4 py-3 text-center">❌ Enkelt</td>
+                                <td class="px-4 py-3 text-center">❌ Enkelt</td>
+                                <td class="px-4 py-3 text-center">❌ Sekvensielt</td>
+                                <td class="px-4 py-3 text-center">❌ Enkelt</td>
+                                <td class="px-4 py-3 text-center">❌ Enkelt</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">AI Prisfleksibilitet</td>
+                                <td class="px-4 py-3 text-center">✅ Begge Alternativer</td>
+                                <td class="px-4 py-3 text-center">❌ Innebygd</td>
+                                <td class="px-4 py-3 text-center">❌ Innebygd</td>
+                                <td class="px-4 py-3 text-center">❌ Tillegg</td>
+                                <td class="px-4 py-3 text-center">❌ Tillegg</td>
+                                <td class="px-4 py-3 text-center">❌ Tillegg</td>
+                                <td class="px-4 py-3 text-center">❌ Innebygd</td>
+                                <td class="px-4 py-3 text-center">❌ Tillegg</td>
+                                <td class="px-4 py-3 text-center">✅ BYO</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-3 font-medium text-slate-800">Gratis Nivå Tilgjengelig</td>
+                                <td class="px-4 py-3 text-center">✅ Sjenerøst</td>
+                                <td class="px-4 py-3 text-center">✅ Begrenset</td>
+                                <td class="px-4 py-3 text-center">✅ 50/mnd</td>
+                                <td class="px-4 py-3 text-center">✅ 1M tokens</td>
+                                <td class="px-4 py-3 text-center">✅ 5/dag</td>
+                                <td class="px-4 py-3 text-center">✅ Kreditter</td>
+                                <td class="px-4 py-3 text-center">✅ Starter</td>
+                                <td class="px-4 py-3 text-center">✅ 200/mnd</td>
+                                <td class="px-4 py-3 text-center">⚠️ Begrenset</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="flexibility" class="py-20 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Hvorfor Fleksibilitet Er Viktig</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600"></p>
+                </div>
+                
+                <div class="mt-12 grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-3xl mb-4">🔒</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6">Hvem Velger Selvhostet</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Sikkerhet-Først Bedrifter</h4>
+                                <p class="text-slate-600">Din kode berører aldri våre servere. Aldri.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Regulerte Industrier</h4>
+                                <p class="text-slate-600">Helse, finans, offentlig sektor - møt compliance-krav.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Kostnadsbevisste Team</h4>
+                                <p class="text-slate-600">Har allerede infrastruktur? Bruk den. Har allerede AI-abonnementer? Behold dem.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Tilpassede Arbeidsflyter</h4>
+                                <p class="text-slate-600">Integrer med dine eksisterende CI/CD, overvåking og sikkerhetsverktøy.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <div class="text-3xl mb-4">⚡</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-6">Hvem Velger Fullt Administrert</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Hurtiggående Startups</h4>
+                                <p class="text-slate-600">Registrer deg. Start å kode. 30 sekunder.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Små Team</h4>
+                                <p class="text-slate-600">Fokuser på å bygge, ikke administrere infrastruktur.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Proof-of-Concepts</h4>
+                                <p class="text-slate-600">Test ideer raskt uten infrastruktur-forpliktelse.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Byrå & Konsulenter</h4>
+                                <p class="text-slate-600">Sett opp miljøer for klienter øyeblikkelig.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Priser</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">Velg selvhostet for kontroll, eller fullt administrert for bekvemmelighet.</p>
+                </div>
+
+                <div class="mt-12">
+                    <h3 class="text-center text-2xl font-bold text-slate-800 mb-8">
+                        <span class="text-3xl mr-2">🔧</span>
+                        Selvhostede Planer
+                    </h3>
+                    <p class="text-center text-lg text-slate-600 mb-8">(Din Infrastruktur, Dine AI-Nøkler)</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                        <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-green-300 relative">
+                            <div class="absolute -top-3 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold">GRATIS FOR ALLTID</div>
+                            <h4 class="text-xl font-bold text-slate-800 mt-2">Gründere</h4>
+                            <p class="text-sm text-slate-600 mb-4">Perfekt for sideprosjekter</p>
+                            <div class="text-3xl font-bold text-slate-800 mb-1">$0</div>
+                            <div class="text-sm text-slate-600 mb-4">for alltid</div>
+                            <ul class="space-y-2 text-sm text-slate-600">
+                                <li>✓ Din infrastruktur</li>
+                                <li>✓ Dine AI-nøkler</li>
+                                <li>✓ 2 teammedlemmer</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                            <h4 class="text-xl font-bold text-slate-800">Startup</h4>
+                            <p class="text-sm text-slate-600 mb-4">Team på 3-10</p>
+                            <div class="text-3xl font-bold text-slate-800 mb-1">$31</div>
+                            <div class="text-sm text-slate-600 mb-4">per plass/måned</div>
+                            <ul class="space-y-2 text-sm text-slate-600">
+                                <li>✓ Din infrastruktur</li>
+                                <li>✓ Dine AI-nøkler</li>
+                                <li>✓ 10 teammedlemmer</li>
+                                <li>✓ Avanserte funksjoner</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-blue-300 relative">
+                            <div class="absolute -top-3 left-4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">POPULÆR</div>
+                            <h4 class="text-xl font-bold text-slate-800 mt-2">Skalering</h4>
+                            <p class="text-sm text-slate-600 mb-4">Etablerte selskaper</p>
+                            <div class="text-3xl font-bold text-slate-800 mb-1">$99</div>
+                            <div class="text-sm text-slate-606 mb-4">per plass/måned</div>
+                            <ul class="space-y-2 text-sm text-slate-600">
+                                <li>✓ Din infrastruktur</li>
+                                <li>✓ Dine AI-nøkler</li>
+                                <li>✓ Ubegrensede medlemmer</li>
+                                <li>✓ SSO & compliance</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                            <h4 class="text-xl font-bold text-slate-800">Bedrift</h4>
+                            <p class="text-sm text-slate-600 mb-4">Tilpassede behov</p>
+                            <div class="text-3xl font-bold text-slate-800 mb-1">Tilpasset</div>
+                            <div class="text-sm text-slate-600 mb-4">La oss snakke</div>
+                            <ul class="space-y-2 text-sm text-slate-600">
+                                <li>✓ On-premise distribusjon</li>
+                                <li>✓ Air-gapped alternativ</li>
+                                <li>✓ Tilpassede integrasjoner</li>
+                                <li>✓ SLA-garantier</li>
+                                <li>✓ Vi setter det opp for deg</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16">
+                    <h3 class="text-center text-2xl font-bold text-slate-800 mb-8">
+                        <span class="text-3xl mr-2">☁️</span>
+                        Fullt Administrerte Planer
+                    </h3>
+                    <p class="text-center text-lg text-slate-606 mb-8">(Vi Leverer Infrastruktur & AI)</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-purple-300 relative">
+                        <div class="absolute -top-3 left-4 bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold">INTET OPPSETT</div>
+                        <h4 class="text-xl font-bold text-slate-800 mt-2">Starter</h4>
+                        <p class="text-sm text-slate-600 mb-4">Individuelle utviklere</p>
+                        <div class="text-3xl font-bold text-slate-800 mb-1">$49</div>
+                        <div class="text-sm text-slate-600 mb-4">per måned</div>
+                        <ul class="space-y-2 text-sm text-slate-600">
+                            <li>✓ Administrert infrastruktur</li>
+                            <li>✓ 1M AI tokens/måned</li>
+                            <li>✓ 1 samtidig agent</li>
+                            <li>✓ Øyeblikkelig oppsett</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h4 class="text-xl font-bold text-slate-800">Team</h4>
+                        <p class="text-sm text-slate-600 mb-4">Små team</p>
+                        <div class="text-3xl font-bold text-slate-800 mb-1">$199</div>
+                        <div class="text-sm text-slate-600 mb-4">per måned</div>
+                        <ul class="space-y-2 text-sm text-slate-600">
+                            <li>✓ Administrert infrastruktur</li>
+                            <li>✓ 10M AI tokens/måned</li>
+                            <li>✓ 5 samtidige agenter</li>
+                            <li>✓ 5 teammedlemmer</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-2 border-indigo-300 relative">
+                        <div class="absolute -top-3 left-4 bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold">BEST VERDI</div>
+                        <h4 class="text-xl font-bold text-slate-800 mt-2">Business</h4>
+                        <p class="text-sm text-slate-600 mb-4">Voksende selskaper</p>
+                        <div class="text-3xl font-bold text-slate-800 mb-1">$599</div>
+                        <div class="text-sm text-slate-600 mb-4">per måned</div>
+                        <ul class="space-y-2 text-sm text-slate-600">
+                            <li>✓ Administrert infrastruktur</li>
+                            <li>✓ 50M AI tokens/måned</li>
+                            <li>✓ Ubegrensede agenter</li>
+                            <li>✓ 20 teammedlemmer</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <h4 class="text-xl font-bold text-slate-800">Bedrift</h4>
+                        <p class="text-sm text-slate-600 mb-4">Store organisasjoner</p>
+                        <div class="text-3xl font-bold text-slate-800 mb-1">Tilpasset</div>
+                        <div class="text-sm text-slate-600 mb-4">Volumpriser</div>
+                        <ul class="space-y-2 text-sm text-slate-600">
+                            <li>✓ Dedikert infrastruktur</li>
+                            <li>✓ Ubegrensede AI tokens</li>
+                            <li>✓ Ubegrenset alt</li>
+                            <li>✓ SLA-garantier</li>
+                            <li>✓ Kontomanager</li>
+                        </ul>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="team" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Hvem som bygger dette</h2>
+                </div>
+                <div class="mt-16 grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6">
+                            <img src="founders/eivind_meyer.png" alt="Eivind Meyer" class="w-24 h-24 rounded-full object-cover border-2 border-blue-200">
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">Eivind Meyer</h3>
+                        <p class="mt-2 text-blue-600 font-semibold">Teknisk Grunder</p>
+                        <p class="text-sm text-slate-500">Tromsø, Norge</p>
+                        <div class="mt-6 flex justify-center">
+                            <a href="https://www.linkedin.com/in/eivind-meyer/" target="_blank" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 font-medium">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                                <span>LinkedIn</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6">
+                            <img src="founders/michael_eichelbeck.png" alt="Michael Eichelbeck" class="w-24 h-24 rounded-full object-cover border-2 border-green-200">
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">Michael Eichelbeck</h3>
+                        <p class="mt-2 text-green-600 font-semibold">Strategisk Partner, Investor</p>
+                        <p class="text-sm text-slate-500">München, Tyskland</p>
+                        <div class="mt-6 flex justify-center">
+                            <a href="https://www.linkedin.com/in/michael-eichelbeck-016b87171/" target="_blank" class="inline-flex items-center space-x-2 text-slate-600 hover:text-slate-800 font-medium">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                                <span>LinkedIn</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Planned Hires -->
+                <div class="mt-12 text-center">
+                    <h4 class="text-lg font-semibold text-slate-800 mb-4">Hvem vi ansetter</h4>
+                    <div class="flex justify-center space-x-8 text-slate-600">
+                        <span>• 2-3 Senior Backend Utviklere</span>
+                        <span>• Vekst Markedsføringsleder</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4">Hvis vi samler inn</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+</body>
+</html>

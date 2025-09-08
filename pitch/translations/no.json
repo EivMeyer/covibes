@@ -1,0 +1,823 @@
+{
+  "lang": "no",
+  "meta": {
+    "title": "Covibes: AI-Arbeidsplattformen",
+    "description": "Der team og AI-agenter koder sammen, fra hvor som helst, på din infrastruktur."
+  },
+  "nav": {
+    "home": "Hjem",
+    "opportunity": "Mulighet", 
+    "product": "Produkt",
+    "market": "Marked",
+    "marketSize": "Markedsstørrelse",
+    "goToMarket": "Vekststrategi",
+    "growthRoadmap": "Roadmap",
+    "pricing": "Priser",
+    "team": "Team"
+  },
+  "vibeIntro": {
+    "title": "Karpathy sa det. Vi bygde det.",
+    "subtitle": "",
+    "transition": ""
+  },
+  "tweet": {
+    "avatar": "AK",
+    "authorName": "Andrej Karpathy", 
+    "handle": "@karpathy",
+    "content": "Det finnes en ny type koding jeg kaller <span class=\"highlight-vibe\">\"vibe-koding\"</span>, der du <span class=\"highlight-key\">gir deg helt hen til vibesa</span>, omfavner eksponentialer, og <span class=\"highlight-key\">glemmer at koden i det hele tatt eksisterer</span>. Det er mulig fordi LLM-ene (f.eks. Cursor Composer m/ Sonnet) blir for gode. Jeg snakker også til Composer med SuperWhisper så jeg <span class=\"highlight-key\">knapt rører tastaturet</span>. Jeg ber om de dummeste tingene som \"reduser padding på sidebar med halvparten\" fordi jeg er for lat til å finne det. Jeg \"Accept All\" alltid, jeg leser ikke diff-ene lenger. Når jeg får feilmeldinger kopierer jeg de bare inn uten kommentar, vanligvis fikser det seg. Koden vokser utover min vanlige forståelse, jeg måtte egentlig lest gjennom den en stund. Noen ganger kan ikke LLM-ene fikse en bug så jeg jobber bare rundt det eller ber om tilfeldige endringer til det forsvinner. Det er ikke så verst for engangsprosjekter på helga, men fortsatt ganske morsomt. Jeg bygger et prosjekt eller webapp, men det er ikke egentlig koding - <span class=\"highlight-key\">jeg bare ser ting, sier ting, kjører ting</span>, og kopier og limer ting, og det funker for det meste."
+  },
+  "hero": {
+    "title": "Flerspiller AI-Utvikling",
+    "subtitle": "Der team og AI-agenter koder sammen, fra hvor som helst, på din infrastruktur.",
+    "location": "Tromsø, september 2025"
+  },
+  "opportunity": {
+    "title": "Hva Som Endret Seg",
+    "subtitle": "Husker du overgangen fra Word til Google Docs? Det skjer med kode akkurat nå.",
+    "todayCard": {
+      "title": "I dag: AI-Assistert",
+      "humanIcon": "👨‍💻",
+      "humanTitle": "Menneskestyrt",
+      "humanDesc": "Utvikleren må være ved skrivebordet.",
+      "aiIcon": "💡", 
+      "aiTitle": "AI Assisterer",
+      "aiDesc": "AI hjelper én person av gangen.",
+      "timeIcon": "⏳",
+      "timeTitle": "Sekvensielt & Tregt",
+      "timeDesc": "Arbeid begrenses av én persons tilgjengelighet."
+    },
+    "covibesCard": {
+      "title": "Med Covibes: AI-Arbeidsstyrke",
+      "humanIcon": "📱",
+      "humanTitle": "Menneskeledede",
+      "humanDesc": "Fiks produksjon fra stranda.",
+      "aiIcon": "🤖",
+      "aiTitle": "AI Handler",
+      "aiDesc": "5 agenter som jobber med 5 forskjellige oppgaver.",
+      "timeIcon": "⚡️",
+      "timeTitle": "Parallelt & Raskt", 
+      "timeDesc": "Alt skjer samtidig."
+    }
+  },
+  "product": {
+    "title": "Se Prototypen i Aksjon",
+    "subtitle": "Dette er ikke et konsept. Vi har allerede en fungerende implementasjon. Se våre AI-agenter koordinere i delte arbeidsområder med sanntids teamsamarbeid.",
+    "demo1": {
+      "title": "📹 Se Demo: Flerspiller Samarbeid",
+      "description": "To utviklere som jobber sammen i sanntid med AI-agenter",
+      "url": "https://www.youtube.com/watch?v=xiDsllZ3SrA",
+      "cta": "▶️ Spill Video"
+    },
+    "demo2": {
+      "title": "📱 Se Demo: Mobil Live Forhåndsvisning",
+      "description": "Desktop agent-utvikling med sanntids mobil forhåndsvisning",
+      "url": "https://www.youtube.com/shorts/uFm28pklYKE",
+      "cta": "▶️ Spill Video"
+    }
+  },
+  "features": {
+    "title": "Hva Som Gjør Covibes Annerledes",
+    "subtitle": "Den <strong>eneste</strong> plattformen som kombinerer alle fire egenskapene",
+    "codeAnywhere": {
+      "icon": "📱",
+      "title": "Kod Fra Hvor Som Helst",
+      "description": "Gjør dødtid til dev-tid. Fiks kritiske bugs på t-banen. Ship features mens du venter på flyplassen. Vær like produktiv på fjellturen som ved arbeidsstasjonen. For deadlines venter ikke på at du kommer tilbake til skrivebordet."
+    },
+    "multiplayerAI": {
+      "icon": "👥",
+      "title": "Flerspiller AI-Koding", 
+      "description": "Et delt arbeidsområde der flere utviklere og AI-agenter jobber samtidig. Alle ser samme kode, samme terminaler, samme output. Ingen merge-konflikter fordi alle jobber i samme miljø. Ingen koordinasjonsmøter fordi alle kan se hva som skjer."
+    },
+    "deployYourWay": {
+      "icon": "🎯",
+      "title": "Host det selv eller la oss håndtere det",
+      "selfHosted": {
+        "title": "Selvhostet",
+        "description": "Din infrastruktur, din kontroll. AWS, Azure, on-premise - du velger."
+      },
+      "fullyManaged": {
+        "title": "Fullt Administrert",
+        "description": "Vi håndterer alt. Null DevOps, øyeblikkelig oppsett, bare kod."
+      }
+    },
+    "flexibleAI": {
+      "icon": "🤖",
+      "title": "Ta med din AI eller bruk vår",
+      "bringYourOwn": {
+        "title": "Ta Med Din Egen",
+        "description": "Bruk dine AI-nøkler. Null tillegg. Direkte leverandørpriser."
+      },
+      "weProvide": {
+        "title": "Vi Leverer",
+        "description": "AI inkludert. Enkle priser. Ingen API-nøkkelhåndtering."
+      }
+    },
+    "tldr": {
+      "prefix": "TL;DR:",
+      "content": "AI-utvikling som tilpasser seg hvordan du jobber. Administrer agenter fra mobil på pendlerreisen. Samarbeid med distribuerte team. Hold alt på din infrastruktur. Vi gjorde ikke AI-en smartere - vi fikk den til å fungere for team."
+    }
+  },
+  "architecture": {
+    "title": "Slik Fungerer Det Egentlig",
+    "subtitle": "Arkitekturen bak flerspiller AI-utvikling",
+    "sharedDashboard": {
+      "title": "📊 Det Delte Dashboard-Opplevelsen",
+      "description": "Et delt arbeidsområde der alle teammedlemmer ser samme visning. Tenk Google Docs, men for hele utviklingsmiljøet ditt.",
+      "agentTerminals": {
+        "icon": "💻",
+        "title": "Agentterminaler",
+        "description": "Live output fra alle aktive agenter. Overvåk arbeidet deres, send kommandoer, grip inn når nødvendig."
+      },
+      "ideEditor": {
+        "icon": "📝",
+        "title": "IDE Editor",
+        "description": "Monaco editor med IntelliSense og synlige teamkameraters markører."
+      },
+      "livePreview": {
+        "icon": "🔥",
+        "title": "Live Forhåndsvisning",
+        "description": "Hot-reload forhåndsvisning synlig for hele teamet øyeblikkelig."
+      },
+      "teamChat": {
+        "icon": "💬", 
+        "title": "Teamchat",
+        "description": "Delt kanal for mennesker og supervisor-agenter. Agenter kan lese og svare på teamdiskusjoner."
+      },
+      "bottomText": "Alle paneler synkroniseres på tvers av teammedlemmer øyeblikkelig. Dette er flerspiller utvikling."
+    },
+    "deploymentOptions": {
+      "title": "Distribusjonsmuligheter",
+      "selfHosted": {
+        "title": "🔧 Selvhostet Modus",
+        "step1": "1. Distribuer på din infrastruktur (AWS, Azure, on-prem)",
+        "step2": "2. Bruk dine AI API-nøkler direkte",
+        "step3": "3. Komplett datasuverenitet",
+        "step4": "4. Integrer med eksisterende verktøy"
+      },
+      "fullyManaged": {
+        "title": "☁️ Fullt Administrert Modus",
+        "step1": "1. Vi håndterer all infrastruktur",
+        "step2": "2. AI-kreditter inkludert i prisen",
+        "step3": "3. Øyeblikkelig oppsett, null DevOps",
+        "step4": "4. Automatisk skalering og oppdateringer"
+      }
+    },
+    "supportedAI": {
+      "title": "Støttede AI-Agenter",
+      "claude": "Claude Code",
+      "gemini": "Gemini CLI", 
+      "gpt": "GPT-4/Cursor",
+      "future": "Enhver Fremtidig AI"
+    },
+    "keyInnovation": {
+      "title": "🎯 Nøkkelinnovasjon: Delt Realitet",
+      "gitBacked": "✓ Git-basert - hver endring skaper et commit-sjekkpunkt",
+      "liveSync": "✓ Live synkronisering - alle teammedlemmer ser samme kode, terminaler og output",
+      "noConflicts": "✓ Ingen merge-konflikter - alle jobber i samme arbeidsområde"
+    },
+    "universalPreview": {
+      "title": "🚀 Universal GUI Forhåndsvisning", 
+      "web": "• Webapplikasjoner",
+      "mobile": "• Mobilapper",
+      "desktop": "• Desktopprogramvare",
+      "anyGui": "• Ethvert GUI-grensesnitt",
+      "description": "Forhåndsvis enhver GUI-applikasjon med øyeblikkelig visuell tilbakemelding"
+    },
+    "whyThisWins": {
+      "title": "💡 Hvorfor Denne Arkitekturen Vinner",
+      "noLockIn": {
+        "title": "Ingen leverandørbinding:",
+        "description": "Din kode, dine servere, dine AI-nøkler"
+      },
+      "trueIsolation": {
+        "title": "Ekte isolasjon:",
+        "description": "Hver agent i sikker Docker-container"
+      },
+      "privacy": {
+        "title": "Personvern:",
+        "description": "Vi ser aldri din kode eller nøkler"
+      },
+      "scalable": {
+        "title": "Skalerbar:",
+        "description": "Legg til VM-er etter hvert som du vokser"
+      }
+    },
+    "aiInnovations": {
+      "title": "🧠 AI-Spesifikke Innovasjoner",
+      "crossAgent": {
+        "title": "🔄 Kryss-Agent Kontekstinjeksjon",
+        "description": "Agenter kringkaster handlingene sine for å forhindre konflikter og dobbeltarbeid.",
+        "example": {
+          "agentA": "Agent-A: \"Refaktorerer auth.js til JWT\"",
+          "agentB": "Agent-B: \"Jeg ser JWT-endring. Oppdaterer user-service\"",
+          "result": "→ Perfekt koordinering"
+        }
+      },
+      "hierarchical": {
+        "title": "🏗️ Hierarkisk Agent-Arkitektur",
+        "description": "Supervisor-agenter overvåker teamchat og spawner arbeidere basert på diskusjoner.",
+        "workers": "Arbeidere: Utfører spesifikke oppgaver (tilgjengelig nå)",
+        "supervisors": "Supervisorer: Overvåker chat, spawner arbeidere (6 måneder)"
+      },
+      "bottomText": "Ikke individuelle AI-assistenter, men koordinerte team av agenter"
+    }
+  },
+  "market": {
+    "title": "Hvorfor Nå",
+    "subtitle": "",
+    "unbundling": {
+      "title": "",
+      "paragraph1": "Når en senior utvikler blir oppsagt fordi AI kan gjøre 70% av jobben deres, leter de ikke etter en ny jobb. De innser at de nå kan bygge et helt SaaS-produkt på en helg. De tar med designer-vennen som også ble oppsagt, og kanskje en salgsmann som er lei av å selge andres drøm.",
+      "paragraph2": "Et 3-manns team med AI kan shippe det som tidligere krevde et 20-manns team i seks måneder. Men her er haken: disse mikro-teamene må bevege seg i lysets hastighet. De konkurrerer med tusenvis av andre mikro-team med samme AI-tilgang.",
+      "paragraph3": "Vinnerne er de som kan prototype, teste med brukere, og iterere raskest. Hver oppsagte utvikler med ChatGPT er nå en potensiell gründer. Hvert nedbemannte team på 3 kan nå konkurrere med selskaper på 30. Barrieren for å starte noe har gått fra $100k og 6 måneder til $20 og en helg."
+    },
+    "conclusion": "Disse mikro-startupene trenger alle det samme: evnen til å bygge og iterere raskere enn konkurrentene, som et team. Covibes er flerspiller utviklingsmiljøet for de tusenvis av nye 2-3 personers team som kommer ut av AI-omveltningen."
+  },
+  "marketSize": {
+    "title": "Muligheten",
+    "subtitle": "Et massivt marked som nettopp har begynt",
+    "tam": {
+      "title": "Hele Markedet",
+      "value": "$5 Milliarder → $30 Milliarder",
+      "period": "2025 til 2033", 
+      "description": "Globalt AI-kodingsverktøymarked vokser 30% årlig",
+      "detail": "Hver utvikler på planeten vil til slutt bruke AI. Vi fanger opp den overgangen."
+    },
+    "sam": {
+      "title": "Vårt Mål",
+      "value": "50,000 - 100,000", 
+      "label": "Mikro-SaaS bedrifter globalt",
+      "description": "Hurtiggående team på 2-5 personer som bygger neste generasjons programvare",
+      "detail": "Disse teamene beveger seg raskt, adopterer tidlig, og trenger desperat flerspiller AI."
+    },
+    "som": {
+      "title": "Vårt 3-års Mål",
+      "value": "5,000 Team",
+      "revenue": "$15-20 Millioner",
+      "label": "årlig omsetning",
+      "description": "En realistisk del av et massivt marked",
+      "detail": "Bare 5% av vårt målmarked gir oss bærekraftig vekst."
+    },
+    "bottomLine": "Vi trenger ikke å dominere. Vi trenger bare en liten del av en gigantisk, voksende kake."
+  },
+  "goToMarket": {
+    "title": "Slik Når Vi Dit",
+    "subtitle": "Kapitaleffektiv vekst gjennom verktøyene utviklere allerede bruker",
+    "productLed": {
+      "icon": "🎯",
+      "title": "Produktledet Vekst",
+      "tagline": "Gratis for alltid for gründere (2 plasser)",
+      "description": "Selvhostet versjon. Din infrastruktur. Dine AI-nøkler. Ingen salgssamtaler.",
+      "detail1": "Null friksjon for sideprosjekter",
+      "detail2": "$31/plass for team på 3-10",
+      "detail3": "Naturlig ekspansjon når team vokser"
+    },
+    "communityLed": {
+      "icon": "🌱",
+      "title": "Fellesskapsdrevet Vekst",
+      "tagline": "Gå dit byggere befinner seg",
+      "description": "Reddit (r/SaaS, r/startups), Indie Hackers, Y Combinator fora, X",
+      "detail1": "Del verdi, ikke annonser",
+      "detail2": "Hjelp andre å bygge raskere",
+      "detail3": "Bli det åpenbare valget"
+    },
+    "viralContent": {
+      "icon": "🚀",
+      "title": "Viral Innholdsstrategi",
+      "tagline": "Vis, ikke fortell",
+      "description": "Live-koding sesjoner som får utviklere til å bli entusiastiske",
+      "detail1": "\"Bygg en SaaS på 48 timer\" livestreams",
+      "detail2": "\"Fra oppsagt til gründer på 30 dager\" tutorials",
+      "detail3": "Ekte builds, ekte resultater, ekte raskt"
+    },
+    "bottomLine": "Hver utvikler som ser Covibes i aksjon forstår umiddelbart hvorfor de trenger det."
+  },
+  "growthRoadmap": {
+    "title": "Veien Videre",
+    "subtitle": "Fra beta til skalering på 4 år",
+    "year1": {
+      "label": "År 1 (2025)",
+      "milestone": "Lansering & Læring",
+      "goal1": "Offentlig beta med kjerne flerspiller funksjoner",
+      "goal2": "100 aktive team som bruker plattformen",
+      "goal3": "Finn produkt-marked tilpasning",
+      "revenue": "Pre-omsetning",
+      "focus": "Designpartnere & tilbakemelding"
+    },
+    "year2": {
+      "label": "År 2 (2026)",
+      "milestone": "Produkt-Marked Tilpasning",
+      "goal1": "Versjon 1.0 med selvhostet alternativ",
+      "goal2": "1,000 betalende team",
+      "goal3": "Innledende AI supervisor-kapasiteter",
+      "revenue": "$500,000",
+      "focus": "årlig omsetning"
+    },
+    "year3": {
+      "label": "År 3 (2027)",
+      "milestone": "Skalering",
+      "goal1": "Full hierarkisk agent-arkitektur",
+      "goal2": "5,000 betalende team",
+      "goal3": "Første bedriftskunder (SSO, compliance)",
+      "revenue": "$2.5 Millioner",
+      "focus": "årlig omsetning"
+    },
+    "note": ""
+  },
+  "competition": {
+    "title": "Slik sammenligner vi",
+    "subtitle": "",
+    "table": {
+      "headers": {
+        "feature": "Funksjon",
+        "covibes": "Covibes",
+        "cursor": "Cursor",
+        "windsurf": "Windsurf",
+        "bolt": "Bolt.new",
+        "lovable": "Lovable",
+        "v0": "v0",
+        "replit": "Replit",
+        "base44": "Base44",
+        "others": "Claude Code/Gemini CLI/Codex/Copilot"
+      },
+      "rows": {
+        "codeAnywhere": {
+          "feature": "Kod Fra Hvor Som Helst",
+          "covibes": "✅ Full App",
+          "cursor": "⚠️ Web Pro+",
+          "windsurf": "❌ Desktop",
+          "bolt": "⚠️ Nettleser",
+          "lovable": "⚠️ Nettleser",
+          "v0": "⚠️ Nettleser",
+          "replit": "✅ Full App",
+          "base44": "⚠️ Nettleser",
+          "others": "⚠️ Blandet"
+        },
+        "multiplayerAI": {
+          "feature": "Flerspiller AI Arbeidsområde",
+          "covibes": "✅ Multi-Bruker",
+          "cursor": "❌ Enkelt",
+          "windsurf": "⚠️ Del",
+          "bolt": "⚠️ Kun Visning",
+          "lovable": "⚠️ Overlevering",
+          "v0": "❌ Fork",
+          "replit": "⚠️ Kun Kode",
+          "base44": "⚠️ Team",
+          "others": "❌ Isolert"
+        },
+        "deploymentFlexibility": {
+          "feature": "Distribusjonsfleksibilitet",
+          "covibes": "✅ Full fleksibilitet",
+          "cursor": "❌ Kun Lokal",
+          "windsurf": "⚠️ Begrenset",
+          "bolt": "❌ Kun Administrert",
+          "lovable": "❌ Kun Administrert",
+          "v0": "❌ Kun Vercel",
+          "replit": "❌ Kun Replit",
+          "base44": "❌ Kun Wix",
+          "others": "⚠️ Varierer"
+        },
+        "ownInfrastructure": {
+          "feature": "Egen Infrastruktur",
+          "covibes": "✅ Valgfritt",
+          "cursor": "❌ Kun Lokal",
+          "windsurf": "✅ Fleksibel",
+          "bolt": "⚠️ bolt.diy",
+          "lovable": "✅ Eksporter",
+          "v0": "❌ Kun Vercel",
+          "replit": "❌ Kun Replit",
+          "base44": "❌ Wix Cloud",
+          "others": "✅ Lokal/BYO"
+        },
+        "livePreview": {
+          "feature": "Live Forhåndsvisning",
+          "covibes": "✅ Integrert",
+          "cursor": "❌ Ekstern",
+          "windsurf": "✅ Klikk-Rediger",
+          "bolt": "✅ Innebygd",
+          "lovable": "✅ Sanntid",
+          "v0": "✅ Innebygd",
+          "replit": "✅ Innebygd",
+          "base44": "✅ Øyeblikkelig",
+          "others": "⚠️ Begrenset"
+        },
+        "parallelAI": {
+          "feature": "Parallelle AI-oppgaver",
+          "covibes": "✅ Multi-Agent",
+          "cursor": "⚠️ Løsninger",
+          "windsurf": "✅ Cascade",
+          "bolt": "❌ Enkelt",
+          "lovable": "❌ Enkelt",
+          "v0": "❌ Enkelt",
+          "replit": "❌ Sekvensielt",
+          "base44": "❌ Enkelt",
+          "others": "❌ Enkelt"
+        },
+        "aiPricing": {
+          "feature": "AI Prisfleksibilitet",
+          "covibes": "✅ Begge Alternativer",
+          "cursor": "❌ Innebygd",
+          "windsurf": "❌ Innebygd",
+          "bolt": "❌ Tillegg",
+          "lovable": "❌ Tillegg",
+          "v0": "❌ Tillegg",
+          "replit": "❌ Innebygd",
+          "base44": "❌ Tillegg",
+          "others": "✅ BYO"
+        },
+        "freeTier": {
+          "feature": "Gratis Nivå Tilgjengelig",
+          "covibes": "✅ Sjenerøst",
+          "cursor": "✅ Begrenset",
+          "windsurf": "✅ 50/mnd",
+          "bolt": "✅ 1M tokens",
+          "lovable": "✅ 5/dag",
+          "v0": "✅ Kreditter",
+          "replit": "✅ Starter",
+          "base44": "✅ 200/mnd",
+          "others": "⚠️ Begrenset"
+        }
+      }
+    }
+  },
+  "flexibility": {
+    "title": "Hvorfor Fleksibilitet Er Viktig",
+    "subtitle": "",
+    "selfHosted": {
+      "icon": "🔒",
+      "title": "Hvem Velger Selvhostet",
+      "security": {
+        "title": "Sikkerhet-Først Bedrifter",
+        "description": "Din kode berører aldri våre servere. Aldri."
+      },
+      "regulated": {
+        "title": "Regulerte Industrier",
+        "description": "Helse, finans, offentlig sektor - møt compliance-krav."
+      },
+      "costConscious": {
+        "title": "Kostnadsbevisste Team",
+        "description": "Har allerede infrastruktur? Bruk den. Har allerede AI-abonnementer? Behold dem."
+      },
+      "customWorkflows": {
+        "title": "Tilpassede Arbeidsflyter",
+        "description": "Integrer med dine eksisterende CI/CD, overvåking og sikkerhetsverktøy."
+      }
+    },
+    "fullyManaged": {
+      "icon": "⚡",
+      "title": "Hvem Velger Fullt Administrert",
+      "fastStartups": {
+        "title": "Hurtiggående Startups",
+        "description": "Registrer deg. Start å kode. 30 sekunder."
+      },
+      "smallTeams": {
+        "title": "Små Team",
+        "description": "Fokuser på å bygge, ikke administrere infrastruktur."
+      },
+      "proofOfConcepts": {
+        "title": "Proof-of-Concepts",
+        "description": "Test ideer raskt uten infrastruktur-forpliktelse."
+      },
+      "agencies": {
+        "title": "Byrå & Konsulenter",
+        "description": "Sett opp miljøer for klienter øyeblikkelig."
+      }
+    }
+  },
+  "pricing": {
+    "title": "Priser",
+    "subtitle": "Velg selvhostet for kontroll, eller fullt administrert for bekvemmelighet.",
+    "selfHosted": {
+      "icon": "🔧",
+      "title": "Selvhostede Planer",
+      "subtitle": "(Din Infrastruktur, Dine AI-Nøkler)",
+      "founders": {
+        "badge": "GRATIS FOR ALLTID",
+        "name": "Gründere",
+        "description": "Perfekt for sideprosjekter",
+        "price": "$0",
+        "period": "for alltid",
+        "features": {
+          "infrastructure": "Din infrastruktur",
+          "aiKeys": "Dine AI-nøkler",
+          "teamMembers": "2 teammedlemmer"
+        }
+      },
+      "startup": {
+        "name": "Startup",
+        "description": "Team på 3-10",
+        "price": "$31",
+        "period": "per plass/måned",
+        "features": {
+          "infrastructure": "Din infrastruktur",
+          "aiKeys": "Dine AI-nøkler",
+          "teamMembers": "10 teammedlemmer",
+          "advanced": "Avanserte funksjoner"
+        }
+      },
+      "scale": {
+        "badge": "POPULÆR",
+        "name": "Skalering",
+        "description": "Etablerte selskaper",
+        "price": "$99",
+        "period": "per plass/måned",
+        "features": {
+          "infrastructure": "Din infrastruktur",
+          "aiKeys": "Dine AI-nøkler",
+          "members": "Ubegrensede medlemmer",
+          "compliance": "SSO & compliance"
+        }
+      },
+      "enterprise": {
+        "name": "Bedrift",
+        "description": "Tilpassede behov",
+        "price": "Tilpasset",
+        "period": "La oss snakke",
+        "features": {
+          "onPremise": "On-premise distribusjon",
+          "airGapped": "Air-gapped alternativ",
+          "integrations": "Tilpassede integrasjoner",
+          "sla": "SLA-garantier",
+          "setup": "Vi setter det opp for deg"
+        }
+      }
+    },
+    "fullyManaged": {
+      "icon": "☁️",
+      "title": "Fullt Administrerte Planer",
+      "subtitle": "(Vi Leverer Infrastruktur & AI)",
+      "starter": {
+        "badge": "INTET OPPSETT",
+        "name": "Starter",
+        "description": "Individuelle utviklere",
+        "price": "$49",
+        "period": "per måned",
+        "features": {
+          "infrastructure": "Administrert infrastruktur",
+          "tokens": "1M AI tokens/måned",
+          "agents": "1 samtidig agent",
+          "setup": "Øyeblikkelig oppsett"
+        }
+      },
+      "team": {
+        "name": "Team",
+        "description": "Små team",
+        "price": "$199",
+        "period": "per måned",
+        "features": {
+          "infrastructure": "Administrert infrastruktur",
+          "tokens": "10M AI tokens/måned",
+          "agents": "5 samtidige agenter",
+          "members": "5 teammedlemmer"
+        }
+      },
+      "business": {
+        "badge": "BEST VERDI",
+        "name": "Business",
+        "description": "Voksende selskaper",
+        "price": "$599",
+        "period": "per måned",
+        "features": {
+          "infrastructure": "Administrert infrastruktur",
+          "tokens": "50M AI tokens/måned",
+          "agents": "Ubegrensede agenter",
+          "members": "20 teammedlemmer"
+        }
+      },
+      "enterprise": {
+        "name": "Bedrift",
+        "description": "Store organisasjoner",
+        "price": "Tilpasset",
+        "period": "Volumpriser",
+        "features": {
+          "infrastructure": "Dedikert infrastruktur",
+          "tokens": "Ubegrensede AI tokens",
+          "everything": "Ubegrenset alt",
+          "sla": "SLA-garantier",
+          "manager": "Kontomanager"
+        }
+      }
+    }
+  },
+  "businessModel": {
+    "title": "Forretningsmodell Realitet",
+    "subtitle": "AI-koding er dyrt i dag. Slik får vi det til å fungere.",
+    "timeline": {
+      "title": "Utviklingstidslinje",
+      "today": {
+        "label": "I dag",
+        "text": "Fungerende demo, trenger produktisering"
+      },
+      "twoMonths": {
+        "label": "+2 måneder",
+        "text": "Alpha med 20 beta-testere"
+      },
+      "threeMonths": {
+        "label": "+3 måneder",
+        "text": "MVP klar for betalende kunder"
+      },
+      "sixMonths": {
+        "label": "+6 måneder",
+        "text": "50 betalende kunder"
+      },
+      "twelveMonths": {
+        "label": "+12 måneder",
+        "text": "200 betalende kunder"
+      },
+      "twentyFourMonths": {
+        "label": "+24 måneder",
+        "text": "1,000 betalende kunder"
+      }
+    },
+    "costs": {
+      "title": "Faktisk Kostnadsstruktur",
+      "perTeam": {
+        "title": "Per Team Arbeidsområde",
+        "vm": "VM/Container: $80-120/måned",
+        "storage": "Lagring: $20/måned",
+        "networking": "Nettverk: $10/måned",
+        "total": "Totalt: ~$100-150/måned"
+      },
+      "perUser": {
+        "title": "Per Aktiv Bruker",
+        "ai": "AI API-kostnader: $40-80/måned",
+        "powerUsers": "Kraftbrukere: Noen brenner $200+/måned"
+      }
+    },
+    "revenue": {
+      "title": "Inntektsmodell",
+      "hobby": {
+        "name": "Hobby",
+        "price": "$0 (BYO nøkler)"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$49/måned"
+      },
+      "team": {
+        "name": "Team",
+        "price": "$79/plass/måned"
+      },
+      "unlimited": {
+        "name": "Ubegrenset",
+        "price": "$199/måned"
+      }
+    },
+    "unitEconomics": {
+      "title": "Matteproblem",
+      "current": {
+        "title": "Dagens Realitet",
+        "revenue": "Gjennomsnittlig inntekt: ~$60/måned",
+        "cost": "Gjennomsnittlig kostnad: ~$80/måned",
+        "margin": "Margin: -33%"
+      },
+      "path": {
+        "title": "Vei til Lønnsomhet",
+        "year1": "År 1: Tap penger (vekst)",
+        "year2": "År 2: Null i pluss på lette brukere",
+        "year3": "År 3: 20-30% marginer"
+      }
+    }
+  },
+  "projections": {
+    "title": "Vekstprognoser",
+    "subtitle": "Konservativt scenario med realistiske antagelser",
+    "metrics": {
+      "users": "Totale Brukere",
+      "paying": "Betalende",
+      "mrr": "MRR",
+      "burn": "Forbrenning",
+      "profit": "Profitt"
+    },
+    "year2026": {
+      "users": "3,000",
+      "paying": "50",
+      "mrr": "$3K",
+      "burn": "-$12K/mnd",
+      "status": "Finner produkt-marked tilpasning"
+    },
+    "year2027": {
+      "users": "15,000",
+      "paying": "300",
+      "mrr": "$18K",
+      "burn": "-$2K/mnd",
+      "status": "Nærmer seg null i pluss"
+    },
+    "year2028": {
+      "users": "50,000",
+      "paying": "1,500",
+      "mrr": "$60K",
+      "profit": "+$20K/mnd",
+      "status": "Lønnsom"
+    },
+    "visualization": {
+      "title": "Vekstbane",
+      "totalUsers": "Totale Brukere",
+      "revenue": "Månedlig Inntekt"
+    }
+  },
+  "investment": {
+    "title": "Investeringsforespørsel",
+    "subtitle": "Landingsbane for å finne bærekraftig prismodell",
+    "amount": "5M NOK",
+    "amountDescription": "~$450K USD",
+    "useOfFunds": {
+      "title": "Bruk av Midler",
+      "engineering": {
+        "label": "Engineering",
+        "description": "2-3 utviklere",
+        "percentage": "40%"
+      },
+      "infrastructure": {
+        "label": "Infrastruktur & AI",
+        "description": "Servere, AI-kostnader",
+        "percentage": "40%"
+      },
+      "marketing": {
+        "label": "Markedsføring",
+        "description": "Brukeranskaffelse",
+        "percentage": "15%"
+      },
+      "other": {
+        "label": "Annet",
+        "description": "Juridisk, regnskap",
+        "percentage": "5%"
+      }
+    },
+    "milestones": {
+      "title": "Nøkkelmilepæler",
+      "oct2025": {
+        "date": "Okt 2025",
+        "text": "Produksjonsklar plattform"
+      },
+      "dec2025": {
+        "date": "Des 2025",
+        "text": "Offentlig beta-lansering"
+      },
+      "mar2026": {
+        "date": "Mar 2026",
+        "text": "50 betalende kunder"
+      },
+      "jun2026": {
+        "date": "Jun 2026",
+        "text": "$5K MRR milepæl"
+      },
+      "sep2026": {
+        "date": "Sep 2026",
+        "text": "Serie A klar eller lønnsom vei"
+      }
+    },
+    "whyWin": {
+      "title": "Hvorfor Vi Kan Vinne",
+      "reason1": "Flerspiller koding er uunngåelig",
+      "reason2": "Plattform allerede bygget og fungerer",
+      "reason3": "Kapitaleffektiv tilnærming",
+      "reason4": "Klar monetiseringssti"
+    }
+  },
+  "team": {
+    "title": "Hvem som bygger dette",
+    "eivind": {
+      "name": "Eivind Meyer",
+      "role": "Teknisk Grunder",
+      "location": "Tromsø, Norge",
+      "photo": "founders/eivind_meyer.png",
+      "linkedinUrl": "https://www.linkedin.com/in/eivind-meyer/",
+      "linkedinText": "LinkedIn"
+    },
+    "michael": {
+      "name": "Michael Eichelbeck",
+      "role": "Strategisk Partner, Investor",
+      "location": "München, Tyskland",
+      "photo": "founders/michael_eichelbeck.png",
+      "linkedinUrl": "https://www.linkedin.com/in/michael-eichelbeck-016b87171/",
+      "linkedinText": "LinkedIn"
+    },
+    "hiring": {
+      "title": "Hvem vi ansetter",
+      "backend": "2-3 Senior Backend Utviklere",
+      "growth": "Vekst Markedsføringsleder",
+      "condition": "Hvis vi samler inn"
+    }
+  },
+  "chart": {
+    "labels": "'Dev Tools Market', 'Global Developers', 'AI Adoption'",
+    "datasetLabel": "Markedsdata",
+    "data": "26, 100, 92",
+    "tooltips": {
+      "devTools": {
+        "label": "Dev Tools Market",
+        "format": "$",
+        "suffix": " Milliarder+"
+      },
+      "developers": {
+        "label": "Globale Utviklere",
+        "suffix": " Millioner+"
+      },
+      "percentage": {
+        "suffix": "%"
+      }
+    },
+    "yAxisSuffix": " M/$B/%"
+  }
+}
