@@ -1462,12 +1462,39 @@ io.on('connection', (socket: Socket) => {
       console.log('🚀 No existing PTY found, agent should already have been spawned');
       
       // The PTY process should have been created when the agent was spawned
-      // If it doesn't exist, something went wrong
+      // If it doesn't exist, check if the agent still exists in database
       const ptyInfo = dockerManager.getPTYSessionInfo(data.agentId);
       if (!ptyInfo) {
+        // Check if agent exists in database and its current status
+        const dbAgent = await prisma.agents.findUnique({
+          where: { id: data.agentId }
+        });
+        
+        if (!dbAgent) {
+          socket.emit('terminal_error', { 
+            agentId: data.agentId, 
+            error: 'Agent not found. This agent may have been deleted.',
+            action: 'refresh_page'
+          });
+          return;
+        }
+        
+        if (dbAgent.status === 'stopped') {
+          socket.emit('terminal_error', { 
+            agentId: data.agentId, 
+            error: 'Agent is stopped. Terminal session is no longer available.',
+            action: 'show_restart_option',
+            suggestion: 'You can restart this agent or spawn a new one.'
+          });
+          return;
+        }
+        
+        // Agent exists but no PTY - likely server restart
         socket.emit('terminal_error', { 
           agentId: data.agentId, 
-          error: 'PTY session not found. Agent may not have been properly spawned.' 
+          error: 'PTY session not found. The server may have been restarted.',
+          action: 'show_restart_option',
+          suggestion: 'Try refreshing the page or spawn a new agent.'
         });
         return;
       }
@@ -2236,6 +2263,63 @@ async function testDatabaseConnection(): Promise<void> {
   }
 }
 
+// Reconcile agent state on startup - mark agents without active PTY sessions as stopped
+async function reconcileAgentState(): Promise<void> {
+  try {
+    console.log('🔄 Reconciling agent state on startup...');
+    
+    // Find all agents that are marked as "running" but have no active PTY session
+    const runningAgents = await prisma.agents.findMany({
+      where: {
+        status: 'running'
+      }
+    });
+    
+    if (runningAgents.length === 0) {
+      console.log('✅ No running agents found to reconcile');
+      return;
+    }
+    
+    let orphanedCount = 0;
+    for (const agent of runningAgents) {
+      // Check if this agent has an active PTY session or container
+      const hasActivePTY = dockerManager.getPTYProcess(agent.id) !== null;
+      const hasActiveContainer = dockerManager.getPTYSessionInfo(agent.id) !== null;
+      
+      if (!hasActivePTY && !hasActiveContainer) {
+        // This agent is orphaned - mark it as stopped
+        await prisma.agents.update({
+          where: { id: agent.id },
+          data: { 
+            status: 'stopped',
+            output: agent.output + '\n🔄 Server restarted - terminal session ended'
+          }
+        });
+        
+        // Emit status update to any connected clients
+        io.to(`team-${agent.teamId}`).emit('agent_status', {
+          agentId: agent.id,
+          status: 'stopped',
+          message: 'Agent stopped due to server restart'
+        });
+        
+        orphanedCount++;
+        console.log(`📝 Marked orphaned agent ${agent.id} as stopped`);
+      }
+    }
+    
+    if (orphanedCount > 0) {
+      console.log(`✅ Agent reconciliation completed: ${orphanedCount} orphaned agents marked as stopped`);
+    } else {
+      console.log('✅ Agent reconciliation completed: all running agents have active sessions');
+    }
+    
+  } catch (error) {
+    console.error('❌ Failed to reconcile agent state:', error);
+    // Don't throw - this shouldn't prevent server startup
+  }
+}
+
 // Preview service event listeners
 previewService.on('status-change', (data) => {
   const { teamId, branch, status, port, url, error } = data;
@@ -2317,6 +2401,9 @@ async function startServer(): Promise<void> {
     
     // Reconcile preview state on startup (after server starts)
     await universalPreviewService.reconcilePreviewState();
+    
+    // Reconcile agent state on startup - mark orphaned agents as stopped
+    await reconcileAgentState();
     
     // Start preview health check service
     previewHealthCheck.start();
