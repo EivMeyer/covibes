@@ -290,7 +290,16 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         if (terminal) {
           try {
             terminal.writeln('\r\n❌ Terminal Error: ' + data.error)
-            terminal.writeln('🔧 Try refreshing the page or spawning a new agent')
+            
+            // Handle specific error actions from server
+            if (data.action === 'refresh_page') {
+              terminal.writeln('🔄 Please refresh the page to see the latest agent status')
+            } else if (data.action === 'show_restart_option') {
+              terminal.writeln('🔧 ' + (data.suggestion || 'Try refreshing the page or spawn a new agent'))
+              terminal.writeln('💡 You can restart this agent from the agents panel')
+            } else {
+              terminal.writeln('🔧 Try refreshing the page or spawning a new agent')
+            }
           } catch (e) {
             console.error(`[SimpleTerminal] Error writing error to terminal:`, e)
           }
