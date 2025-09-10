@@ -1,5 +1,3 @@
-const { EC2_HOST, EC2_USERNAME, SERVER_PORT } = require('./server/config/deployment');
-
 module.exports = {
   apps: [
     {
@@ -8,9 +6,13 @@ module.exports = {
       cwd: '/home/ubuntu/covibes',
       env: {
         NODE_ENV: 'production',
-        PORT: SERVER_PORT,
-        EC2_HOST: EC2_HOST,
-        EC2_USERNAME: EC2_USERNAME
+        PORT: 3001,
+        EC2_HOST: 'ec2-13-48-135-139.eu-north-1.compute.amazonaws.com',
+        EC2_USERNAME: 'ubuntu',
+        DATABASE_URL: 'postgresql://postgres:password@localhost:5433/colabvibe_prod',
+        JWT_SECRET: 'prod_jwt_2024_colabvibe_secure_random_key_123456789',
+        ENCRYPTION_KEY: 'abcdef1234567890abcdef1234567890',
+        SESSION_SECRET: 'prod_session_colabvibe_secure_secret_key_987654321'
       },
       env_file: './server/.env.production',
       instances: 1,

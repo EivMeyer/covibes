@@ -273,25 +273,34 @@ export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.co
 export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
 ```
 
-### Complete Environment Setup Script
-Run ALL these commands before starting any services (NO FALLBACKS):
+### Simplified Development Startup ✨
+**NEW**: All environment variables are now configured in `.env` files - no manual exports needed!
 
+#### Quick Start (Recommended):
 ```bash
-# Server environment variables (REQUIRED)
-export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
-export EC2_USERNAME=ubuntu
-export JWT_SECRET="development-jwt-secret-key"
-export ENCRYPTION_KEY="32-character-development-encrypt-key!"
-export NODE_ENV="development"
+# Start everything with one command
+./start-dev.sh
 
-# Client environment variables (REQUIRED)
-export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
-export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
+# Stop everything
+./stop-dev.sh
+```
 
-# Start servers
+#### Manual Startup (if needed):
+```bash
+# 1. Start database services
+docker-compose up -d postgres redis
+
+# 2. Build client (required for server)
+cd client && npm run build && cd ..
+
+# 3. Start servers (environment automatically loaded from .env files)
 cd server && npm run dev &
 cd ../client && npm run dev
 ```
+
+All required environment variables are now pre-configured in:
+- `server/.env` - Backend configuration including EC2_HOST and EC2_USERNAME
+- `client/.env` - Frontend configuration with correct URLs
 
 ### Startup Issues Prevention
 Common startup failures and their fixes:
