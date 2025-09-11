@@ -13,7 +13,7 @@ console.log('🔥🔥🔥 PREVIEW ROUTES FILE LOADED!!! 🔥🔥🔥');
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 // import jwt from 'jsonwebtoken';
-import http from 'http';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { authenticateToken } from '../middleware/auth.js';
 import { createAuthHandler } from '../types/express.js';
 import { previewService } from '../../services/preview-service.js';
@@ -40,16 +40,14 @@ const createPreviewSchema = z.object({
 /**
  * GET /api/preview/proxy/:teamId/:branch/*
  * Proxy requests to the preview container
- * This handles the actual preview iframe content
+ * This handles the actual preview iframe content with proper MIME types
  * NOTE: This route handles its own authentication via query params or headers
  * MUST be defined BEFORE the global auth middleware
  */
-router.get('/proxy/:teamId/:branch/*', async (req, res) => {
+router.use('/proxy/:teamId/:branch', async (req, res, next) => {
   try {
     console.log(`🔍 Preview proxy request: ${req.method} ${req.url}`);
     console.log(`🔍 Team ID: ${req.params.teamId}, Branch: ${req.params.branch}`);
-    console.log(`🔍 Query params:`, req.query);
-    console.log(`🔍 Headers:`, req.headers);
     
     const requestTeamId = req.params.teamId;
     
@@ -68,38 +66,37 @@ router.get('/proxy/:teamId/:branch/*', async (req, res) => {
     const proxyPort = previewStatus.proxyPort || previewStatus.port;
     console.log(`🔄 Proxying to http://localhost:${proxyPort}`);
     
-    // Get the rest of the path after /proxy/:teamId/:branch/
-    const restPath = (req.params as any)[0] || '/';
-    const fullPath = restPath + (req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '');
-    
-    // Create a simple proxy using node's http module
-    const proxyReq = http.request({
-      hostname: 'localhost',
-      port: proxyPort,
-      path: fullPath,
-      method: req.method,
-      headers: {
-        ...req.headers,
-        'host': `localhost:${proxyPort}`
-      }
-    }, (proxyRes: any) => {
-      // Forward status code and headers
-      res.status(proxyRes.statusCode);
-      Object.keys(proxyRes.headers).forEach(key => {
-        res.set(key, proxyRes.headers[key]);
-      });
-      
-      // Pipe the response
-      proxyRes.pipe(res);
+    // Create proper proxy middleware with MIME type support
+    const proxy = createProxyMiddleware({
+      target: `http://localhost:${proxyPort}`,
+      changeOrigin: true,
+      ws: true, // WebSocket support for HMR
+      pathRewrite: (path, req) => {
+        // Remove the proxy prefix dynamically
+        const prefix = `/api/preview/proxy/${requestTeamId}/${req.params.branch}`;
+        const newPath = path.replace(prefix, '');
+        console.log(`🔀 Path rewrite: ${path} -> ${newPath}`);
+        return newPath;
+      },
+      on: {
+        proxyRes: (proxyRes: any) => {
+          // Headers for iframe embedding and CORS
+          proxyRes.headers['x-frame-options'] = 'ALLOWALL';
+          proxyRes.headers['content-security-policy'] = 'frame-ancestors *';
+          proxyRes.headers['access-control-allow-origin'] = '*';
+          proxyRes.headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+          proxyRes.headers['access-control-allow-headers'] = 'Content-Type, Authorization';
+          proxyRes.headers['access-control-allow-credentials'] = 'true';
+        },
+        error: (err: any) => {
+          console.error('❌ Proxy error:', err);
+        }
+      },
+      logger: console
     });
     
-    proxyReq.on('error', (err: any) => {
-      console.error('❌ Proxy error:', err);
-      res.status(502).json({ message: 'Preview service unavailable' });
-    });
-    
-    // Forward request body if any
-    req.pipe(proxyReq);
+    // Apply the proxy middleware
+    proxy(req, res, next);
     
   } catch (error) {
     console.error('❌ Preview proxy error:', error);
@@ -167,7 +164,7 @@ router.get('/status', createAuthHandler(async (req, res) => {
           workspace: {
             status: 'running',
             port: dockerStatus.port,  // Return actual container port for direct access
-            url: dockerStatus.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined,
+            url: dockerStatus.proxyPort ? `http://${process.env.EC2_HOST}:3001/api/preview/proxy/${teamId}/main/` : undefined,
             message: `Universal preview running on port ${dockerStatus.port}`,
             projectType: dockerStatus.projectType
           },
@@ -400,7 +397,7 @@ router.post('/restart', createAuthHandler(async (req, res) => {
       return res.json({
         message: 'Universal preview restarted successfully',
         mode: 'docker',
-        url: status?.proxyPort ? `/api/preview/proxy/${teamId}/main/` : undefined
+        url: status?.proxyPort ? `http://${process.env.EC2_HOST}:3001/api/preview/proxy/${teamId}/main/` : undefined
       });
     }
 

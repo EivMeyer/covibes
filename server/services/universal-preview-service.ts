@@ -179,7 +179,7 @@ class UniversalPreviewService {
           
           return {
             port: existing.port,  // Return the actual container port for direct access
-            url: `/api/preview/proxy/${teamId}/main/`
+            url: `http://${process.env.EC2_HOST}:3001/api/preview/proxy/${teamId}/main/`
           };
         }
         
@@ -283,7 +283,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
       
       return {
         port: proxyPort,  // Return proxy port, not container port
-        url: `/api/preview/proxy/${teamId}/main/`  // API route instead of direct URL
+        url: `http://${process.env.EC2_HOST}:3001/api/preview/proxy/${teamId}/main/`  // API route instead of direct URL
       };
 
     } catch (error) {

@@ -25,7 +25,7 @@ interface PreviewProxy {
 
 class DedicatedPreviewProxyService {
   private proxies: Map<string, PreviewProxy> = new Map();
-  private baseProxyPort = 7174; // Start from same port as MVP
+  private baseProxyPort = 9000; // Use 9000+ range to avoid conflicts with preview containers (8000+)
 
   /**
    * Find an available proxy port
