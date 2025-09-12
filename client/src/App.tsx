@@ -146,19 +146,15 @@ function AppContent() {
               }
               
               // Update URL based on mode
-              if (data.mode === 'docker' && data.workspace?.status === 'running') {
-                // ALWAYS use direct port URL for Docker mode - fuck the proxy!
-                const port = data.workspace.port || 8000; // Default to 8000 if port missing
+              // Prefer server-provided public URL (dedicated proxy)
+              if (data.workspace?.url) {
+                setPreviewUrl(data.workspace.url);
+              } else if (data.mode === 'docker' && data.workspace?.port) {
+                // Fallback to direct host port if URL not provided
                 const currentHost = window.location.hostname;
-                console.log(`🚀 Using direct preview port: ${port}`);
-                setPreviewUrl(`http://${currentHost}:${port}/`);
-              } else if (data.mode === 'docker') {
-                // Even if status is weird, still use direct port for docker mode
-                const currentHost = window.location.hostname;
-                console.log(`🚀 Forcing direct preview on port 8000 (docker mode)`);
-                setPreviewUrl(`http://${currentHost}:8000/`);
+                setPreviewUrl(`http://${currentHost}:${data.workspace.port}/`);
               } else if (data.main?.status === 'running') {
-                // Only use proxy for non-docker modes
+                // Legacy/non-docker mode fallback
                 setPreviewUrl(`/api/preview/proxy/${team.id}/main/`);
               }
             } else {

@@ -179,13 +179,13 @@ class UniversalPreviewService {
           
           return {
             port: existing.port,  // Return the actual container port for direct access
-            url: `/api/preview/proxy/${teamId}/main/`
+            url: `/preview/${teamId}/`
           };
         }
         
         return {
           port: existing.port,  // Return the actual container port, not proxy port
-          url: `/api/preview/proxy/${teamId}/main/`
+          url: `/preview/${teamId}/`
         };
       }
       
@@ -250,6 +250,9 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
         `-v /app/node_modules ` +  // Don't overwrite node_modules
         `-e CHOKIDAR_USEPOLLING=true ` +  // Enable file watching in Docker
         `-e PORT=5173 ` +  // Force server to run on port 5173 for Docker mapping
+        // Remove VITE_BASE_PATH to prevent redirect loops
+        `-e VITE_HMR_HOST=${BASE_HOST} ` +  // HMR host
+        `-e VITE_HMR_PORT=3001 ` +  // HMR through main server
         `preview-${teamId}`
       );
 
@@ -282,8 +285,10 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
       await new Promise(resolve => setTimeout(resolve, 5000));
       
       return {
-        port: proxyPort,  // Return proxy port, not container port
-        url: `/api/preview/proxy/${teamId}/main/`  // API route instead of direct URL
+        port,                 // Container's mapped host port (Vite dev server)
+        // Expose the dedicated proxy port separately so callers can build a stable public URL
+        // and keep absolute paths like /@vite/client within the same origin/port
+        url: `http://${BASE_HOST}:${proxyPort}/`
       };
 
     } catch (error) {
@@ -296,7 +301,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
   /**
    * Generate Vite configuration with MIME type fix and HMR support (DRY)
    */
-  private generateViteConfig(containerPort: number = 8000, includeGlobalDefine: boolean = false): string {
+  private generateViteConfig(containerPort: number = 8000, includeGlobalDefine: boolean = false, teamId: string = 'demo'): string {
     const additionalConfig = includeGlobalDefine ? `,
   // Additional configuration
   define: {
@@ -307,8 +312,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // CRITICAL FIX: Set base path to root to fix MIME type issues
-  base: '/',
+  // Dynamic base path - use environment variable for HTTPS compatibility
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [
     react({
       // Keep React plugin working normally
@@ -338,14 +343,16 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    // Configure HMR for direct container access
+    // Configure HMR to work through nginx direct proxy WebSocket  
     hmr: {
-      clientPort: ${containerPort},  // Direct container port
-      host: '${BASE_HOST}'
+      clientPort: 80,  // Client connects to nginx 
+      host: '${BASE_HOST}',
+      // Use nginx direct proxy path for WebSocket connections
+      path: '/preview/${teamId}/',
+      overlay: true
     },
     cors: true,
     allowedHosts: "all",
-    origin: 'http://${BASE_HOST}:${containerPort}',
     // Ensure proper file serving
     fs: {
       strict: false,
@@ -355,11 +362,12 @@ export default defineConfig({
 })`;
   }
 
-  private async updateViteConfigWithProxy(teamId: string, _proxyPort: number): Promise<void> {
+  private async updateViteConfigWithProxy(teamId: string, proxyPort: number): Promise<void> {
     const projectDir = path.join(this.workspaceDir, teamId);
     const viteConfigPath = path.join(projectDir, 'vite.config.js');
     
-    const viteConfig = this.generateViteConfig(8000); // Direct container port access
+    // Generate Vite config that points HMR to the public proxy port
+    const viteConfig = this.generateViteConfig(proxyPort, false, teamId);
     await fs.writeFile(viteConfigPath, viteConfig);
     
     // Restart Vite dev server in container to pick up new config
@@ -455,7 +463,7 @@ export default defineConfig({
     );
     
     // Create vite.config.js with DRY method
-    const viteConfig = this.generateViteConfig(8000, true); // Include global define for full app
+    const viteConfig = this.generateViteConfig(8000, true, teamId); // Include global define for full app
     
     await fs.writeFile(path.join(projectDir, 'vite.config.js'), viteConfig);
     
@@ -779,14 +787,22 @@ footer {
   // REMOVED: _generateDockerfile method - current implementation uses fixed Dockerfile template
 
   async getPreviewStatus(teamId: string): Promise<PreviewInfo | null> {
+    console.log(`🔍 [DEBUG] getPreviewStatus called for teamId: ${teamId}`);
     const deployment = await this.prisma.preview_deployments.findUnique({
       where: { teamId }
     });
     
+    console.log(`🔍 [DEBUG] Database deployment found:`, deployment ? 'YES' : 'NO');
+    if (deployment) {
+      console.log(`🔍 [DEBUG] Deployment details: status=${deployment.status}, containerName=${deployment.containerName}`);
+    }
+    
     if (!deployment) return null;
     
     // Always validate container health on access
+    console.log(`🔍 [DEBUG] Checking container health for: ${deployment.containerName}`);
     const isHealthy = await this.validateContainerHealth(deployment.containerName);
+    console.log(`🔍 [DEBUG] Container health result: ${isHealthy}`);
     
     if (!isHealthy && deployment.status === 'running') {
       // Container died - update database
@@ -807,14 +823,16 @@ footer {
       data: { lastHealthCheck: new Date() }
     });
     
-    return {
+    const result = {
       running: deployment.status === 'running',
       port: deployment.port,
       proxyPort: deployment.proxyPort,
       containerId: deployment.containerId,
       projectType: deployment.projectType,
-      command: 'npm run dev'
     };
+    
+    console.log(`🔍 [DEBUG] Returning preview status:`, result);
+    return result;
   }
 
   async getContainerLogs(teamId: string): Promise<string[]> {

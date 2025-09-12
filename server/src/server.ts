@@ -407,16 +407,6 @@ app.use('/founders', express.static(path.join(__dirname, '../../../pitch/output/
 // Serve JS files for pitch deck
 app.use('/js', express.static(path.join(__dirname, '../../../js')));
 
-// Serve static files from React build
-app.use(express.static(path.join(process.cwd(), 'client/dist'), {
-  setHeaders: (res) => {
-    if (process.env['NODE_ENV'] === 'development') {
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-    }
-  }
-}));
 
 // SSH Helper Functions (copied from simple-claude-server.js)
 function loadSSHKey(keyPath: string) {
@@ -932,6 +922,75 @@ app.use('/api/terminal', terminalRoutes); // No auth required for testing
 app.use('/api/layout', authenticateToken, layoutRoutes); // Layout persistence requires authentication
 app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace persistence requires authentication
 
+// Special-case proxy for Vite dev absolute module paths when loaded via
+// /api/preview/proxy/:teamId/:branch/.
+// Some dev HTML (or 3rd-party templates) reference root-absolute URLs like
+// "/@vite/client", "/@react-refresh", "/src/*" or "/assets/*". When the
+// preview is embedded under the API proxy path, those requests would miss the
+// preview proxy and hit this server instead, often returning HTML which causes
+// "Failed to load module script (text/html)" errors. We detect such requests
+// by checking the Referer and transparently forward them to the correct team
+// preview container.
+app.use(async (req, res, next) => {
+  try {
+    const p = req.path || '';
+    const isViteAsset = (
+      p === '/@vite/client' ||
+      p === '/@react-refresh' ||
+      p === '/vite.svg' ||
+      p.startsWith('/src/') ||
+      p.startsWith('/assets/') ||
+      p.startsWith('/@fs/') ||
+      p.startsWith('/@id/')
+    );
+
+    if (!isViteAsset) return next();
+
+    const referer = req.get('referer') || '';
+    const m = referer.match(/\/api\/preview\/proxy\/([^/]+)\/([^/]+)\//);
+    if (!m) return next();
+
+    const teamId = m[1];
+    // Resolve the currently running preview for this team
+    const previewStatus = await universalPreviewService.getPreviewStatus(teamId);
+    if (!previewStatus || !previewStatus.running) return next();
+
+    const proxyPort = previewStatus.proxyPort || previewStatus.port;
+    const { createProxyMiddleware } = await import('http-proxy-middleware');
+
+    // Transparent pass-through to the Vite dev server/container. Keep the
+    // original absolute path (no rewrite) so requests like "/@vite/client"
+    // and "/src/main.jsx" resolve exactly as the dev server expects.
+    const passthrough = createProxyMiddleware({
+      target: `http://localhost:${proxyPort}`,
+      changeOrigin: true,
+      ws: true,
+      logLevel: 'debug',
+      onProxyRes: (proxyRes) => {
+        // Preserve content-type headers to satisfy module MIME checks
+        if (proxyRes.headers['content-type']) {
+          res.setHeader('content-type', proxyRes.headers['content-type']);
+        }
+      },
+    });
+
+    return passthrough(req, res, next);
+  } catch (err) {
+    return next();
+  }
+});
+
+// Serve static files from React build (AFTER API routes to prevent interference)
+app.use(express.static(path.join(process.cwd(), 'client/dist'), {
+  setHeaders: (res) => {
+    if (process.env['NODE_ENV'] === 'development') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
+
 // Catch-all route - serve React app for all non-API routes
 app.get('*', (req, res) => {
   // Check if it's a mobile device
@@ -941,7 +1000,7 @@ app.get('*', (req, res) => {
   // Redirect mobile users to the mobile-friendly preview instead of the complex workspace
   if (isMobile && req.path === '/') {
     console.log('📱 Mobile user detected, redirecting to preview:', userAgent);
-    return res.redirect('/api/preview/proxy/demo-team-001/main/');
+    return res.redirect('/preview/demo-team-001/');
   }
   
   res.sendFile(path.join(process.cwd(), 'client/dist/index.html'));
@@ -2149,47 +2208,65 @@ server.on('upgrade', async (request, socket, head) => {
     const url = new URL(request.url || '', `http://${request.headers.host}`);
     
     // Check if this is a preview proxy WebSocket upgrade
-    const previewMatch = url.pathname.match(/^\/api\/preview\/([^\/]+)\/live\/(.*)$/);
+    // Matches both old live pattern and new proxy pattern
+    const previewMatch = url.pathname.match(/^\/api\/preview\/(?:([^\/]+)\/live\/(.*)$|proxy\/([^\/]+)\/([^\/]+)\/?.*)/);
     
     if (previewMatch) {
-      const teamId = previewMatch[1];
+      // Extract teamId from either pattern: live/teamId or proxy/teamId/branch
+      const teamId = previewMatch[1] || previewMatch[3];
       
       console.log(`🔄 WebSocket upgrade for preview proxy: team ${teamId}, path: ${url.pathname}`);
       
-      // Verify authentication via authorization header
-      const authHeader = request.headers.authorization;
-      if (!authHeader?.startsWith('Bearer ')) {
-        console.warn('❌ Preview proxy WebSocket upgrade denied: No auth token');
-        socket.destroy();
-        return;
-      }
+      // Allow HMR WebSocket connections without authentication
+      // HMR (Hot Module Replacement) requests from Vite/dev servers don't carry JWT tokens
+      // Check if this is likely an HMR WebSocket (no auth header + upgrade header)
+      const isHMRRequest = url.pathname.includes('/__vite_hmr') ||
+                          (request.headers.upgrade === 'websocket' && !request.headers.authorization);
       
-      try {
-        const token = authHeader.substring(7);
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
-        const userId = decoded.userId;
-        
-        // Verify user belongs to the team
-        const user = await prisma.users.findUnique({
-          where: { id: userId }
-        });
-        
-        if (!user || user.teamId !== teamId) {
-          console.warn(`❌ Preview proxy WebSocket upgrade denied: Invalid team access for user ${userId}`);
+      console.log(`🔍 WebSocket upgrade debug: path=${url.pathname}, upgrade=${request.headers.upgrade}, hasAuth=${!!request.headers.authorization}, isHMR=${isHMRRequest}`);
+      
+      if (!isHMRRequest) {
+        // Verify authentication via authorization header for non-HMR requests
+        const authHeader = request.headers.authorization;
+        if (!authHeader?.startsWith('Bearer ')) {
+          console.warn('❌ Preview proxy WebSocket upgrade denied: No auth token');
           socket.destroy();
           return;
         }
+      } else {
+        console.log('🔥 Allowing HMR WebSocket upgrade without authentication');
+      }
+      
+      // Skip JWT verification for HMR requests
+      if (!isHMRRequest) {
+        try {
+          const authHeader = request.headers.authorization!;
+          const token = authHeader.substring(7);
+          const decoded = jwt.verify(token, JWT_SECRET) as any;
+          const userId = decoded.userId;
+          
+          // Verify user belongs to the team
+          const user = await prisma.users.findUnique({
+            where: { id: userId }
+          });
+          
+          if (!user || user.teamId !== teamId) {
+            console.warn(`❌ Preview proxy WebSocket upgrade denied: Invalid team access for user ${userId}`);
+            socket.destroy();
+            return;
+          }
+        } catch (jwtError) {
+          console.warn('❌ Preview proxy WebSocket upgrade denied: Invalid token', jwtError);
+          socket.destroy();
+          return;
+        }
+      }
         
-        // Find running preview container
-        const containers = await dockerManager.getTeamContainers(teamId) as ContainerInfo[];
-        const previewContainer = containers.find(c => 
-          c.type === 'preview' && 
-          c.status === 'running' && 
-          c.previewPort
-        );
+        // Find running preview deployment using database-backed service
+        const deployment = await universalPreviewService.getPreviewStatus(teamId);
         
-        if (!previewContainer || !previewContainer.previewPort) {
-          console.warn(`❌ Preview proxy WebSocket upgrade failed: No running container for team ${teamId}`);
+        if (!deployment || !deployment.proxyPort || !deployment.running) {
+          console.warn(`❌ Preview proxy WebSocket upgrade failed: No running deployment for team ${teamId}`);
           socket.destroy();
           return;
         }
@@ -2199,11 +2276,12 @@ server.on('upgrade', async (request, socket, head) => {
         
         // Create a temporary proxy middleware just for this WebSocket upgrade
         const wsProxy = createProxyMiddleware({
-          target: `http://${BASE_HOST}:${previewContainer.previewPort}`,
+          target: `http://localhost:${deployment.proxyPort}`,
           changeOrigin: true,
           ws: true,
           pathRewrite: {
-            [`^/api/preview/${teamId}/live`]: ''
+            [`^/api/preview/${teamId}/live`]: '',
+            [`^/api/preview/proxy/${teamId}/[^/]+/?`]: ''
           },
           on: {
             error: (err: Error) => {
@@ -2216,13 +2294,7 @@ server.on('upgrade', async (request, socket, head) => {
         // Handle the WebSocket upgrade
         (wsProxy as any).upgrade?.(request, socket, head);
         
-        console.log(`✅ WebSocket upgrade proxied to container on port ${previewContainer.previewPort}`);
-        
-      } catch (jwtError) {
-        console.warn('❌ Preview proxy WebSocket upgrade denied: Invalid token', jwtError);
-        socket.destroy();
-        return;
-      }
+        console.log(`✅ WebSocket upgrade proxied to dedicated proxy on port ${deployment.proxyPort}`);
     }
   } catch (error) {
     console.error('❌ WebSocket upgrade handler error:', error);
@@ -2389,6 +2461,54 @@ async function startServer(): Promise<void> {
     // Test database connection first
     await testDatabaseConnection();
     
+    // Add WebSocket upgrade handling for preview proxy HMR
+    server.on('upgrade', (request, socket, head) => {
+      console.log(`🔌 WebSocket upgrade request: ${request.url}`);
+      
+      // Check if this is a preview proxy WebSocket request
+      const previewProxyMatch = request.url?.match(/^\/api\/preview\/proxy\/([^\/]+)\/([^\/]+)/);
+      if (previewProxyMatch) {
+        const teamId = previewProxyMatch[1];
+        const branch = previewProxyMatch[2];
+        console.log(`🎯 HMR WebSocket upgrade for team ${teamId}, branch ${branch}`);
+        
+        // Import and use the preview service to get the proxy port
+        import('../services/universal-preview-service.js').then(async ({ universalPreviewService }) => {
+          try {
+            const previewStatus = await universalPreviewService.getPreviewStatus(teamId);
+            if (previewStatus && previewStatus.running) {
+              const proxyPort = previewStatus.proxyPort || previewStatus.port;
+              console.log(`🔄 Proxying HMR WebSocket to localhost:${proxyPort}`);
+              
+              // Create proxy middleware specifically for this WebSocket upgrade
+              const { createProxyMiddleware } = await import('http-proxy-middleware');
+              const wsProxy = createProxyMiddleware({
+                target: `http://localhost:${proxyPort}`,
+                changeOrigin: true,
+                ws: true,
+                pathRewrite: {
+                  [`^/api/preview/proxy/${teamId}/${branch}`]: `/api/preview/proxy/${teamId}/${branch}`
+                }
+              });
+              
+              // Handle the WebSocket upgrade
+              wsProxy.upgrade(request, socket, head);
+            } else {
+              console.log(`❌ No preview running for team ${teamId}`);
+              socket.destroy();
+            }
+          } catch (error) {
+            console.error('❌ WebSocket upgrade error:', error);
+            socket.destroy();
+          }
+        });
+      } else {
+        // Not a preview proxy request, let Socket.io handle it
+        console.log(`🔍 Non-preview WebSocket upgrade: ${request.url}`);
+        socket.destroy();
+      }
+    });
+    
     // Start listening
     server.listen(PORT, () => {
       console.log(`🚀 CoVibe server running on port ${PORT}`);
@@ -2437,3 +2557,4 @@ export const getIO = () => io;
 if (import.meta.url === `file://${process.argv[1]}`) {
   startServer();
 }
+// restart
