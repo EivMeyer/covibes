@@ -922,6 +922,7 @@ app.use('/api/terminal', terminalRoutes); // No auth required for testing
 app.use('/api/layout', authenticateToken, layoutRoutes); // Layout persistence requires authentication
 app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace persistence requires authentication
 
+
 // Special-case proxy for Vite dev absolute module paths when loaded via
 // /api/preview/proxy/:teamId/:branch/.
 // Some dev HTML (or 3rd-party templates) reference root-absolute URLs like
@@ -931,57 +932,57 @@ app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace pers
 // "Failed to load module script (text/html)" errors. We detect such requests
 // by checking the Referer and transparently forward them to the correct team
 // preview container.
+// VITE-ROUTER: Fix "Failed to load module script: text/html" errors
+// This middleware detects JavaScript module requests that are incorrectly served as HTML
+// and routes them to the correct team preview container based on Referer header.
 app.use(async (req, res, next) => {
-  try {
-    const p = req.path || '';
-    const isViteAsset = (
-      p === '/@vite/client' ||
-      p === '/@react-refresh' ||
-      p === '/vite.svg' ||
-      p.startsWith('/src/') ||
-      p.startsWith('/assets/') ||
-      p.startsWith('/@fs/') ||
-      p.startsWith('/@id/')
-    );
-
-    if (!isViteAsset) return next();
-
-    const referer = req.get('referer') || '';
-    const m = referer.match(/\/api\/preview\/proxy\/([^/]+)\/([^/]+)\//);
-    if (!m) return next();
-
-    const teamId = m[1];
-    // Resolve the currently running preview for this team
-    const previewStatus = await universalPreviewService.getPreviewStatus(teamId);
-    if (!previewStatus || !previewStatus.running) return next();
-
-    const proxyPort = previewStatus.proxyPort || previewStatus.port;
-    const { createProxyMiddleware } = await import('http-proxy-middleware');
-
-    // Transparent pass-through to the Vite dev server/container. Keep the
-    // original absolute path (no rewrite) so requests like "/@vite/client"
-    // and "/src/main.jsx" resolve exactly as the dev server expects.
-    const passthrough = createProxyMiddleware({
-      target: `http://localhost:${proxyPort}`,
-      changeOrigin: true,
-      ws: true,
-      logLevel: 'debug',
-      onProxyRes: (proxyRes) => {
-        // Preserve content-type headers to satisfy module MIME checks
-        if (proxyRes.headers['content-type']) {
-          res.setHeader('content-type', proxyRes.headers['content-type']);
-        }
-      },
-    });
-
-    return passthrough(req, res, next);
-  } catch (err) {
+  const path = req.path || '';
+  const referer = req.get('Referer') || '';
+  
+  // Check if this is a JavaScript file or Vite asset
+  const isJSFile = path.match(/\.(js|jsx|ts|tsx|mjs)(\?.*)?$/);
+  const isViteAsset = (
+    path === '/@vite/client' ||
+    path === '/@react-refresh' ||
+    path.startsWith('/src/') ||
+    path.startsWith('/node_modules/') ||
+    path.startsWith('/@fs/') ||
+    path.startsWith('/@id/')
+  );
+  
+  // IMPORTANT: Exclude /assets/ from middleware to avoid interfering with production assets
+  const isProductionAsset = path.startsWith('/assets/');
+  
+  // Skip if not a JS file/asset or if it's a production asset
+  if ((!isJSFile && !isViteAsset) || isProductionAsset) {
     return next();
   }
+  
+  // Extract team from referer if present
+  const teamMatch = referer.match(/\/api\/preview\/proxy\/([^\/]+)\/main\//);
+  if (!teamMatch) {
+    console.log(`🔍 [VITE-ROUTER] No team found in referer, passing through: ${path}`);
+    return next();
+  }
+  
+  const teamId = teamMatch[1];
+  console.log(`🔍 [VITE-ROUTER] Routing ${path} to team ${teamId} based on referer`);
+  
+  // Forward to team preview proxy using Express redirect
+  const proxyUrl = `/api/preview/proxy/${teamId}/main${path}`;
+  console.log(`🔄 [VITE-ROUTER] Redirecting: ${req.originalUrl} -> ${proxyUrl}`);
+  
+  // Send an HTTP redirect to let the browser re-request the correct URL
+  res.redirect(302, proxyUrl);
+  
+  console.log(`✅ [VITE-ROUTER] Sent redirect for ${path} to ${proxyUrl}`);
+  return;
 });
 
 // Serve static files from React build (AFTER API routes to prevent interference)
-app.use(express.static(path.join(process.cwd(), 'client/dist'), {
+console.log('🔍 [DEBUG] process.cwd():', process.cwd());
+console.log('🔍 [DEBUG] static path:', path.join(process.cwd(), '../client/dist'));
+app.use(express.static(path.join(process.cwd(), '../client/dist'), {
   setHeaders: (res) => {
     if (process.env['NODE_ENV'] === 'development') {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');

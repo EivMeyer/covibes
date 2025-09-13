@@ -52,21 +52,59 @@ class DedicatedPreviewProxyService {
     const proxyPort = existingProxyPort || this.findAvailablePort();
     const app = express();
 
-    // Pure reverse proxy - connect to Docker host port (localhost)
+    // Pure reverse proxy with HTML rewriting for base tag fix
     const proxy = createProxyMiddleware({
       target: `http://localhost:${vitePort}`,  // Docker maps container:5173 -> host:vitePort
       changeOrigin: true,
       ws: true, // WebSocket support for HMR
-      // No pathRewrite - completely transparent
+      selfHandleResponse: true, // Handle response manually for HTML rewriting
       on: {
-        proxyRes: (proxyRes: any) => {
+        proxyReq: (proxyReq, req, res) => {
+          console.log(`🔧 [DEDICATED-PROXY] Proxying ${req.method} ${req.url} for team ${teamId}`);
+        },
+        proxyRes: async (proxyRes: any, req: any, res: any) => {
           // Headers for iframe embedding and CORS (like Caddy MVP)
-          proxyRes.headers['x-frame-options'] = 'ALLOWALL';
-          proxyRes.headers['content-security-policy'] = 'frame-ancestors *';
-          proxyRes.headers['access-control-allow-origin'] = '*';
-          proxyRes.headers['access-control-allow-methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-          proxyRes.headers['access-control-allow-headers'] = 'Content-Type, Authorization';
-          proxyRes.headers['access-control-allow-credentials'] = 'true';
+          res.setHeader('x-frame-options', 'ALLOWALL');
+          res.setHeader('content-security-policy', 'frame-ancestors *');
+          res.setHeader('access-control-allow-origin', '*');
+          res.setHeader('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
+          res.setHeader('access-control-allow-headers', 'Content-Type, Authorization');
+          res.setHeader('access-control-allow-credentials', 'true');
+
+          // Copy status and headers
+          res.statusCode = proxyRes.statusCode || 200;
+          Object.keys(proxyRes.headers).forEach(key => {
+            res.setHeader(key, proxyRes.headers[key]);
+          });
+
+          // CRITICAL FIX: HTML path rewriting for MIME type errors
+          const isHTML = proxyRes.headers['content-type']?.includes('text/html');
+          if (isHTML) {
+            console.log(`🔧 [DEDICATED-PROXY] Applying HTML base tag fix for team ${teamId}`);
+            
+            let body = '';
+            proxyRes.on('data', (chunk: Buffer) => {
+              body += chunk.toString();
+            });
+
+            proxyRes.on('end', () => {
+              // Add base tag to fix absolute path resolution
+              const baseTag = `<base href="/api/preview/proxy/${teamId}/main/">`;
+              if (body.includes('<head>')) {
+                body = body.replace('<head>', `<head>\n    ${baseTag}`);
+                console.log(`✅ [DEDICATED-PROXY] Added base tag for team ${teamId}`);
+              }
+              
+              // Fix absolute paths
+              body = body.replace(/src="\//g, `src="/api/preview/proxy/${teamId}/main/`);
+              body = body.replace(/href="\//g, `href="/api/preview/proxy/${teamId}/main/`);
+              
+              res.end(body);
+            });
+          } else {
+            // Non-HTML: pipe response directly
+            proxyRes.pipe(res);
+          }
         }
       },
       logger: console

@@ -105,16 +105,41 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
       };
       
       const response = await fetch(targetUrl, requestOptions);
+      console.log(`🔍 [FETCH-DEBUG] Got response: status=${response.status}, ok=${response.ok}`);
       const responseHeaders = Object.fromEntries(response.headers.entries());
       
       console.log(`✅ [SIMPLE-PROXY] ${response.status} ${response.statusText}`);
       console.log(`📄 [SIMPLE-PROXY] Original Content-Type: ${responseHeaders['content-type'] || 'none'}`);
       
-      // MIME type fix for JavaScript modules
-      const isJSModule = originalPath.match(/\.(js|jsx|ts|tsx)(\?.*)?$/);
+      // MIME type fix for JavaScript modules - check both original path and proxy path
+      const isJSModule = originalPath.match(/\.(js|jsx|ts|tsx|mjs)(\?.*)?$/) || proxyPath.match(/\.(js|jsx|ts|tsx|mjs)(\?.*)?$/);
       if (isJSModule) {
         responseHeaders['content-type'] = 'text/javascript; charset=utf-8';
-        console.log(`🔧 [MIME-FIX] Fixed MIME type for JS module: ${originalPath}`);
+        console.log(`🔧 [MIME-FIX] Fixed MIME type for JS module: ${originalPath} -> ${proxyPath}`);
+      }
+
+      // 🚀 HTML PATH REWRITING FIX - Fix absolute paths in Vite HTML responses
+      const isHTML = responseHeaders['content-type']?.includes('text/html');
+      let responseBody = await response.text();
+      
+      console.log(`🔍 [HTML-DEBUG] isHTML: ${isHTML}, proxyPath: "${proxyPath}", content-type: ${responseHeaders['content-type']}`);
+      
+      if (isHTML && proxyPath === '/') {
+        console.log(`🔧 [HTML-REWRITE] Fixing absolute paths in HTML response`);
+        const baseProxyPath = `/api/preview/proxy/${requestTeamId}/main`;
+        
+        // Fix common Vite development absolute paths
+        responseBody = responseBody
+          .replace(/src="\/(@vite\/[^"]+)"/g, `src="${baseProxyPath}/$1"`)
+          .replace(/src="\/(@react-refresh[^"]+)"/g, `src="${baseProxyPath}/$1"`)
+          .replace(/src="\/src\/([^"]+)"/g, `src="${baseProxyPath}/src/$1"`)
+          .replace(/src="\/node_modules\/([^"]+)"/g, `src="${baseProxyPath}/node_modules/$1"`)
+          .replace(/href="\/(@vite\/[^"]+)"/g, `href="${baseProxyPath}/$1"`)
+          .replace(/href="\/src\/([^"]+)"/g, `href="${baseProxyPath}/src/$1"`);
+        
+        console.log(`✅ [HTML-REWRITE] Fixed absolute paths for proxy: ${baseProxyPath}`);
+      } else if (isHTML) {
+        console.log(`⏭️ [HTML-SKIP] Not root path, skipping HTML rewrite for: "${proxyPath}"`);
       }
       
       // Set response status and headers
@@ -123,11 +148,9 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
         res.set(key, value);
       });
       
-      // Stream response body
-      if (response.body) {
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        res.send(buffer);
+      // Send rewritten response body (HTML paths fixed, MIME types corrected)
+      if (responseBody) {
+        res.send(responseBody);
       } else {
         res.end();
       }
@@ -205,11 +228,8 @@ router.get('/status', createAuthHandler(async (req, res) => {
         const forceNginx = req.query.nginx === 'true';
         let publicUrl;
         
-        if (forceNginx || !dockerStatus.proxyPort) {
-          publicUrl = `http://${BASE_HOST}/preview/${teamId}/`;
-        } else {
-          publicUrl = dockerStatus.proxyPort ? `http://${BASE_HOST}:${dockerStatus.proxyPort}/` : undefined;
-        }
+        // Always use clean URLs through main server
+        publicUrl = `http://${BASE_HOST}/preview/${teamId}/`;
         
         console.log('🚀 URL SET TO:', publicUrl, 'forceNginx:', forceNginx);
         const response = {
@@ -446,7 +466,7 @@ router.post('/restart', createAuthHandler(async (req, res) => {
       await universalPreviewService.restartPreview(teamId);
       const status = await universalPreviewService.getPreviewStatus(teamId);
       
-      // Always use nginx direct proxy instead of proxyPort
+      // Always use clean URLs through main server
       const publicUrl = `http://${BASE_HOST}/preview/${teamId}/`;
       return res.json({
         message: 'Universal preview restarted successfully',

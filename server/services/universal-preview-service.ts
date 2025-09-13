@@ -179,13 +179,13 @@ class UniversalPreviewService {
           
           return {
             port: existing.port,  // Return the actual container port for direct access
-            url: `/preview/${teamId}/`
+            url: `http://${BASE_HOST}/api/preview/proxy/${teamId}/main/`
           };
         }
         
         return {
           port: existing.port,  // Return the actual container port, not proxy port
-          url: `/preview/${teamId}/`
+          url: `http://${BASE_HOST}/api/preview/proxy/${teamId}/main/`
         };
       }
       
@@ -286,9 +286,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
       
       return {
         port,                 // Container's mapped host port (Vite dev server)
-        // Expose the dedicated proxy port separately so callers can build a stable public URL
-        // and keep absolute paths like /@vite/client within the same origin/port
-        url: `http://${BASE_HOST}:${proxyPort}/`
+        // Return URL that goes through main server API proxy (no port numbers!)
+        url: `http://${BASE_HOST}/api/preview/proxy/${teamId}/main/`
       };
 
     } catch (error) {
