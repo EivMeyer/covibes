@@ -10,9 +10,7 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
+    "metadata": {},
     "preserveOutput": "always",
     "reporter": [
       [
@@ -40,9 +38,7 @@
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "chromium",
         "name": "chromium",
         "testDir": "/home/ubuntu/covibes/tests",
@@ -56,9 +52,7 @@
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "firefox",
         "name": "firefox",
         "testDir": "/home/ubuntu/covibes/tests",
@@ -72,9 +66,7 @@
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "webkit",
         "name": "webkit",
         "testDir": "/home/ubuntu/covibes/tests",
@@ -97,299 +89,19 @@
       "reuseExistingServer": true
     }
   },
-  "suites": [
+  "suites": [],
+  "errors": [
     {
-      "title": "playwright-mime-test.test.js",
-      "file": "playwright-mime-test.test.js",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "Preview MIME type test",
-          "ok": false,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "chromium",
-              "projectName": "chromium",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 18674,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n    at /home/ubuntu/covibes/tests/playwright-mime-test.test.js:89:31",
-                    "location": {
-                      "file": "/home/ubuntu/covibes/tests/playwright-mime-test.test.js",
-                      "column": 31,
-                      "line": 89
-                    },
-                    "snippet": "  87 |     \n  88 |     // Final assertion\n> 89 |     expect(mimeErrors.length).toBe(0);\n     |                               ^\n  90 |     \n  91 |   } catch (error) {\n  92 |     console.error('❌ Test failed:', error.message);"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/ubuntu/covibes/tests/playwright-mime-test.test.js",
-                        "column": 31,
-                        "line": 89
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n\n  87 |     \n  88 |     // Final assertion\n> 89 |     expect(mimeErrors.length).toBe(0);\n     |                               ^\n  90 |     \n  91 |   } catch (error) {\n  92 |     console.error('❌ Test failed:', error.message);\n    at /home/ubuntu/covibes/tests/playwright-mime-test.test.js:89:31"
-                    }
-                  ],
-                  "stdout": [
-                    {
-                      "text": "🧪 Testing preview page for MIME errors...\n"
-                    },
-                    {
-                      "text": "📄 Loading preview page...\n"
-                    },
-                    {
-                      "text": "❌ http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/@vite/client\n"
-                    },
-                    {
-                      "text": "   Status: 200\n"
-                    },
-                    {
-                      "text": "   Content-Type: text/html; charset=UTF-8\n"
-                    },
-                    {
-                      "text": "❌ http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/src/main.jsx\n"
-                    },
-                    {
-                      "text": "   Status: 200\n"
-                    },
-                    {
-                      "text": "   Content-Type: text/html; charset=UTF-8\n"
-                    },
-                    {
-                      "text": "❌ Console error: Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "❌ Console error: Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "❌ Console error: Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "⏳ Waiting for JavaScript modules to load...\n"
-                    },
-                    {
-                      "text": "\n📊 Results:\n"
-                    },
-                    {
-                      "text": "   Total responses: 4\n"
-                    },
-                    {
-                      "text": "   Console errors: 3\n"
-                    },
-                    {
-                      "text": "   MIME errors: 3\n"
-                    },
-                    {
-                      "text": "\n❌ MIME TYPE ERRORS FOUND:\n"
-                    },
-                    {
-                      "text": "1. Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "2. Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "3. Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "\n📄 Page title: \"Alice's Fixed CoVibes App\"\n"
-                    },
-                    {
-                      "text": "❌ React root div not found\n"
-                    },
-                    {
-                      "text": "❌ Preview content not detected\n"
-                    },
-                    {
-                      "text": "Body preview: \n    \n    \n  \n\n...\n"
-                    }
-                  ],
-                  "stderr": [
-                    {
-                      "text": "❌ Test failed: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n"
-                    }
-                  ],
-                  "retry": 0,
-                  "startTime": "2025-09-12T20:01:19.924Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/ubuntu/covibes/tests/test-results/playwright-mime-test-Preview-MIME-type-test-chromium/test-failed-1.png"
-                    },
-                    {
-                      "name": "video",
-                      "contentType": "video/webm",
-                      "path": "/home/ubuntu/covibes/tests/test-results/playwright-mime-test-Preview-MIME-type-test-chromium/video.webm"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/ubuntu/covibes/tests/playwright-mime-test.test.js",
-                    "column": 31,
-                    "line": 89
-                  }
-                },
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 18872,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n    at /home/ubuntu/covibes/tests/playwright-mime-test.test.js:89:31",
-                    "location": {
-                      "file": "/home/ubuntu/covibes/tests/playwright-mime-test.test.js",
-                      "column": 31,
-                      "line": 89
-                    },
-                    "snippet": "  87 |     \n  88 |     // Final assertion\n> 89 |     expect(mimeErrors.length).toBe(0);\n     |                               ^\n  90 |     \n  91 |   } catch (error) {\n  92 |     console.error('❌ Test failed:', error.message);"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/ubuntu/covibes/tests/playwright-mime-test.test.js",
-                        "column": 31,
-                        "line": 89
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n\n  87 |     \n  88 |     // Final assertion\n> 89 |     expect(mimeErrors.length).toBe(0);\n     |                               ^\n  90 |     \n  91 |   } catch (error) {\n  92 |     console.error('❌ Test failed:', error.message);\n    at /home/ubuntu/covibes/tests/playwright-mime-test.test.js:89:31"
-                    }
-                  ],
-                  "stdout": [
-                    {
-                      "text": "🧪 Testing preview page for MIME errors...\n"
-                    },
-                    {
-                      "text": "📄 Loading preview page...\n"
-                    },
-                    {
-                      "text": "❌ http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/@vite/client\n"
-                    },
-                    {
-                      "text": "   Status: 200\n"
-                    },
-                    {
-                      "text": "   Content-Type: text/html; charset=UTF-8\n"
-                    },
-                    {
-                      "text": "❌ http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/src/main.jsx\n"
-                    },
-                    {
-                      "text": "   Status: 200\n"
-                    },
-                    {
-                      "text": "   Content-Type: text/html; charset=UTF-8\n"
-                    },
-                    {
-                      "text": "❌ Console error: Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "❌ Console error: Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "❌ Console error: Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "⏳ Waiting for JavaScript modules to load...\n"
-                    },
-                    {
-                      "text": "\n📊 Results:\n"
-                    },
-                    {
-                      "text": "   Total responses: 4\n"
-                    },
-                    {
-                      "text": "   Console errors: 3\n"
-                    },
-                    {
-                      "text": "   MIME errors: 3\n"
-                    },
-                    {
-                      "text": "\n❌ MIME TYPE ERRORS FOUND:\n"
-                    },
-                    {
-                      "text": "1. Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "2. Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "3. Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of \"text/html\". Strict MIME type checking is enforced for module scripts per HTML spec.\n"
-                    },
-                    {
-                      "text": "\n📄 Page title: \"Alice's Fixed CoVibes App\"\n"
-                    },
-                    {
-                      "text": "❌ React root div not found\n"
-                    },
-                    {
-                      "text": "❌ Preview content not detected\n"
-                    },
-                    {
-                      "text": "Body preview: \n    \n    \n  \n\n...\n"
-                    }
-                  ],
-                  "stderr": [
-                    {
-                      "text": "❌ Test failed: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n"
-                    }
-                  ],
-                  "retry": 1,
-                  "startTime": "2025-09-12T20:01:39.727Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/ubuntu/covibes/tests/test-results/playwright-mime-test-Preview-MIME-type-test-chromium-retry1/test-failed-1.png"
-                    },
-                    {
-                      "name": "video",
-                      "contentType": "video/webm",
-                      "path": "/home/ubuntu/covibes/tests/test-results/playwright-mime-test-Preview-MIME-type-test-chromium-retry1/video.webm"
-                    },
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/ubuntu/covibes/tests/test-results/playwright-mime-test-Preview-MIME-type-test-chromium-retry1/trace.zip"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/ubuntu/covibes/tests/playwright-mime-test.test.js",
-                    "column": 31,
-                    "line": 89
-                  }
-                }
-              ],
-              "status": "unexpected"
-            }
-          ],
-          "id": "1221c26d4f8fa110664b-a3dc86603ec0dc26778f",
-          "file": "playwright-mime-test.test.js",
-          "line": 3,
-          "column": 1
-        }
-      ]
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
     }
   ],
-  "errors": [],
   "stats": {
-    "startTime": "2025-09-12T20:01:18.959Z",
-    "duration": 39889.509999999995,
+    "startTime": "2025-09-14T17:57:37.385Z",
+    "duration": 52.83499999999981,
     "expected": 0,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

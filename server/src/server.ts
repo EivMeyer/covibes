@@ -979,7 +979,21 @@ app.use(async (req, res, next) => {
   return;
 });
 
-// Serve static files from React build (AFTER API routes to prevent interference)
+// Handle /preview/:teamId/* routes - redirect to proper proxy path (BEFORE static middleware!)
+app.get('/preview/:teamId/*', async (req, res) => {
+  const { teamId } = req.params;
+  const subPath = req.params[0] || ''; // Get everything after teamId/
+
+  console.log(`🔄 [PREVIEW-REDIRECT] Handling /preview/${teamId}/${subPath}`);
+
+  // Redirect to the proper API proxy path
+  const proxyPath = `/api/preview/proxy/${teamId}/main/${subPath}`;
+  console.log(`🔄 [PREVIEW-REDIRECT] Redirecting to: ${proxyPath}`);
+
+  res.redirect(302, proxyPath);
+});
+
+// Serve static files from React build (AFTER API routes and preview routes to prevent interference)
 console.log('🔍 [DEBUG] process.cwd():', process.cwd());
 console.log('🔍 [DEBUG] static path:', path.join(process.cwd(), '../client/dist'));
 app.use(express.static(path.join(process.cwd(), '../client/dist'), {
@@ -997,13 +1011,13 @@ app.get('*', (req, res) => {
   // Check if it's a mobile device
   const userAgent = req.headers['user-agent'] || '';
   const isMobile = /android|blackberry|iemobile|ipad|iphone|ipod|opera mini|webos|mobile/i.test(userAgent);
-  
+
   // Redirect mobile users to the mobile-friendly preview instead of the complex workspace
   if (isMobile && req.path === '/') {
     console.log('📱 Mobile user detected, redirecting to preview:', userAgent);
     return res.redirect('/preview/demo-team-001/');
   }
-  
+
   res.sendFile(path.join(process.cwd(), 'client/dist/index.html'));
 });
 
