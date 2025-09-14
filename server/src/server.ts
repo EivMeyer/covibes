@@ -1012,10 +1012,10 @@ app.get('*', (req, res) => {
   const userAgent = req.headers['user-agent'] || '';
   const isMobile = /android|blackberry|iemobile|ipad|iphone|ipod|opera mini|webos|mobile/i.test(userAgent);
 
-  // Redirect mobile users to the mobile-friendly preview instead of the complex workspace
+  // Mobile users get the same app - it's already responsive
   if (isMobile && req.path === '/') {
-    console.log('📱 Mobile user detected, redirecting to preview:', userAgent);
-    return res.redirect('/preview/demo-team-001/');
+    console.log('📱 Mobile user detected, serving responsive app:', userAgent);
+    // Removed hardcoded demo-team-001 redirect - serve main app instead
   }
 
   res.sendFile(path.join(process.cwd(), 'client/dist/index.html'));

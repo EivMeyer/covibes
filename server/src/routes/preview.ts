@@ -51,23 +51,10 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
     // For preview proxy, we'll allow access if a preview is running for the team
     console.log(`🔓 [WS-PROXY] Allowing access for team ${requestTeamId}`);
     
-    // NUCLEAR FIX: Bypass broken service reconciliation
-    console.log(`🚨 [NUCLEAR] Hardcoded fix for team ${requestTeamId}`);
-    let previewStatus = null;
-    
-    if (requestTeamId === 'demo-team-001') {
-      previewStatus = {
-        running: true,
-        port: 8000, // Direct container port
-        proxyPort: null,
-        containerId: 'preview-demo-team-001',
-        projectType: 'vite-react'
-      };
-      console.log(`✅ [NUCLEAR] Hardcoded preview status for demo-team-001`);
-    } else {
-      // Fall back to service for other teams
-      previewStatus = await universalPreviewService.getPreviewStatus(requestTeamId);
-    }
+    // Get preview status from service (database-backed)
+    console.log(`🔍 [SERVICE] Getting preview status for team ${requestTeamId}`);
+    const previewStatus = await universalPreviewService.getPreviewStatus(requestTeamId);
+    console.log(`📊 [SERVICE] Preview status result:`, previewStatus ? `running=${previewStatus.running}, port=${previewStatus.port}` : 'null');
     
     if (!previewStatus || !previewStatus.running) {
       console.log(`❌ [WS-PROXY] No preview running for team ${requestTeamId}`);
@@ -529,9 +516,9 @@ router.get('/logs/:branch', createAuthHandler(async (req, res) => {
  * Test if new routes work
  */
 router.get('/test', (req, res) => {
-  res.json({ 
-    message: 'New route works!', 
-    nginxUrl: `http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/preview/demo-team-001/`,
+  res.json({
+    message: 'Preview API endpoint working',
+    apiVersion: '2.0',
     timestamp: new Date().toISOString()
   });
 });
