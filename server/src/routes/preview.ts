@@ -215,8 +215,9 @@ router.get('/status', createAuthHandler(async (req, res) => {
         const forceNginx = req.query.nginx === 'true';
         let publicUrl;
         
-        // Always use clean URLs through main server
-        publicUrl = `http://${BASE_HOST}/preview/${teamId}/`;
+        // FIXED: Use dynamic server port instead of hardcoding
+        const serverPort = process.env['PORT'] || 3001;
+        publicUrl = `http://${BASE_HOST}:${serverPort}/preview/${teamId}/`;
         
         console.log('🚀 URL SET TO:', publicUrl, 'forceNginx:', forceNginx);
         const response = {

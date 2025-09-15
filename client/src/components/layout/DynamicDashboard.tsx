@@ -114,15 +114,27 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
       setSeenTiles(prev => new Set([...prev, ...newTiles.map(t => t.id)]))
     }
     
-    // Remove layouts for tiles that no longer exist
+    // Remove layouts for tiles that no longer exist (ONLY if needed)
     const currentTileIds = new Set(tiles.map(t => t.id))
-    setLayouts(prev => ({
-      ...prev,
-      lg: (prev.lg || []).filter(layout => currentTileIds.has(layout.i)),
-    }))
-    
-    // Remove from seen tiles if they no longer exist
-    setSeenTiles(prev => new Set([...prev].filter(id => currentTileIds.has(id))))
+    const currentLayouts = layouts.lg || []
+    const layoutsToKeep = currentLayouts.filter(layout => currentTileIds.has(layout.i))
+
+    // FIXED: Only update layouts if there are actually layouts to remove
+    if (layoutsToKeep.length !== currentLayouts.length) {
+      setLayouts(prev => ({
+        ...prev,
+        lg: layoutsToKeep,
+      }))
+    }
+
+    // Remove from seen tiles if they no longer exist (ONLY if needed)
+    const currentSeenTiles = [...seenTiles]
+    const seenTilesToKeep = currentSeenTiles.filter(id => currentTileIds.has(id))
+
+    // FIXED: Only update seenTiles if there are actually tiles to remove
+    if (seenTilesToKeep.length !== currentSeenTiles.length) {
+      setSeenTiles(new Set(seenTilesToKeep))
+    }
   }, [tiles])
 
   // Save layout changes to localStorage and trigger parent save
@@ -174,7 +186,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   const handleRemoveTileWithCollab = (tileId: string) => {
     // Emit collaborative event
     onTileRemove?.(tileId);
-    
+
     // Call original handler
     onRemoveTile(tileId);
   }
@@ -433,8 +445,26 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
     }
   }, [])
 
+  // Safety check for tiles data integrity
+  if (!tiles || !Array.isArray(tiles)) {
+    console.error('🚨 [DYNAMIC DASHBOARD] Invalid tiles data:', tiles)
+    return (
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="text-center space-y-4">
+          <div className="text-red-400 text-xl">⚠️ Data Error</div>
+          <div className="text-white">Invalid workspace data. Please refresh the page.</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // Empty state
-  
   if (tiles.length === 0) {
     return (
       <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
@@ -492,10 +522,10 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
         margin={[4, 4]}
         isDroppable={false}
       >
-        {tiles.map((tile) => {
+        {tiles?.filter(tile => tile && typeof tile === 'object' && tile.id && !Array.isArray(tile)).map((tile) => {
           // Find the layout for this tile from the current breakpoint (lg)
           const layoutItem = layouts.lg?.find((l) => l.i === tile.id)
-          
+
           // Check if this tile is being dragged by a team member
           const activeDrag = activeDrags.get(tile.id)
           const isBeingDragged = !!activeDrag
