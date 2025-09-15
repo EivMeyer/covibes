@@ -20,7 +20,6 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { Client } from 'ssh2';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -339,8 +338,6 @@ dockerManager.on('pty-exit', (data: { agentId: string; code: number; signal: str
   agentSockets.delete(data.agentId);
 });
 
-// SSH Session Management (copied from simple-claude-server.js)
-const sshSessions = new Map();
 
 // Configuration  
 const PORT = process.env['PORT'] || 3001;
@@ -407,132 +404,6 @@ app.use('/founders', express.static(path.join(__dirname, '../../../pitch/output/
 app.use('/js', express.static(path.join(__dirname, '../../../js')));
 
 
-// SSH Helper Functions (copied from simple-claude-server.js)
-function loadSSHKey(keyPath: string) {
-  try {
-    const fullPath = path.resolve(keyPath);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`SSH key not found: ${fullPath}`);
-    }
-    return fs.readFileSync(fullPath, 'utf8');
-  } catch (error: any) {
-    throw new Error(`Failed to load SSH key: ${error.message}`);
-  }
-}
-
-function createSSHSession(sessionId: string, config: any, socket: any) {
-  return new Promise((resolve, reject) => {
-    const client = new Client();
-    
-    // Auto-find SSH key if not provided
-    if (!config.privateKey || config.privateKey.length < 100) {
-      console.log('🔍 Auto-searching for SSH keys...');
-      
-      const possiblePaths = [
-        './.ssh/ec2.pem',
-        './.ssh/id_rsa', 
-        './config/ssh-key.pem',
-        path.join(process.env['HOME'] || '', '.ssh/id_rsa'),
-        path.join(process.env['HOME'] || '', '.ssh/ec2.pem'),
-      ];
-      
-      let keyFound = false;
-      for (const keyPath of possiblePaths) {
-        try {
-          config.privateKey = loadSSHKey(keyPath);
-          console.log(`✅ Found SSH key: ${keyPath} (${config.privateKey.length} bytes)`);
-          keyFound = true;
-          break;
-        } catch (error) {
-          continue;
-        }
-      }
-      
-      if (!keyFound) {
-        reject(new Error('No SSH private key found. Please provide one or ensure it exists.'));
-        return;
-      }
-    }
-    
-    const timeout = setTimeout(() => {
-      client.destroy();
-      reject(new Error('SSH connection timeout'));
-    }, 10000);
-    
-    client.on('ready', () => {
-      clearTimeout(timeout);
-      console.log(`✅ SSH connection ready for session: ${sessionId}`);
-      
-      client.shell((err: any, stream: any) => {
-        if (err) {
-          client.end();
-          reject(err);
-          return;
-        }
-        
-        // Store session
-        sshSessions.set(sessionId, {
-          client,
-          stream,
-          socket: socket.id
-        });
-        
-        // Handle stream data
-        stream.on('data', (data: Buffer) => {
-          socket.emit('ssh-output', {
-            sessionId,
-            output: data.toString()
-          });
-        });
-        
-        stream.on('close', () => {
-          console.log(`🔌 SSH stream closed for session: ${sessionId}`);
-          sshSessions.delete(sessionId);
-          client.end();
-        });
-        
-        stream.on('error', (error: any) => {
-          console.error(`SSH stream error (${sessionId}):`, error);
-          socket.emit('ssh-error', { 
-            sessionId, 
-            error: error.message 
-          });
-        });
-        
-        // Auto-start Claude Code
-        setTimeout(() => {
-          console.log(`🤖 Auto-starting Claude Code for session: ${sessionId}`);
-          socket.emit('ssh-output', {
-            sessionId,
-            output: '\r\n🤖 Starting Claude Code...\r\n'
-          });
-          
-          stream.write(`claude --model sonnet --dangerously-skip-permissions\r`);
-          
-          setTimeout(() => {
-            socket.emit('claude-started', { sessionId });
-          }, 3000);
-        }, 1500);
-        
-        resolve({ sessionId, stream });
-      });
-    });
-    
-    client.on('error', (error: any) => {
-      clearTimeout(timeout);
-      console.error(`SSH connection error (${sessionId}):`, error);
-      reject(new Error(`SSH connection failed: ${error.message}`));
-    });
-    
-    client.connect({
-      host: config.host,
-      username: config.username || 'ubuntu',
-      privateKey: config.privateKey,
-      port: config.port || 22,
-      readyTimeout: 8000
-    });
-  });
-}
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {

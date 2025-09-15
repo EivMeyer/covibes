@@ -52,6 +52,19 @@ class DedicatedPreviewProxyService {
     const proxyPort = existingProxyPort || this.findAvailablePort();
     const app = express();
 
+    // Calculate backend port (it's always vitePort - 3171 based on our container setup)
+    const backendPort = vitePort - 3171;
+
+    // API proxy for backend requests
+    const apiProxy = createProxyMiddleware({
+      target: `http://localhost:${backendPort}`,  // Backend on port 3002 (if vite is 5173)
+      changeOrigin: true,
+      ws: false,
+      pathRewrite: {
+        '^/api/preview/proxy/[^/]+/[^/]+/api': '/api'  // Strip proxy prefix from API paths
+      }
+    });
+
     // Pure reverse proxy with HTML rewriting for base tag fix
     const proxy = createProxyMiddleware({
       target: `http://localhost:${vitePort}`,  // Docker maps container:5173 -> host:vitePort
@@ -110,7 +123,10 @@ class DedicatedPreviewProxyService {
       logger: console
     });
 
-    // Apply proxy to all routes
+    // Apply API proxy for backend requests
+    app.use('/api', apiProxy);
+
+    // Apply general proxy for all other routes (frontend assets)
     app.use('/', proxy);
 
     // Start the dedicated proxy server

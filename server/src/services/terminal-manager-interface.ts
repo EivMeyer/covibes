@@ -23,7 +23,7 @@ export interface TerminalOptions {
   teamId: string;
   task: string;
   location: 'local' | 'remote';
-  isolation: 'none' | 'docker' | 'tmux' | 'screen';
+  isolation: 'none' | 'docker' | 'tmux';
   vmConfig?: VMConfig;
   workspaceRepo?: string;
 }
@@ -31,7 +31,7 @@ export interface TerminalOptions {
 export interface TerminalSession {
   agentId: string;
   location: 'local' | 'remote';
-  isolation: 'none' | 'docker' | 'tmux' | 'screen';
+  isolation: 'none' | 'docker' | 'tmux';
   process?: any;  // PTY process for simple terminals
   containerId?: string;  // Container ID for Docker terminals
   vmConfig?: VMConfig;  // VM config for remote terminals

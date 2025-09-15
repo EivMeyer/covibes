@@ -53,7 +53,7 @@ async function executeAgentAsync(
   _type: string, 
   task: string, 
   terminalLocation: 'local' | 'remote',
-  terminalIsolation: 'none' | 'docker' | 'tmux' | 'screen',
+  terminalIsolation: 'none' | 'docker' | 'tmux',
   repositoryUrl?: string,
   userId?: string,
   teamId?: string
