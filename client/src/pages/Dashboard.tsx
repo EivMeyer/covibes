@@ -587,7 +587,9 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       agentName: agent.agentName || agent.userName,
       status: agent.status,
       task: agent.task,
-      output: agent.output
+      output: agent.output,
+      userId: agent.userId,  // CRITICAL: Include userId for ownership check
+      userName: agent.userName  // Include userName for display
     } : null;
 
     // FIXED: Sanitize agents array to prevent circular references
@@ -595,7 +597,9 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       id: a.id,
       agentName: a.agentName || a.userName,
       status: a.status,
-      task: a.task
+      task: a.task,
+      userId: a.userId,  // Include userId for ownership checks
+      userName: a.userName  // Include userName for display
     }));
 
     return (
@@ -933,24 +937,18 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
 
           {/* Dynamic Dashboard - Drag & Drop with Resizable Tiles */}
           <div className="flex-1 h-full bg-midnight-900 overflow-y-auto overflow-x-hidden">
-            {/* TEMPORARILY DISABLED: DynamicDashboard has infinite recursion */}
-            <div className="flex-1 flex items-center justify-center bg-slate-800 m-4 rounded-lg">
-              <div className="text-center text-white space-y-4">
-                <div className="text-green-400 text-2xl">✅ Dashboard Loaded Successfully!</div>
-                <div className="text-lg">Demo Team: {team.name} ({team.inviteCode})</div>
-                <div className="text-lg">User: {user.userName} ({user.email})</div>
-                <div className="text-blue-400">
-                  <a href="/preview/demo-team-001/" target="_blank" className="underline hover:text-blue-300">
-                    🌐 View Demo Preview (Working)
-                  </a>
-                </div>
-                <div className="text-sm text-gray-400 mt-6">
-                  Dashboard functionality temporarily simplified while investigating infinite recursion in layout system.
-                  <br />
-                  Preview system fully functional - demo team works perfectly.
-                </div>
-              </div>
-            </div>
+            <DynamicDashboard
+              tiles={memoizedGridTiles}
+              onAddTile={handleAddTile}
+              onRemoveTile={handleRemoveTile}
+              renderTile={renderTile}
+              activeDrags={activeDrags}
+              onDragStart={emitDragStart}
+              onDragMove={emitDragMove}
+              onDragStop={emitDragStop}
+              onTileAdd={emitTileAdd}
+              onTileRemove={emitTileRemove}
+            />
           </div>
         </div>
 

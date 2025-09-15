@@ -14,7 +14,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import type { GlobalSSHSession, ContainerInfo } from './types/socket-ext.js';
+import type { GlobalSSHSession } from './types/socket-ext.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -982,7 +982,7 @@ app.use(async (req, res, next) => {
 // Handle /preview/:teamId/* routes - redirect to proper proxy path (BEFORE static middleware!)
 app.get('/preview/:teamId/*', async (req, res) => {
   const { teamId } = req.params;
-  const subPath = req.params[0] || ''; // Get everything after teamId/
+  const subPath = (req.params as any)[0] || ''; // Get everything after teamId/
 
   console.log(`🔄 [PREVIEW-REDIRECT] Handling /preview/${teamId}/${subPath}`);
 
@@ -2278,7 +2278,7 @@ server.on('upgrade', async (request, socket, head) => {
       }
         
         // Find running preview deployment using database-backed service
-        const deployment = await universalPreviewService.getPreviewStatus(teamId);
+        const deployment = await universalPreviewService.getPreviewStatus(teamId!);
         
         if (!deployment || !deployment.proxyPort || !deployment.running) {
           console.warn(`❌ Preview proxy WebSocket upgrade failed: No running deployment for team ${teamId}`);
@@ -2490,7 +2490,7 @@ async function startServer(): Promise<void> {
         // Import and use the preview service to get the proxy port
         import('../services/universal-preview-service.js').then(async ({ universalPreviewService }) => {
           try {
-            const previewStatus = await universalPreviewService.getPreviewStatus(teamId);
+            const previewStatus = await universalPreviewService.getPreviewStatus(teamId!);
             if (previewStatus && previewStatus.running) {
               const proxyPort = previewStatus.proxyPort || previewStatus.port;
               console.log(`🔄 Proxying HMR WebSocket to localhost:${proxyPort}`);
@@ -2507,7 +2507,7 @@ async function startServer(): Promise<void> {
               });
               
               // Handle the WebSocket upgrade
-              wsProxy.upgrade(request, socket, head);
+              wsProxy.upgrade(request, socket as any, head);
             } else {
               console.log(`❌ No preview running for team ${teamId}`);
               socket.destroy();

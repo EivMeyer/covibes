@@ -300,7 +300,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]`;
   /**
    * Generate Vite configuration with MIME type fix and HMR support (DRY)
    */
-  private generateViteConfig(containerPort: number = 8000, includeGlobalDefine: boolean = false, teamId: string = 'demo'): string {
+  private generateViteConfig(_containerPort: number = 8000, includeGlobalDefine: boolean = false, teamId: string = 'demo'): string {
     const additionalConfig = includeGlobalDefine ? `,
   // Additional configuration
   define: {

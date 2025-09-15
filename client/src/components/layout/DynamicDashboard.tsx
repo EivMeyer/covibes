@@ -76,11 +76,10 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
     };
   }, []);
 
-  // Only add layouts for genuinely new tiles
+  // Only add layouts for genuinely new tiles - FIXED: Split into separate effects to prevent infinite loops
   useEffect(() => {
-    
     const newTiles = tiles.filter(tile => !seenTiles.has(tile.id))
-    
+
     if (newTiles.length > 0) {
       const newLayouts: DashboardLayout[] = newTiles.map((tile, index) => {
         const defaultLayouts: Record<GridTile['type'], Partial<DashboardLayout>> = {
@@ -89,14 +88,14 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
           preview: { w: 6, h: 8, minW: 3, minH: 4 },
           ide: { w: 8, h: 10, minW: 4, minH: 5 },
         }
-        
+
         const tileDefaults = defaultLayouts[tile.type] || {
           w: 4,
           h: 6,
           minW: 2,
           minH: 3,
         }
-        
+
         return {
           i: tile.id,
           x: (index % 3) * 4,
@@ -104,22 +103,24 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
           ...tileDefaults,
         }
       })
-      
+
       setLayouts(prev => ({
         ...prev,
         lg: [...(prev.lg || []), ...newLayouts],
       }))
-      
+
       // Mark these tiles as seen
       setSeenTiles(prev => new Set([...prev, ...newTiles.map(t => t.id)]))
     }
-    
-    // Remove layouts for tiles that no longer exist (ONLY if needed)
+  }, [tiles, seenTiles])
+
+  // Separate effect for cleanup to prevent circular dependencies
+  useEffect(() => {
     const currentTileIds = new Set(tiles.map(t => t.id))
     const currentLayouts = layouts.lg || []
     const layoutsToKeep = currentLayouts.filter(layout => currentTileIds.has(layout.i))
 
-    // FIXED: Only update layouts if there are actually layouts to remove
+    // Only update layouts if there are actually layouts to remove
     if (layoutsToKeep.length !== currentLayouts.length) {
       setLayouts(prev => ({
         ...prev,
@@ -127,15 +128,15 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
       }))
     }
 
-    // Remove from seen tiles if they no longer exist (ONLY if needed)
+    // Remove from seen tiles if they no longer exist
     const currentSeenTiles = [...seenTiles]
     const seenTilesToKeep = currentSeenTiles.filter(id => currentTileIds.has(id))
 
-    // FIXED: Only update seenTiles if there are actually tiles to remove
+    // Only update seenTiles if there are actually tiles to remove
     if (seenTilesToKeep.length !== currentSeenTiles.length) {
       setSeenTiles(new Set(seenTilesToKeep))
     }
-  }, [tiles])
+  }, [tiles.length, layouts.lg]) // Use tiles.length to avoid infinite loops
 
   // Save layout changes to localStorage and trigger parent save
   const handleLayoutChange = (currentLayout: Layout[], allLayouts: any) => {

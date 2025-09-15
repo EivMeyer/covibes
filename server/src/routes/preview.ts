@@ -212,7 +212,7 @@ router.get('/status', createAuthHandler(async (req, res) => {
       
       if (dockerStatus && dockerStatus.running) {
         // Check if nginx=true query param is set to force nginx URL
-        const forceNginx = req.query.nginx === 'true';
+        const forceNginx = req.query['nginx'] === 'true';
         let publicUrl;
         
         // FIXED: Use dynamic server port instead of hardcoding
@@ -452,7 +452,7 @@ router.post('/restart', createAuthHandler(async (req, res) => {
     if (previewMode === 'local' || previewMode === 'docker') {
       // Restart universal Docker preview
       await universalPreviewService.restartPreview(teamId);
-      const status = await universalPreviewService.getPreviewStatus(teamId);
+      await universalPreviewService.getPreviewStatus(teamId);
       
       // Always use clean URLs through main server
       const publicUrl = `http://${BASE_HOST}/preview/${teamId}/`;
@@ -516,7 +516,7 @@ router.get('/logs/:branch', createAuthHandler(async (req, res) => {
  * GET /api/preview/test
  * Test if new routes work
  */
-router.get('/test', (req, res) => {
+router.get('/test', (_req, res) => {
   res.json({
     message: 'Preview API endpoint working',
     apiVersion: '2.0',

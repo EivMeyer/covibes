@@ -59,10 +59,10 @@ class DedicatedPreviewProxyService {
       ws: true, // WebSocket support for HMR
       selfHandleResponse: true, // Handle response manually for HTML rewriting
       on: {
-        proxyReq: (proxyReq, req, res) => {
+        proxyReq: (_proxyReq: any, req: any, _res: any) => {
           console.log(`🔧 [DEDICATED-PROXY] Proxying ${req.method} ${req.url} for team ${teamId}`);
         },
-        proxyRes: async (proxyRes: any, req: any, res: any) => {
+        proxyRes: async (proxyRes: any, _req: any, res: any) => {
           // Headers for iframe embedding and CORS (like Caddy MVP)
           res.setHeader('x-frame-options', 'ALLOWALL');
           res.setHeader('content-security-policy', 'frame-ancestors *');
