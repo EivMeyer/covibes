@@ -12,7 +12,6 @@ import { EventEmitter } from 'events';
 import { TerminalManager, TerminalOptions } from './terminal-manager-interface.js';
 import { LocalPtyManager } from './local-pty-manager.js';
 import { TmuxPtyManager } from './tmux-pty-manager.js';
-import { ScreenPtyManager } from './screen-pty-manager.js';
 import { LocalDockerManager } from './local-docker-manager.js';
 import { RemotePtyManager } from './remote-pty-manager.js';
 import { RemoteDockerManager } from './remote-docker-manager.js';
@@ -36,7 +35,7 @@ export class TerminalManagerFactory extends EventEmitter {
   /**
    * Get or create appropriate terminal manager for given configuration
    */
-  getManager(location: 'local' | 'remote', isolation: 'none' | 'docker' | 'tmux' | 'screen'): TerminalManager {
+  getManager(location: 'local' | 'remote', isolation: 'none' | 'docker' | 'tmux'): TerminalManager {
     const key = `${location}-${isolation}`;
     
     if (this.managers.has(key)) {
@@ -51,8 +50,6 @@ export class TerminalManagerFactory extends EventEmitter {
       manager = new LocalPtyManager();
     } else if (location === 'local' && isolation === 'tmux') {
       manager = new TmuxPtyManager();
-    } else if (location === 'local' && isolation === 'screen') {
-      manager = new ScreenPtyManager();
     } else if (location === 'local' && isolation === 'docker') {
       manager = new LocalDockerManager();
     } else if (location === 'remote' && isolation === 'none') {

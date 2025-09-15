@@ -53,7 +53,6 @@ import { previewHealthCheck } from '../services/preview-health-check.js';
 import { universalPreviewService } from '../services/universal-preview-service.js';
 // import { mockAgentService, isMockAgentEnabled } from '../services/mock-agent.js';
 import { previewService } from '../services/preview-service.js';
-import { getEscapedSystemPrompt } from './prompts/agentSystemPrompt.js';
 import { agentChatService } from '../services/agent-chat.js';
 import terminalBuffer from './services/terminal-buffer.js';
 import { dockerManager } from './services/docker-manager-compat.js';
@@ -508,8 +507,7 @@ function createSSHSession(sessionId: string, config: any, socket: any) {
             output: '\r\n🤖 Starting Claude Code...\r\n'
           });
           
-          const systemPrompt = getEscapedSystemPrompt();
-          stream.write(`claude --dangerously-skip-permissions --append-system-prompt "${systemPrompt}"\r`);
+          stream.write(`claude --model sonnet --dangerously-skip-permissions\r`);
           
           setTimeout(() => {
             socket.emit('claude-started', { sessionId });
@@ -2056,59 +2054,7 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  // SSH Terminal Event Handlers (copied from simple-claude-server.js)
-  socket.on('ssh-connect', async (config) => {
-    const sessionId = `ssh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    try {
-      console.log(`🔄 Creating SSH session: ${sessionId}`);
-      await createSSHSession(sessionId, config, socket);
-      
-      socket.emit('ssh-connected', { 
-        sessionId,
-        message: 'SSH connection established'
-      });
-      
-    } catch (error: any) {
-      console.error(`❌ SSH connection failed: ${error.message}`);
-      socket.emit('ssh-error', { 
-        error: error.message 
-      });
-    }
-  });
   
-  socket.on('ssh-input', (data) => {
-    const { sessionId, input } = data;
-    const session = sshSessions.get(sessionId);
-    
-    if (!session) {
-      socket.emit('ssh-error', { 
-        sessionId, 
-        error: 'Session not found' 
-      });
-      return;
-    }
-    
-    // Send input to SSH stream
-    session.stream.write(input);
-    
-    // Check if starting Claude
-    if (input.trim().toLowerCase() === 'claude') {
-      setTimeout(() => {
-        socket.emit('claude-started', { sessionId });
-      }, 2000);
-    }
-  });
-
-  socket.on('ssh-resize', (data) => {
-    const { sessionId, cols, rows } = data;
-    const session = sshSessions.get(sessionId);
-    
-    if (session?.stream?.setWindow) {
-      session.stream.setWindow(rows, cols);
-    }
-  });
-
   // Workspace synchronization events
   socket.on('workspace-update', async (data: { tiles?: any; layouts?: any; sidebarWidth?: number }) => {
     if (!socket.teamId || !socket.userId) {

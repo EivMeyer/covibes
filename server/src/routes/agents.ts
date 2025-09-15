@@ -19,7 +19,6 @@ import { authenticateToken } from '../middleware/auth.js';
 import { getIO } from '../server.js';
 import { generateAgentName } from '../utils/nameGenerator.js';
 import { agentChatService } from '../../services/agent-chat.js';
-// import { getEscapedSystemPrompt } from '../prompts/agentSystemPrompt.js';
 import { dockerManager } from '../services/docker-manager-compat.js';
 import { terminalManagerFactory } from '../services/terminal-manager-factory.js';
 // import fs from 'fs/promises';
@@ -39,7 +38,7 @@ const spawnAgentSchema = z.object({
   task: z.string().max(1000).transform(val => val || '').default(''), // Allow empty strings for interactive sessions
   agentType: z.enum(['claude']).optional().default('claude'), // Client sends agentType, not type
   terminalLocation: z.enum(['local', 'remote']).optional().default('local'),
-  terminalIsolation: z.enum(['none', 'docker', 'tmux', 'screen']).optional().default('screen') // Screen provides persistent sessions with proper ANSI handling
+  terminalIsolation: z.enum(['none', 'docker', 'tmux']).optional().default('tmux') // Tmux provides persistent sessions with proper system prompt
 });
 
 // Apply JWT authentication middleware to all routes

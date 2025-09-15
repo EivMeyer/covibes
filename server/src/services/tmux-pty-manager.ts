@@ -81,15 +81,28 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     workspaceDir: string
   ): Promise<TerminalSession> {
     // Build Claude command with user's configuration
-    const { command: claudeCommand, args: claudeArgs, env: claudeEnv } = 
+    const { command: claudeCommand, args: claudeArgs, env: claudeEnv } =
       claudeConfigManager.buildClaudeCommand(options.userId, {
         task: options.task,
         skipPermissions: true,
-        interactive: !options.task // Interactive if no specific task
+        interactive: !options.task, // Interactive if no specific task
+        appendSystemPrompt: true // Add agent development guidelines
       });
 
-    // Build simple Claude command 
-    const escapedArgs = claudeArgs.map(arg => `"${arg.replace(/"/g, '\\"')}"`).join(' ');
+    // Build simple Claude command with proper shell escaping
+    const escapedArgs = claudeArgs.map(arg => {
+      // Escape all bash special characters
+      const escaped = arg
+        .replace(/\\/g, '\\\\')  // Escape backslashes first
+        .replace(/"/g, '\\"')    // Escape quotes
+        .replace(/!/g, '\\!')    // Escape exclamation marks (history expansion)
+        .replace(/\$/g, '\\$')   // Escape dollar signs (variable expansion)
+        .replace(/`/g, '\\`')    // Escape backticks (command substitution)
+        .replace(/\n/g, '\\n')   // Escape newlines
+        .replace(/\r/g, '\\r')   // Escape carriage returns
+        .replace(/\t/g, '\\t');  // Escape tabs
+      return `"${escaped}"`;
+    }).join(' ');
     let claudeCmd = claudeCommand;
     if (escapedArgs) {
       claudeCmd += ` ${escapedArgs}`;
@@ -97,7 +110,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     
     console.log(`🎯 Creating tmux session: ${sessionName}`);
     console.log(`📁 Workspace: ${workspaceDir}`);
-    console.log(`🤖 Claude Command: ${claudeCmd}`);
+    console.log(`🤖 Claude Command: ${claudeCmd.replace(/\n/g, '\\n')}`);
 
     // Create tmux session with persistent bash shell
     await execAsync(`tmux new-session -d -s "${sessionName}" -c "${workspaceDir}"`);

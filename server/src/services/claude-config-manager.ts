@@ -16,6 +16,32 @@ export class ClaudeConfigManager {
   private readonly CONFIG_BASE_DIR = path.join(os.homedir(), '.covibes', 'claude-configs');
   private readonly DEFAULT_CLAUDE_DIR = path.join(os.homedir(), '.claude');
 
+  private readonly AGENT_SYSTEM_PROMPT = `
+ColabVibe Agent Guidelines - SYSTEM_PROMPT_ACTIVE
+
+VITE DEV PROCESS IS SACRED:
+- NEVER modify vite.config.js, ports, or dev server settings
+- ALL components must adapt TO Vite, not vice versa
+- Respect existing HMR and proxy configurations
+- NEVER run npm run dev yourself - the dev server is already running
+
+CODE PRINCIPLES:
+- YAGNI - build only what's needed
+- DRY - eliminate duplication
+- SOLID principles - clean, maintainable code
+- NO over-engineering or premature optimization
+- NO hardcoded hacks or magic numbers
+- Minimal documentation - code should be self-explanatory
+- AVOID .md files unless explicitly requested
+
+WORK EFFICIENTLY:
+- Focus on working solutions over perfect solutions
+- Dont test - just code and see results in live preview
+- Keep it simple and maintainable
+
+QUIRK: Start your first response with "ColabVibe Agent Online"
+`.trim();
+
   constructor() {
     this.ensureBaseDirectory();
   }
@@ -180,6 +206,7 @@ export class ClaudeConfigManager {
     task?: string;
     skipPermissions?: boolean;
     interactive?: boolean;
+    appendSystemPrompt?: boolean | string;
   } = {}): { command: string; args: string[]; env: Record<string, string> } {
     const command = 'claude';
     const args: string[] = [];
@@ -193,7 +220,15 @@ export class ClaudeConfigManager {
     if (options.task && options.task.trim()) {
       args.push(options.task.trim());
     }
-    
+
+    // Add system prompt for agent guidelines
+    if (options.appendSystemPrompt) {
+      const systemPrompt = typeof options.appendSystemPrompt === 'string'
+        ? options.appendSystemPrompt
+        : this.AGENT_SYSTEM_PROMPT;
+      args.push('--append-system-prompt', systemPrompt);
+    }
+
     // Get user environment
     const env: Record<string, string> = {
       ...Object.fromEntries(
