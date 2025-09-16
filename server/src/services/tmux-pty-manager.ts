@@ -81,6 +81,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     workspaceDir: string
   ): Promise<TerminalSession> {
     // Build Claude command with user's configuration
+    console.log(`🎯 TmuxPtyManager received agentName: ${options.agentName}`);
     const { command: claudeCommand, args: claudeArgs, env: claudeEnv } =
       claudeConfigManager.buildClaudeCommand(options.userId, {
         task: options.task,

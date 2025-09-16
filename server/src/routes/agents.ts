@@ -59,6 +59,7 @@ async function executeAgentAsync(
   teamId?: string,
   agentName?: string
 ): Promise<void> {
+  console.log(`✅ executeAgentAsync received agentName: ${agentName}`);
   try {
     // Update agent status to starting
     await prisma.agents.update({
@@ -128,6 +129,7 @@ async function executeAgentAsync(
         // Use new terminal manager factory for simple PTY mode
         const manager = terminalManagerFactory.getManager(terminalLocation, terminalIsolation);
         
+        console.log(`🔧 Creating terminalOptions with agentName: ${agentName}`);
         const terminalOptions: any = {
           agentId,
           agentName,
@@ -286,6 +288,7 @@ router.post('/spawn', async (req: express.Request, res) => {
 
     // Generate a random name for the agent
     const agentName = generateAgentName();
+    console.log(`🎯 Generated agent name: ${agentName} for agent ${randomUUID()}`);
 
     // Create agent record
     const agent = await prisma.agents.create({
@@ -307,6 +310,7 @@ router.post('/spawn', async (req: express.Request, res) => {
       }
     });
 
+    console.log(`🚀 Calling executeAgentAsync with agentName: ${agentName}`);
     // Start agent execution asynchronously
     executeAgentAsync(
       agent.id,

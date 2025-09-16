@@ -226,11 +226,14 @@ export class ClaudeConfigManager {
         ? options.appendSystemPrompt
         : this.AGENT_SYSTEM_PROMPT;
 
-      // Inject agent designation if provided
+      // Inject worker callsign if provided
+      console.log(`🔍 buildClaudeCommand received agentName: ${options.agentName}`);
       if (options.agentName) {
-        systemPrompt = `AGENT DESIGNATION: ${options.agentName}
+        systemPrompt = `WORKER CALLSIGN: ${options.agentName}
 
 ${systemPrompt}`;
+        console.log(`✅ Injected WORKER CALLSIGN: ${options.agentName} into system prompt`);
+      }
 
       // Add template context if teamId provided
       if (options.teamId) {
