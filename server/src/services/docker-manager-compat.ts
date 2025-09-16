@@ -38,6 +38,7 @@ class DockerManagerCompat extends EventEmitter {
   async spawnAgentInContainer(options: any) {
     const terminalOptions: TerminalOptions = {
       agentId: options.agentId,
+      agentName: options.agentName,
       userId: options.userId,
       teamId: options.teamId,
       task: options.task,

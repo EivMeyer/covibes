@@ -48,15 +48,16 @@ router.use(authenticateToken);
  * Execute agent asynchronously using configured terminal manager
  */
 async function executeAgentAsync(
-  agentId: string, 
-  _vmId: string | null, 
-  _type: string, 
-  task: string, 
+  agentId: string,
+  _vmId: string | null,
+  _type: string,
+  task: string,
   terminalLocation: 'local' | 'remote',
   terminalIsolation: 'none' | 'docker' | 'tmux',
   repositoryUrl?: string,
   userId?: string,
-  teamId?: string
+  teamId?: string,
+  agentName?: string
 ): Promise<void> {
   try {
     // Update agent status to starting
@@ -94,6 +95,7 @@ async function executeAgentAsync(
           userId,
           teamId,
           agentId,
+          agentName,
           task,
           workspaceRepo: repositoryUrl || undefined
         });
@@ -307,15 +309,16 @@ router.post('/spawn', async (req: express.Request, res) => {
 
     // Start agent execution asynchronously
     executeAgentAsync(
-      agent.id, 
-      user.vmId, 
-      agentType, 
+      agent.id,
+      user.vmId,
+      agentType,
       task,
       terminalLocation || 'local',
       terminalIsolation || 'none',
       user.teams?.repositoryUrl || undefined,
       req.user?.userId,
-      user.teamId
+      user.teamId,
+      agentName
     );
 
     // Broadcast agent creation to all team members via WebSocket
@@ -1157,6 +1160,7 @@ router.post('/:id/reconnect', async (req: express.Request, res) => {
       // This will attempt to attach to the existing session
       const terminalOptions: any = {
         agentId: agent.id,
+        agentName: agent.agentName,
         userId: req.user?.userId!,
         teamId: user.teamId,
         task: agent.task,
