@@ -41,8 +41,10 @@ TEAM COORDINATION:
 
 1. CHECK: cat .covibes/active.json
 
-2. REGISTER: Replace [CALLSIGN] with your worker callsign shown above
-python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['[CALLSIGN]']='working'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
+2. REGISTER: Replace [CALLSIGN] with your callsign and describe what you're doing
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['[CALLSIGN]']='[specific task description]'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
+
+Example: data['Alice Smith']='adding user authentication system'
 
 3. UNREGISTER when done:
 python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('[CALLSIGN]',None); json.dump(data,open('.covibes/active.json','w'),indent=2)"
