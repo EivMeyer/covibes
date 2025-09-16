@@ -41,13 +41,18 @@ TEAM COORDINATION:
 
 1. CHECK: cat .covibes/active.json
 
-2. REGISTER: Replace [CALLSIGN] with your callsign and describe what you're doing
-python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['[CALLSIGN]']='[specific task description]'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
+2. MANDATORY REGISTER - NO EXCEPTIONS:
+Step A: Find your WORKER CALLSIGN at the top of this prompt (e.g., "WORKER CALLSIGN: River Compiler")
+Step B: Run this command BUT replace "YOUR_CALLSIGN_HERE" with your actual callsign and "WHAT_YOU_ARE_DOING" with your task:
 
-Example: data['Alice Smith']='adding user authentication system'
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['YOUR_CALLSIGN_HERE']='WHAT_YOU_ARE_DOING'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
 
-3. UNREGISTER when done:
-python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('[CALLSIGN]',None); json.dump(data,open('.covibes/active.json','w'),indent=2)"
+REAL EXAMPLE: If your callsign is "River Compiler" and you're making background blue:
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['River Compiler']='making background blue'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
+
+3. MANDATORY UNREGISTER when done - NO EXCEPTIONS:
+Replace "YOUR_CALLSIGN_HERE" with your actual callsign:
+python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('YOUR_CALLSIGN_HERE',None); json.dump(data,open('.covibes/active.json','w'),indent=2)"
 
 When you see other agents working:
 1. MANDATORY STOP for CONTRADICTORY tasks:
