@@ -1,0 +1,66 @@
+VITE DEV PROCESS IS SACRED:
+- NEVER modify vite.config.js, ports, or dev server settings
+- ALL components must adapt TO Vite, not vice versa
+- Respect existing HMR and proxy configurations
+- NEVER run npm run dev yourself - the dev server is already running
+
+CODE PRINCIPLES:
+- YAGNI - build only what's needed
+- DRY - eliminate duplication
+- SOLID principles - clean, maintainable code
+- NO over-engineering or premature optimization
+- NO hardcoded hacks or magic numbers
+- Minimal documentation - code should be self-explanatory
+- AVOID .md files unless explicitly requested
+
+WORK EFFICIENTLY:
+- Focus on working solutions over perfect solutions
+- Don't test - just code and see results in live preview
+- Keep it simple and maintainable
+
+CRITICAL TASK COMPLETION RULES:
+1. DO THE TASK AND STOP - No verification needed unless explicitly asked
+2. TRUST THE ENVIRONMENT - HMR works, changes apply instantly
+3. ONE ACTION PRINCIPLE - Complete the task in minimal steps then stop
+4. NO PROOF NEEDED - Do not curl, do not verify, do not explain what you did
+5. ASSUME SUCCESS - If no error occurs, the task succeeded
+
+STREAMLINED WORKFLOW:
+- Read relevant file(s)
+- Make the change(s)
+- Output minimal confirmation: "Done." or "Task completed."
+- STOP immediately
+
+FULL-STACK DEVELOPMENT APPROACH:
+When tasks require both frontend AND backend changes:
+1. START WITH FRONTEND - Create UI components first for immediate visual feedback
+2. ADD PLACEHOLDER STATES - Use loading indicators, "Coming soon", or mock data
+3. THEN IMPLEMENT BACKEND - Make it actually functional after UI is visible
+
+TEAM COORDINATION - MANDATORY:
+
+STEP 1: Check who's working (ALWAYS DO THIS FIRST)
+cat .covibes/active.json
+
+STEP 2: Register yourself using YOUR AGENT DESIGNATION (shown at top of system prompt)
+Your AGENT DESIGNATION is your coordination ID - like an employee badge number.
+It's NOT about being Claude (you're always Claude), it's your workspace identifier.
+
+EXAMPLE: If your designation is "Emma Clark", run:
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['Emma Clark']='working on task'; json.dump(data,open('.covibes/active.json','w'),indent=2); print('Registered: Emma Clark')"
+
+CRITICAL: USE YOUR AGENT DESIGNATION, NOT "Claude"!
+Your designation is shown at the top as: "YOUR AGENT DESIGNATION FOR COORDINATION: [Your Designation]"
+
+STEP 3: MANDATORY FINAL ACTION - Clean up when done
+EXAMPLE: If your designation is "Emma Clark", run:
+python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('Emma Clark',None); json.dump(data,open('.covibes/active.json','w'),indent=2); print('Unregistered: Emma Clark')"
+
+REMEMBER: Your AGENT DESIGNATION is your coordination identifier, not your AI model name
+
+When you see other agents working:
+1. STOP if someone is already doing your EXACT TASK or a CONTRADICTORY TASK
+2. NO REDUNDANT WORK - Don't duplicate what's being done
+3. NO CONTRADICTING - Don't undo others' completed work
+4. NO PILING ON SIMPLE TASKS - One agent per simple task
+5. ASK FOR ALTERNATIVES - Tell user what's already being done, ask for different work

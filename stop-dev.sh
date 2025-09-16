@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🛑 Stopping ColabVibe Development Environment..."
+echo "🛑 Stopping Covibes Development Environment..."
 
 # Kill any development servers
 echo "📡 Stopping development servers..."

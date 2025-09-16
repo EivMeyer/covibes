@@ -41,14 +41,18 @@ class TerminalManager {
     // Check if we already have a terminal for this agent
     const existing = this.terminals.get(agentId)
     if (existing && !existing.disposed) {
-      
-      // If the terminal is attached to a different container, reattach it
-      if (existing.terminal.element?.parentElement !== container) {
-        container.innerHTML = '' // Clear container
-        existing.terminal.open(container)
+      // DISPOSE THE OLD TERMINAL COMPLETELY to prevent event listener accumulation
+      // This is critical for mobile where switching views is common
+      if (existing.dataHandler) {
+        existing.dataHandler.dispose()
       }
-      
-      return existing.terminal
+      existing.terminal.dispose()
+      existing.fitAddon?.dispose()
+      existing.socketHandlers.clear()
+      this.terminals.delete(agentId)
+      this.activeConnections.delete(agentId)
+
+      // Now create a fresh terminal below
     }
 
     // Create new terminal - let xterm.js and FitAddon handle all sizing
@@ -156,6 +160,39 @@ class TerminalManager {
    */
   getTerminalData(agentId: string): TerminalInstance | undefined {
     return this.terminals.get(agentId)
+  }
+
+  /**
+   * Get data handler for a terminal
+   */
+  getDataHandler(agentId: string): any {
+    const instance = this.terminals.get(agentId)
+    return instance?.dataHandler
+  }
+
+  /**
+   * Set data handler for a terminal
+   */
+  setDataHandler(agentId: string, handler: any): void {
+    const instance = this.terminals.get(agentId)
+    if (instance) {
+      // Dispose existing handler if any
+      if (instance.dataHandler) {
+        instance.dataHandler.dispose()
+      }
+      instance.dataHandler = handler
+    }
+  }
+
+  /**
+   * Clear data handler for a terminal
+   */
+  clearDataHandler(agentId: string): void {
+    const instance = this.terminals.get(agentId)
+    if (instance && instance.dataHandler) {
+      instance.dataHandler.dispose()
+      instance.dataHandler = null
+    }
   }
 
   /**

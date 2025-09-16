@@ -128,6 +128,7 @@ async function executeAgentAsync(
         
         const terminalOptions: any = {
           agentId,
+          agentName,
           userId: userId!,
           teamId: teamId!,
           task,

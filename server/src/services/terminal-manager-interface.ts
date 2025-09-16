@@ -19,6 +19,7 @@ export interface VMConfig {
 
 export interface TerminalOptions {
   agentId: string;
+  agentName?: string;
   userId: string;
   teamId: string;
   task: string;

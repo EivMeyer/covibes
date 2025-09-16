@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# ColabVibe Development Startup Script
+# Covibes Development Startup Script
 
-echo "🚀 Starting ColabVibe in Development Mode"
+echo "🚀 Starting Covibes in Development Mode"
 echo ""
 
 # Set development environment

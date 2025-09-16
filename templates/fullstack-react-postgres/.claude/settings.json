@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat .covibes/active.json 2>/dev/null | jq -r 'to_entries | map(\"\\(.key): \\(.value)\") | \"Team activity: \" + join(\" | \")' || echo ''"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq 'del(.\"'$USER'-'$$'\")' .covibes/active.json > tmp && mv tmp .covibes/active.json 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

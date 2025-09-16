@@ -181,6 +181,35 @@ npm run prisma:migrate    # Run database migrations
 npm run prisma:studio     # Open database admin interface
 ```
 
+### Simplified Development Startup ✨
+**NEW**: All environment variables are now configured in `.env` files - no manual exports needed!
+
+#### Quick Start (Recommended):
+```bash
+# Start everything with one command
+./start-dev.sh
+
+# Stop everything
+./stop-dev.sh
+```
+
+#### Manual Startup (if needed):
+```bash
+# 1. Start database services
+docker-compose up -d postgres redis
+
+# 2. Build client (required for server)
+cd client && npm run build && cd ..
+
+# 3. Start servers (environment automatically loaded from .env files)
+cd server && npm run dev &
+cd ../client && npm run dev
+```
+
+All required environment variables are now pre-configured in:
+- `server/.env` - Backend configuration including EC2_HOST and EC2_USERNAME
+- `client/.env` - Frontend configuration with correct URLs
+
 ### Client Development
 ```bash
 cd client
@@ -877,3 +906,5 @@ To avoid issues, always follow this order:
 This context provides comprehensive guidance for LLM agents working on ColabVibe. The codebase follows database-backed state management patterns with comprehensive Docker containerization and organized testing infrastructure.
 
 **Important**: Don't restart servers unless explicitly asked - they auto-reload on file changes (development mode only).
+- Avoid unnecessary fallbacks - usually it's better to assume correctness and throw if something unexpected happens
+- Avoid hardcoding something that clearly requires a general solution

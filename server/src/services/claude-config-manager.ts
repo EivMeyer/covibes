@@ -10,40 +10,34 @@
 
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import os from 'os';
 
 export class ClaudeConfigManager {
   private readonly CONFIG_BASE_DIR = path.join(os.homedir(), '.covibes', 'claude-configs');
   private readonly DEFAULT_CLAUDE_DIR = path.join(os.homedir(), '.claude');
-
-  private readonly AGENT_SYSTEM_PROMPT = `
-ColabVibe Agent Guidelines - SYSTEM_PROMPT_ACTIVE
-
-VITE DEV PROCESS IS SACRED:
-- NEVER modify vite.config.js, ports, or dev server settings
-- ALL components must adapt TO Vite, not vice versa
-- Respect existing HMR and proxy configurations
-- NEVER run npm run dev yourself - the dev server is already running
-
-CODE PRINCIPLES:
-- YAGNI - build only what's needed
-- DRY - eliminate duplication
-- SOLID principles - clean, maintainable code
-- NO over-engineering or premature optimization
-- NO hardcoded hacks or magic numbers
-- Minimal documentation - code should be self-explanatory
-- AVOID .md files unless explicitly requested
-
-WORK EFFICIENTLY:
-- Focus on working solutions over perfect solutions
-- Dont test - just code and see results in live preview
-- Keep it simple and maintainable
-
-QUIRK: Start your first response with "ColabVibe Agent Online"
-`.trim();
+  private readonly SYSTEM_PROMPT_FILE = path.join(process.cwd(), 'config', 'agent-system-prompt.txt');
+  private AGENT_SYSTEM_PROMPT: string = '';
 
   constructor() {
     this.ensureBaseDirectory();
+    this.loadSystemPrompt();
+  }
+
+  private loadSystemPrompt(): void {
+    try {
+      // Load system prompt from file - required
+      if (fsSync.existsSync(this.SYSTEM_PROMPT_FILE)) {
+        this.AGENT_SYSTEM_PROMPT = fsSync.readFileSync(this.SYSTEM_PROMPT_FILE, 'utf-8').trim();
+        console.log(`📄 Loaded agent system prompt from: ${this.SYSTEM_PROMPT_FILE}`);
+      } else {
+        console.error(`❌ System prompt file not found at ${this.SYSTEM_PROMPT_FILE}`);
+        this.AGENT_SYSTEM_PROMPT = 'Covibes Agent Online'; // Minimal fallback
+      }
+    } catch (error) {
+      console.error('Failed to load system prompt file:', error);
+      this.AGENT_SYSTEM_PROMPT = 'ColabVibe Agent Online'; // Minimal fallback
+    }
   }
 
   /**
@@ -204,18 +198,20 @@ QUIRK: Start your first response with "ColabVibe Agent Online"
    */
   buildClaudeCommand(userId: string, options: {
     task?: string;
+    teamId?: string;
     skipPermissions?: boolean;
     interactive?: boolean;
     appendSystemPrompt?: boolean | string;
+    agentName?: string;
   } = {}): { command: string; args: string[]; env: Record<string, string> } {
     const command = 'claude';
     const args: string[] = [];
-    
+
     // Add dangerous skip permissions flag for sandbox safety
     if (options.skipPermissions !== false) {
       args.push('--dangerously-skip-permissions');
     }
-    
+
     // Add task if provided
     if (options.task && options.task.trim()) {
       args.push(options.task.trim());
@@ -223,9 +219,44 @@ QUIRK: Start your first response with "ColabVibe Agent Online"
 
     // Add system prompt for agent guidelines
     if (options.appendSystemPrompt) {
-      const systemPrompt = typeof options.appendSystemPrompt === 'string'
+      // Reload system prompt from file to pick up any changes
+      this.loadSystemPrompt();
+
+      let systemPrompt = typeof options.appendSystemPrompt === 'string'
         ? options.appendSystemPrompt
         : this.AGENT_SYSTEM_PROMPT;
+
+      // Inject agent designation if provided
+      if (options.agentName) {
+        systemPrompt = `YOUR AGENT DESIGNATION FOR COORDINATION: ${options.agentName}
+
+IMPORTANT: You are still Claude (the AI), but for team coordination purposes, you have been assigned the designation "${options.agentName}". This is like a callsign or employee ID - it's how other agents identify you in the workspace.
+
+When registering in active.json, you MUST use your AGENT DESIGNATION "${options.agentName}", NOT "Claude".
+Think of it like this: Claude is WHAT you are, but ${options.agentName} is your COORDINATION ID for this specific task.
+
+${systemPrompt}`;
+
+      // Add template context if teamId provided
+      if (options.teamId) {
+        const templateContext = `
+WORKSPACE TEMPLATE STRUCTURE:
+- Frontend: React + Vite on port 5173 (dev server with HMR)
+- Backend: Express on port 3002
+- Database: PostgreSQL (team-isolated: preview_${options.teamId.replace(/-/g, '_')})
+- Main files: /src/App.jsx, /server.js, /package.json, /vite.config.js
+- Build system: Vite bundler
+- Workspace path: /home/ubuntu/.covibes/workspaces/${options.teamId}/
+- Package manager: npm
+
+DEVELOPMENT COMMANDS:
+- Frontend dev: npm run dev (runs on port 5173)
+- Backend: npm run server (runs on port 3002)
+- Full stack: npm run dev:fullstack (runs both)
+`;
+        systemPrompt = templateContext + '\n' + systemPrompt;
+      }
+
       args.push('--append-system-prompt', systemPrompt);
     }
 
@@ -262,13 +293,13 @@ QUIRK: Start your first response with "ColabVibe Agent Online"
         return;
       }
 
-      // Copy essential files from default config
-      const filesToCopy = ['.credentials.json', 'settings.json', 'CLAUDE.md'];
-      
+      // Copy essential files from default config (but NOT settings.json - use workspace settings instead)
+      const filesToCopy = ['.credentials.json', 'CLAUDE.md'];
+
       for (const fileName of filesToCopy) {
         const srcPath = path.join(this.DEFAULT_CLAUDE_DIR, fileName);
         const destPath = path.join(userConfigDir, fileName);
-        
+
         try {
           await fs.copyFile(srcPath, destPath);
           console.log(`📋 Copied ${fileName} to user config`);
@@ -285,13 +316,13 @@ QUIRK: Start your first response with "ColabVibe Agent Online"
 
   private async createBasicSettings(userConfigDir: string): Promise<void> {
     const settingsPath = path.join(userConfigDir, 'settings.json');
-    
+
     // Only create if settings don't exist
     const settingsExist = await this.fileExists(settingsPath);
     if (settingsExist) {
       return;
     }
-    
+
     const basicSettings = {
       "version": "1.0",
       "createdBy": "ColabVibe",
@@ -300,12 +331,26 @@ QUIRK: Start your first response with "ColabVibe Agent Online"
       "sandbox": {
         "enabled": true,
         "skipPermissions": true
+      },
+      "hooks": {
+        "UserPromptSubmit": [{
+          "hooks": [{
+            "type": "command",
+            "command": "cat .covibes/active.json 2>/dev/null | jq -r 'to_entries | map(\"\\(.key): \\(.value)\") | \"Team activity: \" + join(\" | \")' || echo ''"
+          }]
+        }],
+        "Stop": [{
+          "hooks": [{
+            "type": "command",
+            "command": "jq 'del(.\"'$USER'-'$$'\")' .covibes/active.json > tmp && mv tmp .covibes/active.json 2>/dev/null || true"
+          }]
+        }]
       }
     };
-    
+
     try {
       await fs.writeFile(settingsPath, JSON.stringify(basicSettings, null, 2));
-      console.log(`⚙️ Created basic Claude settings`);
+      console.log(`⚙️ Created basic Claude settings with team coordination hooks`);
     } catch (error: any) {
       console.warn('Warning: Could not create basic settings:', error.message);
     }

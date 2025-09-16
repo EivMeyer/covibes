@@ -84,9 +84,11 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     const { command: claudeCommand, args: claudeArgs, env: claudeEnv } =
       claudeConfigManager.buildClaudeCommand(options.userId, {
         task: options.task,
+        teamId: options.teamId,
         skipPermissions: true,
         interactive: !options.task, // Interactive if no specific task
-        appendSystemPrompt: true // Add agent development guidelines
+        appendSystemPrompt: true, // Add agent development guidelines
+        agentName: options.agentName // Pass agent name for coordination
       });
 
     // Build simple Claude command with proper shell escaping
@@ -120,7 +122,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     
     // Send the startup commands to the bash shell in tmux
     const startupCommands = [
-      `echo "🚀 ColabVibe Agent Terminal (Persistent)"`,
+      `echo "🚀 Covibes Agent Terminal (Persistent)"`,
       `echo "📋 Agent ID: ${options.agentId}"`,
       `echo "📁 Workspace: ${workspaceDir}"`,
       `echo "🎯 Task: ${options.task || 'Interactive Claude Session'}"`,
@@ -357,7 +359,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     }
   }
 
-  async listColabVibeSessions(): Promise<string[]> {
+  async listCovibesSessions(): Promise<string[]> {
     try {
       const { stdout } = await execAsync('tmux list-sessions -F "#{session_name}"');
       return stdout
@@ -371,8 +373,8 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
 
   private async cleanupOrphanedSessions(): Promise<void> {
     try {
-      const sessions = await this.listColabVibeSessions();
-      console.log(`🧹 Found ${sessions.length} existing ColabVibe tmux sessions`);
+      const sessions = await this.listCovibesSessions();
+      console.log(`🧹 Found ${sessions.length} existing Covibes tmux sessions`);
       
       // For now, just log them. In production, you might want to clean up old sessions
       for (const sessionName of sessions) {

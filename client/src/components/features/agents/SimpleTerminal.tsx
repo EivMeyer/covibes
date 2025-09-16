@@ -103,6 +103,11 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       return
     }
 
+    // Store disposables for cleanup
+    let dataDisposable: any = null
+    let resizeObserver: ResizeObserver | null = null
+    let connectionInterval: any = null
+
     // Wait for DOM to be ready
     requestAnimationFrame(() => {
       if (!terminalRef.current || !mountedRef.current) return
@@ -114,7 +119,7 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         fontSize,
         isReadOnly
       )
-      
+
       // Don't modify terminal options here - trust TerminalManager's setup
       terminalInstanceRef.current = terminal
 
@@ -152,8 +157,8 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       }
 
       // Setup input handler - NEW PTY PROTOCOL (only for non-read-only terminals)
-      let dataDisposable
       if (!isReadOnly) {
+        // Terminal is always fresh now, no need to clear old handlers
         dataDisposable = terminal.onData((data: string) => {
           // Check for Ctrl+L (clear screen)
           if (data === '\x0c') {
@@ -162,13 +167,16 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
           }
           if (socket && socket.connected) {
             // NEW PTY PROTOCOL: Include type field for raw input
-            socket.emit('terminal_input', { 
+            socket.emit('terminal_input', {
               type: 'input',
-              agentId, 
-              data 
+              agentId,
+              data
             })
           }
         })
+
+        // Store the handler for cleanup
+        TerminalManager.setDataHandler(agentId, dataDisposable)
       }
 
       // Connect to agent only if not already connected
@@ -178,17 +186,15 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
           setStatus('Connecting...')  // Don't set Connected until we get confirmation
         } else {
           setStatus('Connecting...')
-          const checkConnection = setInterval(() => {
+          connectionInterval = setInterval(() => {
             if (socket.connected && mountedRef.current && !TerminalManager.isConnected(agentId)) {
               socket.emit('terminal_connect', { agentId })
               setStatus('Connected')
               TerminalManager.setConnected(agentId, true)
-              clearInterval(checkConnection)
+              clearInterval(connectionInterval)
+              connectionInterval = null
             }
           }, 500)
-          
-          // Store interval for cleanup
-          ;(terminalInstanceRef.current as any)._connectionInterval = checkConnection
         }
       } else {
         setStatus('Connected')
@@ -201,31 +207,35 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         }
       }, 100)
 
-      // Cleanup function for this effect only
-      return () => {
-        dataDisposable.dispose()
-        
-        if (resizeObserverRef.current) {
-          const timeoutId = (resizeObserverRef.current as any)._timeoutId
-          if (timeoutId) {
-            clearTimeout(timeoutId)
-          }
-          resizeObserverRef.current.disconnect()
-          resizeObserverRef.current = null
-        }
-
-        const connectionInterval = (terminalInstanceRef.current as any)?._connectionInterval
-        if (connectionInterval) {
-          clearInterval(connectionInterval)
-        }
-      }
+      // Store resize observer reference for cleanup
+      resizeObserver = resizeObserverRef.current
     })
 
     // Main cleanup on unmount
     return () => {
       mountedRef.current = false
+
+      // Clean up data handler
+      if (dataDisposable) {
+        dataDisposable.dispose()
+        TerminalManager.clearDataHandler(agentId)
+      }
+
+      // Clean up resize observer
+      if (resizeObserver) {
+        const timeoutId = (resizeObserver as any)._timeoutId
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+        }
+        resizeObserver.disconnect()
+      }
+
+      // Clean up connection interval
+      if (connectionInterval) {
+        clearInterval(connectionInterval)
+      }
     }
-  }, [agentId, socket, resizeTerminal])
+  }, [agentId, socket, resizeTerminal, isReadOnly])
 
   // Socket event handlers
   useEffect(() => {
