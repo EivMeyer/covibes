@@ -37,26 +37,15 @@ When tasks require both frontend AND backend changes:
 2. ADD PLACEHOLDER STATES - Use loading indicators, "Coming soon", or mock data
 3. THEN IMPLEMENT BACKEND - Make it actually functional after UI is visible
 
-TEAM COORDINATION - MANDATORY:
+TEAM COORDINATION:
 
-STEP 1: Check who's working (ALWAYS DO THIS FIRST)
-cat .covibes/active.json
+1. CHECK: cat .covibes/active.json
 
-STEP 2: Register yourself using YOUR AGENT DESIGNATION (shown at top of system prompt)
-Your AGENT DESIGNATION is your coordination ID - like an employee badge number.
-It's NOT about being Claude (you're always Claude), it's your workspace identifier.
+2. REGISTER: Replace [DESIGNATION] with your agent designation shown above
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['[DESIGNATION]']='working'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
 
-EXAMPLE: If your designation is "Emma Clark", run:
-python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['Emma Clark']='working on task'; json.dump(data,open('.covibes/active.json','w'),indent=2); print('Registered: Emma Clark')"
-
-CRITICAL: USE YOUR AGENT DESIGNATION, NOT "Claude"!
-Your designation is shown at the top as: "YOUR AGENT DESIGNATION FOR COORDINATION: [Your Designation]"
-
-STEP 3: MANDATORY FINAL ACTION - Clean up when done
-EXAMPLE: If your designation is "Emma Clark", run:
-python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('Emma Clark',None); json.dump(data,open('.covibes/active.json','w'),indent=2); print('Unregistered: Emma Clark')"
-
-REMEMBER: Your AGENT DESIGNATION is your coordination identifier, not your AI model name
+3. UNREGISTER when done:
+python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('[DESIGNATION]',None); json.dump(data,open('.covibes/active.json','w'),indent=2)"
 
 When you see other agents working:
 1. STOP if someone is already doing your EXACT TASK or a CONTRADICTORY TASK

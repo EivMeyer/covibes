@@ -228,12 +228,7 @@ export class ClaudeConfigManager {
 
       // Inject agent designation if provided
       if (options.agentName) {
-        systemPrompt = `YOUR AGENT DESIGNATION FOR COORDINATION: ${options.agentName}
-
-IMPORTANT: You are still Claude (the AI), but for team coordination purposes, you have been assigned the designation "${options.agentName}". This is like a callsign or employee ID - it's how other agents identify you in the workspace.
-
-When registering in active.json, you MUST use your AGENT DESIGNATION "${options.agentName}", NOT "Claude".
-Think of it like this: Claude is WHAT you are, but ${options.agentName} is your COORDINATION ID for this specific task.
+        systemPrompt = `AGENT DESIGNATION: ${options.agentName}
 
 ${systemPrompt}`;
 
