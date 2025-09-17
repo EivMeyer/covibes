@@ -38,7 +38,8 @@ const spawnAgentSchema = z.object({
   task: z.string().max(1000).transform(val => val || '').default(''), // Allow empty strings for interactive sessions
   agentType: z.enum(['claude']).optional().default('claude'), // Client sends agentType, not type
   terminalLocation: z.enum(['local', 'remote']).optional().default('local'),
-  terminalIsolation: z.enum(['none', 'docker', 'tmux']).optional().default('tmux') // Tmux provides persistent sessions with proper system prompt
+  terminalIsolation: z.enum(['none', 'docker', 'tmux']).optional().default('tmux'), // Tmux provides persistent sessions with proper system prompt
+  mode: z.enum(['terminal', 'chat']).optional().default('terminal') // New mode field for chat vs terminal
 });
 
 // Apply JWT authentication middleware to all routes
@@ -57,7 +58,9 @@ async function executeAgentAsync(
   repositoryUrl?: string,
   userId?: string,
   teamId?: string,
-  agentName?: string
+  agentName?: string,
+  mode?: 'terminal' | 'chat',
+  sessionId?: string | null
 ): Promise<void> {
   console.log(`✅ executeAgentAsync received agentName: ${agentName}`);
   try {
@@ -137,7 +140,9 @@ async function executeAgentAsync(
           teamId: teamId!,
           task,
           location: terminalLocation,
-          isolation: terminalIsolation
+          isolation: terminalIsolation,
+          mode: mode || 'terminal',
+          sessionId: sessionId || undefined
         };
         if (repositoryUrl !== undefined) {
           terminalOptions.workspaceRepo = repositoryUrl;
@@ -259,8 +264,8 @@ async function executeAgentAsync(
 // POST /api/agents/spawn - Spawn new agent
 router.post('/spawn', async (req: express.Request, res) => {
   try {
-    const { task, agentType, terminalLocation, terminalIsolation } = spawnAgentSchema.parse(req.body);
-    
+    const { task, agentType, terminalLocation, terminalIsolation, mode } = spawnAgentSchema.parse(req.body);
+
     if (!req.user?.userId) {
       return res.status(401).json({ error: 'User ID not found' });
     }
@@ -290,6 +295,9 @@ router.post('/spawn', async (req: express.Request, res) => {
     const agentName = generateAgentName();
     console.log(`🎯 Generated agent name: ${agentName} for agent ${randomUUID()}`);
 
+    // Generate session ID for chat mode agents
+    const sessionId = mode === 'chat' ? `chat-${user.teamId}-${randomUUID()}` : null;
+
     // Create agent record
     const agent = await prisma.agents.create({
       data: {
@@ -303,6 +311,8 @@ router.post('/spawn', async (req: express.Request, res) => {
         agentName,
         terminalLocation: terminalLocation || 'local',
         terminalIsolation: terminalIsolation || 'none',
+        mode: mode || 'terminal',
+        sessionId,
         updatedAt: new Date()
       },
       include: {
@@ -322,7 +332,9 @@ router.post('/spawn', async (req: express.Request, res) => {
       user.teams?.repositoryUrl || undefined,
       req.user?.userId,
       user.teamId,
-      agentName
+      agentName,
+      mode || 'terminal',
+      sessionId
     );
 
     // Broadcast agent creation to all team members via WebSocket

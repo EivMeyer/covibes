@@ -407,10 +407,542 @@ app.use('/js', express.static(path.join(__dirname, '../../../js')));
 
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString()
   });
+});
+
+// Serve the standalone terminal test HTML
+app.get('/terminal-test', (_req, res) => {
+  const htmlPath = '/home/ubuntu/covibes/claude-terminal-test.html';
+  fs.readFile(htmlPath, 'utf8', (error, html) => {
+    if (error) {
+      console.error('Error reading terminal test HTML:', error);
+      return res.status(500).json({ error: 'Failed to read terminal test HTML' });
+    }
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
+// Test page for full-screen terminal - Working implementation
+app.get('/chat-test', (_req, res) => {
+  // Use the same HTML as /terminal-test
+  const htmlPath = '/home/ubuntu/covibes/claude-terminal-test.html';
+  fs.readFile(htmlPath, 'utf8', (error, html) => {
+    if (error) {
+      console.error('Error reading terminal test HTML:', error);
+      // Fallback to inline HTML
+      res.setHeader('Content-Type', 'text/html');
+      res.send(`<!DOCTYPE html><html><body><h1>Error loading terminal</h1><p>${error.message}</p></body></html>`);
+      return;
+    }
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
+// Plan Mode - Chat interface based on sugyan/claude-code-webui
+app.get('/plan', (_req, res) => {
+  const htmlPath = '/home/ubuntu/covibes/plan-chat-interface.html';
+  fs.readFile(htmlPath, 'utf8', (error, html) => {
+    if (error) {
+      console.error('Error reading plan interface HTML:', error);
+      res.setHeader('Content-Type', 'text/html');
+      res.send(`<!DOCTYPE html><html><body><h1>Error loading plan interface</h1><p>${error.message}</p></body></html>`);
+      return;
+    }
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
+// Think Mode - Terminal interface based on siteboon/claudecodeui
+app.get('/think', (_req, res) => {
+  const htmlPath = '/home/ubuntu/covibes/think-terminal-interface.html';
+  fs.readFile(htmlPath, 'utf8', (error, html) => {
+    if (error) {
+      console.error('Error reading think interface HTML:', error);
+      res.setHeader('Content-Type', 'text/html');
+      res.send(`<!DOCTYPE html><html><body><h1>Error loading think interface</h1><p>${error.message}</p></body></html>`);
+      return;
+    }
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+});
+
+// Legacy inline HTML terminal (backup)
+app.get('/chat-test-old', (_req, res) => {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code Agent Terminal - Enhanced</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #header {
+      background: #111;
+      padding: 15px;
+      border-bottom: 2px solid #0f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #status {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #666;
+    }
+    .status-indicator.connected {
+      background: #0f0;
+      box-shadow: 0 0 10px #0f0;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .status-indicator.error {
+      background: #f00;
+      box-shadow: 0 0 10px #f00;
+    }
+    #terminal-container {
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+    }
+    #terminal {
+      width: 100%;
+      height: 100%;
+    }
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #0a0;
+      box-shadow: 0 0 10px #0f0;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    #logs {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid #0f0;
+      padding: 10px;
+      max-width: 400px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 12px;
+      display: none;
+    }
+    #logs.visible {
+      display: block;
+    }
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 2px;
+    }
+    .log-error {
+      color: #f00;
+    }
+    .log-success {
+      color: #0f0;
+    }
+    .log-info {
+      color: #ff0;
+    }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <div>
+      <h1 style="color: #0f0; text-shadow: 0 0 10px #0f0;">Claude Code Terminal</h1>
+    </div>
+    <div id="status">
+      <div class="status-item">
+        <span>Socket:</span>
+        <div id="socket-status" class="status-indicator"></div>
+        <span id="socket-text">Disconnected</span>
+      </div>
+      <div class="status-item">
+        <span>Agent:</span>
+        <div id="agent-status" class="status-indicator"></div>
+        <span id="agent-text">Not spawned</span>
+      </div>
+      <button id="spawn-btn" disabled>Spawn Agent</button>
+      <button id="log-toggle">Show Logs</button>
+    </div>
+  </div>
+
+  <div id="terminal-container">
+    <div id="terminal"></div>
+  </div>
+
+  <div id="logs"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    // Configuration
+    const BACKEND_URL = window.location.origin;
+    const DEMO_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbTBrbGZlMWQwMDAwMTNwMGc0OWE1MzJnIiwidGVhbUlkIjoiZGVtby10ZWFtLTAwMSIsInVzZXJOYW1lIjoiVGVzdCBVc2VyIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzI1ODk5OTY0LCJleHAiOjE3NTc0MzU5NjR9.l6Gks7egUqg7Bod59r3gnjLBiAzFCQjtFvNzcrXPNt8';
+
+    // State
+    let socket = null;
+    let terminal = null;
+    let fitAddon = null;
+    let currentAgentId = null;
+    let isConnected = false;
+    let isSpawning = false;
+
+    // Logging
+    const logs = [];
+    const maxLogs = 50;
+
+    function addLog(message, type = 'info') {
+      const timestamp = new Date().toTimeString().split(' ')[0];
+      logs.push({ timestamp, message, type });
+      if (logs.length > maxLogs) logs.shift();
+      updateLogDisplay();
+      console.log(\`[\${type.toUpperCase()}] \${message}\`);
+    }
+
+    function updateLogDisplay() {
+      const logsEl = document.getElementById('logs');
+      logsEl.innerHTML = logs.map(log =>
+        \`<div class="log-entry log-\${log.type}">[\${log.timestamp}] \${log.message}</div>\`
+      ).reverse().join('');
+    }
+
+    // UI Updates
+    function updateSocketStatus(connected) {
+      const indicator = document.getElementById('socket-status');
+      const text = document.getElementById('socket-text');
+      const btn = document.getElementById('spawn-btn');
+      if (connected) {
+        indicator.className = 'status-indicator connected';
+        text.textContent = 'Connected';
+        btn.disabled = false;
+      } else {
+        indicator.className = 'status-indicator error';
+        text.textContent = 'Disconnected';
+        btn.disabled = true;
+      }
+    }
+
+    function updateAgentStatus(status, agentId = null) {
+      const indicator = document.getElementById('agent-status');
+      const text = document.getElementById('agent-text');
+      const btn = document.getElementById('spawn-btn');
+
+      switch(status) {
+        case 'spawning':
+          indicator.className = 'status-indicator';
+          text.textContent = 'Spawning...';
+          btn.disabled = true;
+          break;
+        case 'connected':
+          indicator.className = 'status-indicator connected';
+          text.textContent = agentId ? agentId.substring(0, 8) : 'Connected';
+          btn.disabled = true;
+          break;
+        case 'error':
+          indicator.className = 'status-indicator error';
+          text.textContent = 'Error';
+          btn.disabled = !isConnected;
+          break;
+        default:
+          indicator.className = 'status-indicator';
+          text.textContent = 'Not spawned';
+          btn.disabled = !isConnected;
+      }
+    }
+
+    // Terminal initialization
+    function initTerminal() {
+      terminal = new Terminal({
+        cursorBlink: true,
+        fontSize: 14,
+        fontFamily: 'Consolas, "Liberation Mono", Menlo, monospace',
+        theme: {
+          background: '#000000',
+          foreground: '#00ff00',
+          cursor: '#00ff00',
+          cursorAccent: '#000000'
+        },
+        cols: 80,
+        rows: 24,
+        convertEol: true,
+        scrollback: 10000
+      });
+
+      fitAddon = new FitAddon.FitAddon();
+      terminal.loadAddon(fitAddon);
+
+      terminal.open(document.getElementById('terminal'));
+      fitAddon.fit();
+
+      terminal.writeln('\\x1b[32m═══════════════════════════════════════════\\x1b[0m');
+      terminal.writeln('\\x1b[32m     Claude Code Agent Terminal v3.0\\x1b[0m');
+      terminal.writeln('\\x1b[32m═══════════════════════════════════════════\\x1b[0m');
+      terminal.writeln('');
+      terminal.writeln('\\x1b[33mInitializing...\\x1b[0m');
+
+      // Handle terminal input
+      terminal.onData((data) => {
+        if (currentAgentId && socket) {
+          socket.emit('terminal_input', {
+            agentId: currentAgentId,
+            data: data
+          });
+        }
+      });
+
+      // Handle resize
+      window.addEventListener('resize', () => {
+        if (fitAddon) {
+          fitAddon.fit();
+          if (currentAgentId && socket) {
+            socket.emit('terminal_resize', {
+              agentId: currentAgentId,
+              cols: terminal.cols,
+              rows: terminal.rows
+            });
+          }
+        }
+      });
+
+      addLog('Terminal initialized', 'success');
+    }
+
+    // Socket connection
+    function connectSocket() {
+      addLog('Connecting to server...', 'info');
+
+      socket = io(BACKEND_URL, {
+        auth: { token: DEMO_TOKEN },
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+      });
+
+      socket.on('connect', () => {
+        isConnected = true;
+        updateSocketStatus(true);
+        addLog('Socket connected', 'success');
+        terminal.writeln('\\x1b[32m✓ Connected to server\\x1b[0m');
+        terminal.writeln('');
+
+        // Auto-spawn agent on connect
+        if (!currentAgentId && !isSpawning) {
+          setTimeout(spawnAgent, 500);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        isConnected = false;
+        updateSocketStatus(false);
+        addLog('Socket disconnected', 'error');
+        terminal.writeln('\\x1b[31m✗ Disconnected from server\\x1b[0m');
+      });
+
+      socket.on('error', (error) => {
+        addLog(\`Socket error: \${error}\`, 'error');
+        terminal.writeln(\`\\x1b[31mError: \${error}\\x1b[0m\`);
+      });
+
+      // Terminal events
+      socket.on('terminal_connected', (data) => {
+        addLog(\`Terminal connected: \${JSON.stringify(data)}\`, 'success');
+        terminal.writeln('\\x1b[32m✓ Terminal connected\\x1b[0m');
+        terminal.writeln('');
+        updateAgentStatus('connected', currentAgentId);
+      });
+
+      socket.on('terminal_data', (data) => {
+        if (data && data.agentId === currentAgentId && data.data) {
+          terminal.write(data.data);
+        }
+      });
+
+      socket.on('terminal_error', (data) => {
+        addLog(\`Terminal error: \${data.error}\`, 'error');
+        terminal.writeln(\`\\x1b[31mTerminal error: \${data.error}\\x1b[0m\`);
+      });
+
+      socket.on('agent_spawned', (data) => {
+        addLog(\`Agent spawned event received\`, 'info');
+      });
+
+      socket.on('claude_started', (data) => {
+        addLog(\`Claude started: \${data.agentId}\`, 'success');
+      });
+
+      socket.on('reconnect', (attemptNumber) => {
+        addLog(\`Reconnected after \${attemptNumber} attempts\`, 'success');
+        terminal.writeln(\`\\x1b[32m✓ Reconnected to server\\x1b[0m\`);
+      });
+
+      socket.on('reconnect_attempt', (attemptNumber) => {
+        addLog(\`Reconnection attempt \${attemptNumber}\`, 'info');
+      });
+
+      socket.on('reconnect_error', (error) => {
+        addLog(\`Reconnection error: \${error.message}\`, 'error');
+      });
+
+      socket.on('reconnect_failed', () => {
+        addLog('Failed to reconnect after maximum attempts', 'error');
+        terminal.writeln('\\x1b[31m✗ Failed to reconnect to server\\x1b[0m');
+      });
+    }
+
+    // Spawn agent
+    async function spawnAgent() {
+      if (!isConnected || isSpawning || currentAgentId) {
+        addLog('Cannot spawn: not connected, already spawning, or agent exists', 'error');
+        return;
+      }
+
+      isSpawning = true;
+      updateAgentStatus('spawning');
+      terminal.writeln('\\x1b[33mSpawning Claude Code agent...\\x1b[0m');
+      addLog('Spawning agent...', 'info');
+
+      try {
+        // Join team first
+        socket.emit('join-team', {
+          teamId: 'demo-team-001',
+          token: DEMO_TOKEN
+        });
+
+        // Small delay to ensure team join is processed
+        await new Promise(r => setTimeout(r, 200));
+
+        // Spawn agent via API
+        const response = await fetch(\`\${BACKEND_URL}/api/agents/spawn\`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': \`Bearer \${DEMO_TOKEN}\`
+          },
+          body: JSON.stringify({
+            task: 'Terminal test session',
+            teamId: 'demo-team-001'
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(\`HTTP \${response.status}: \${errorText}\`);
+        }
+
+        const data = await response.json();
+        currentAgentId = data.id || data.agentId || data.agent?.id;
+
+        if (!currentAgentId) {
+          throw new Error('No agent ID in response');
+        }
+
+        addLog(\`Agent spawned: \${currentAgentId}\`, 'success');
+        terminal.writeln(\`\\x1b[32m✓ Agent spawned: \${currentAgentId}\\x1b[0m\`);
+        terminal.writeln('\\x1b[33mConnecting to terminal...\\x1b[0m');
+
+        // Connect to terminal with retry logic
+        let retries = 0;
+        const maxRetries = 5;
+        const connectToTerminal = () => {
+          socket.emit('terminal_connect', {
+            agentId: currentAgentId
+          });
+          addLog(\`Sent terminal_connect for \${currentAgentId} (attempt \${retries + 1})\`, 'info');
+
+          retries++;
+          if (retries < maxRetries) {
+            setTimeout(connectToTerminal, 1000);
+          }
+        };
+
+        setTimeout(connectToTerminal, 500);
+
+      } catch (error) {
+        addLog(\`Failed to spawn agent: \${error.message}\`, 'error');
+        terminal.writeln(\`\\x1b[31mError: \${error.message}\\x1b[0m\`);
+        updateAgentStatus('error');
+        currentAgentId = null;
+      } finally {
+        isSpawning = false;
+      }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initTerminal();
+      connectSocket();
+
+      // Button handlers
+      document.getElementById('spawn-btn').addEventListener('click', spawnAgent);
+
+      document.getElementById('log-toggle').addEventListener('click', () => {
+        const logs = document.getElementById('logs');
+        const btn = document.getElementById('log-toggle');
+        if (logs.classList.contains('visible')) {
+          logs.classList.remove('visible');
+          btn.textContent = 'Show Logs';
+        } else {
+          logs.classList.add('visible');
+          btn.textContent = 'Hide Logs';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+  `;
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
 });
 
 // HTML Pitch deck endpoint (English)
@@ -1582,11 +2114,76 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  socket.on('agent_chat_message', async (data: { agentId: string; message: string }) => {
+    if (!socket.userId || !socket.teamId) {
+      return;
+    }
+
+    try {
+      // SECURITY CHECK: Verify agent ownership and chat mode
+      const agent = await prisma.agents.findUnique({
+        where: { id: data.agentId },
+        select: { userId: true, status: true, mode: true, sessionId: true }
+      });
+
+      if (!agent) {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'Agent not found'
+        });
+        return;
+      }
+
+      if (agent.userId !== socket.userId) {
+        console.warn(`🚨 User ${socket.userId} attempted to send chat to agent ${data.agentId} owned by ${agent.userId}`);
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'Permission denied: You can only chat with your own agents'
+        });
+        return;
+      }
+
+      if (agent.mode !== 'chat') {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'This agent is in terminal mode, not chat mode'
+        });
+        return;
+      }
+
+      if (agent.status !== 'running') {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: `Cannot send message to ${agent.status} agent`
+        });
+        return;
+      }
+
+      // For chat mode, send the message with a newline to execute
+      // Claude in print mode will process and return clean response
+      const success = dockerManager.writeToPTY(data.agentId, data.message + '\r');
+
+      if (!success) {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'Failed to send message to agent'
+        });
+      }
+
+    } catch (error) {
+      console.error('Agent chat message error:', error);
+      socket.emit('agent_chat_error', {
+        agentId: data.agentId,
+        error: 'Failed to send chat message'
+      });
+    }
+  });
+
   socket.on('terminal_resize', async (data: { agentId: string; cols: number; rows: number }) => {
     if (!socket.userId || !socket.teamId) {
       return;
     }
-    
+
     console.log(`📐 PTY Terminal resize for agent ${data.agentId}: ${data.cols}x${data.rows}`);
     
     try {

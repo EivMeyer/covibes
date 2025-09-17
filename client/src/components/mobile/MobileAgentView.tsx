@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AgentList } from '@/components/features/agents/AgentList';
-import { TerminalTile } from '@/components/tiles/TerminalTile';
+import { AgentChatTile } from '@/components/tiles/AgentChatTile';
 
 interface MobileAgentViewProps {
   agents: any[];
@@ -24,20 +24,20 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
   socket
 }) => {
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
-  const [showTerminal, setShowTerminal] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const handleAgentClick = (agent: any) => {
     setSelectedAgent(agent);
-    setShowTerminal(true);
+    setShowChat(true);
   };
 
-  // Handle mobile keyboard visibility and adjust terminal height
+  // Handle mobile keyboard visibility and adjust chat height
   React.useEffect(() => {
     let visualViewport: any = null;
     let resizeHandler: (() => void) | null = null;
 
-    const updateTerminalHeight = () => {
+    const updateChatHeight = () => {
       if (typeof window === 'undefined') return;
 
       // Simple keyboard detection using Visual Viewport API
@@ -61,21 +61,21 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
       }
     };
 
-    if (showTerminal) {
-      // Set up listeners when terminal is shown
+    if (showChat) {
+      // Set up listeners when chat is shown
       if (window.visualViewport) {
         visualViewport = window.visualViewport;
-        resizeHandler = updateTerminalHeight;
+        resizeHandler = updateChatHeight;
         visualViewport.addEventListener('resize', resizeHandler);
       } else {
-        resizeHandler = updateTerminalHeight;
+        resizeHandler = updateChatHeight;
         window.addEventListener('resize', resizeHandler);
       }
 
       // Initial calculation
-      updateTerminalHeight();
+      updateChatHeight();
     } else {
-      // Reset keyboard height when terminal is closed
+      // Reset keyboard height when chat is closed
       setKeyboardHeight(0);
     }
 
@@ -87,7 +87,7 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
         window.removeEventListener('resize', resizeHandler);
       }
     };
-  }, [showTerminal]);
+  }, [showChat]);
 
   return (
     <div className="flex flex-col h-full bg-midnight-900">
@@ -141,8 +141,8 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
         </div>
       )}
 
-      {/* TERMINAL AT TOP - DYNAMIC HEIGHT BASED ON KEYBOARD */}
-      {showTerminal && selectedAgent && (
+      {/* AGENT CHAT - DYNAMIC HEIGHT BASED ON KEYBOARD */}
+      {showChat && selectedAgent && (
         <div 
           className="fixed top-0 left-0 right-0 z-50 bg-midnight-800"
           style={{
@@ -154,17 +154,17 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
           }}
         >
           <div 
-            className="absolute inset-0 bg-midnight-800 mobile-terminal-modal"
+            className="absolute inset-0 bg-midnight-800 mobile-chat-modal"
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
             style={{ 
               height: '100%', // Fill the 70vh container
-              // Ensure terminal captures all touch/scroll events
+              // Ensure chat captures all touch/scroll events
               touchAction: 'none',
               overscrollBehavior: 'contain'
             } as React.CSSProperties}
           >
-            {/* Terminal Header */}
+            {/* Chat Header */}
             <div className="px-4 py-3 border-b border-midnight-600 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <h3 className="text-sm font-semibold text-white">
@@ -181,7 +181,7 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
               </div>
               
               <button
-                onClick={() => setShowTerminal(false)}
+                onClick={() => setShowChat(false)}
                 className="p-1 text-gray-400 hover:text-white transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,40 +192,36 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
             
             {/* FULL SCREEN TERMINAL CONTENT */}
             <div 
-              className="h-full overflow-hidden terminal-container" 
+              className="h-full overflow-hidden chat-container" 
               style={{ 
                 height: 'calc(100% - 60px)',
-                // Ensure terminal content is focusable and scrollable
+                // Ensure chat content is focusable and scrollable
                 position: 'relative',
                 zIndex: 1000,
-                backgroundColor: '#1e1e1e' // Terminal background
+                backgroundColor: '#0d0d0d' // Chat background
               }}
               onTouchStart={(e) => {
-                // FORCE focus on terminal content
+                // Focus on chat input
                 e.stopPropagation();
-                e.preventDefault();
-                
-                // Focus this container immediately
-                e.currentTarget.focus();
-                
-                // Find and focus the actual xterm terminal
-                const xtermTextarea = e.currentTarget.querySelector('.xterm-helper-textarea') as HTMLTextAreaElement;
-                if (xtermTextarea) {
+
+                // Find and focus the chat textarea
+                const chatTextarea = e.currentTarget.querySelector('textarea') as HTMLTextAreaElement;
+                if (chatTextarea) {
                   setTimeout(() => {
-                    xtermTextarea.focus();
-                    xtermTextarea.click();
+                    chatTextarea.focus();
                   }, 100);
                 }
               }}
               onTouchMove={(e) => {
-                // Allow scrolling within terminal only
+                // Allow scrolling within chat
                 e.stopPropagation();
               }}
               tabIndex={0}
             >
-              <TerminalTile 
-                agent={selectedAgent} 
+              <AgentChatTile
+                agent={selectedAgent}
                 agentId={selectedAgent.id}
+                agents={agents}
                 user={user}
                 socket={socket}
               />

@@ -270,14 +270,36 @@ function AppContent() {
       }
     });
 
-    socket.on('team-joined', (data: { teamData: any; messages: ChatMessage[]; connectedUsers: number }) => {
+    socket.on('team-joined', (data: { teamData: any; messages: any[]; connectedUsers: number }) => {
       if (data.messages) {
-        setMessages(data.messages);
+        // Transform messages to ensure they have the correct field names
+        const transformedMessages = data.messages.map((msg: any) => ({
+          id: msg.id,
+          userId: msg.userId,
+          userName: msg.user?.userName || msg.userName || 'Unknown',
+          message: msg.content || msg.message || '',
+          content: msg.content || msg.message || '',
+          timestamp: msg.createdAt || msg.timestamp || new Date().toISOString(),
+          teamId: msg.teamId,
+          type: msg.type || 'user'
+        }));
+        setMessages(transformedMessages);
       }
     });
 
-    socket.on('chat-message', (message: ChatMessage) => {
-      setMessages(prev => [...prev, message]);
+    socket.on('chat-message', (message: any) => {
+      // Transform incoming message to ensure correct field names
+      const transformedMessage: ChatMessage = {
+        id: message.id,
+        userId: message.userId,
+        userName: message.user?.userName || message.userName || 'Unknown',
+        message: message.content || message.message || '',
+        content: message.content || message.message || '',
+        timestamp: message.createdAt || message.timestamp || new Date().toISOString(),
+        teamId: message.teamId,
+        type: message.type || 'user'
+      };
+      setMessages(prev => [...prev, transformedMessage]);
     });
 
     socket.on('agent-spawned', (data: { agent: AgentDetails }) => {

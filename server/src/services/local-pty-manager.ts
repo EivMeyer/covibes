@@ -37,9 +37,9 @@ export class LocalPtyManager extends EventEmitter implements TerminalManager {
       
       // Spawn PTY process
       const ptyProcess = pty.spawn(shell, shellArgs, {
-        name: 'xterm-color',
-        cols: 80,
-        rows: 24,
+        name: 'xterm-256color',  // Match the TERM environment variable
+        cols: 100,  // Start with wider default to reduce resize events
+        rows: 30,   // And taller default
         cwd: workspaceDir,
         env: {
           ...process.env,

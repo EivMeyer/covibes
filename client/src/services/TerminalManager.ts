@@ -55,16 +55,16 @@ class TerminalManager {
       // Now create a fresh terminal below
     }
 
-    // Create new terminal - let xterm.js and FitAddon handle all sizing
-    
+    // Create new terminal with proper configuration for ANSI handling
+
     const terminal = new Terminal({
       cursorBlink: true, // Always blink cursor for consistent feel
-      cursorStyle: 'block', // Keep consistent cursor style  
+      cursorStyle: 'block', // Keep consistent cursor style
       disableStdin: isReadOnly, // Disable input for read-only terminals (like the working demo)
       fontSize: fontSize,
-      // Force proper line handling
-      cols: 80, // Set initial size to ensure proper buffer initialization
-      rows: 24,
+      // Start with larger defaults to reduce resize events
+      cols: 100,
+      rows: 30,
       fontFamily:
         '"SFMono-Regular", "Monaco", "Inconsolata", "Roboto Mono", "Consolas", monospace',
       theme: {
@@ -90,8 +90,8 @@ class TerminalManager {
         brightCyan: '#75b5aa',
         brightWhite: '#ffffff',
       },
-      scrollback: 5000,
-      // Don't set convertEol - let xterm use its default like the working demo
+      scrollback: 10000,  // Increased buffer for better history
+      convertEol: false,  // Don't convert line endings - let PTY handle them
       allowTransparency: false,
       altClickMovesCursor: false,
       macOptionIsMeta: true,
@@ -101,7 +101,8 @@ class TerminalManager {
       fastScrollModifier: 'alt',
       fastScrollSensitivity: 5,
       allowProposedApi: true,
-      // DON'T set cols/rows - let FitAddon handle sizing completely
+      // Enable better rendering for terminal output
+      rendererType: 'canvas',  // Use canvas renderer for better performance
     })
 
     // Open terminal in container
@@ -114,32 +115,14 @@ class TerminalManager {
     const fitAddon = new FitAddon()
     terminal.loadAddon(fitAddon)
     
-    // Fit immediately to get initial sizing right
-    try {
-      fitAddon.fit()
-    } catch (e) {
-      console.warn('[TerminalManager] Initial fit failed:', e)
-    }
-    
-    // Fit again after DOM settles
+    // Single fit operation after DOM is ready - reduce multiple fit calls to prevent flickering
     requestAnimationFrame(() => {
       try {
         fitAddon.fit()
       } catch (e) {
-        console.warn('[TerminalManager] Frame fit failed:', e)
+        console.warn('[TerminalManager] Initial fit failed:', e)
       }
     })
-    
-    // And once more after a short delay to catch any layout changes
-    setTimeout(() => {
-      try {
-        fitAddon.fit()
-        const containerWidth = container.offsetWidth
-        const containerHeight = container.offsetHeight
-      } catch (error) {
-        console.warn(`[TerminalManager] Final fit failed:`, error)
-      }
-    }, 100)
 
     // Store the instance
     this.terminals.set(agentId, {

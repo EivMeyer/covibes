@@ -87,6 +87,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
           chat: { w: 4, h: 10, minW: 3, minH: 4 },
           preview: { w: 6, h: 8, minW: 3, minH: 4 },
           ide: { w: 8, h: 10, minW: 4, minH: 5 },
+          agentchat: { w: 5, h: 10, minW: 3, minH: 6 },
         }
 
         const tileDefaults = defaultLayouts[tile.type] || {
@@ -172,7 +173,8 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
       terminal: 'Agent Terminal',
       chat: 'Team Chat',
       preview: 'Preview',
-      ide: 'Code Editor'
+      ide: 'Code Editor',
+      agentchat: 'Agent Chat'
     };
     
     const title = tileNames[type] || 'Unknown';
@@ -184,13 +186,13 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
     onAddTile(type);
   }
 
-  const handleRemoveTileWithCollab = (tileId: string) => {
+  const handleRemoveTileWithCollab = useCallback((tileId: string) => {
     // Emit collaborative event
     onTileRemove?.(tileId);
 
     // Call original handler
     onRemoveTile(tileId);
-  }
+  }, [onTileRemove, onRemoveTile]);
 
   const menuItems = [
     {
@@ -220,6 +222,13 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
       icon: '📝',
       description: 'Code editor',
       color: 'from-blue-500 to-blue-600',
+    },
+    {
+      type: 'agentchat' as GridTile['type'],
+      label: 'Agent Chat',
+      icon: '🤖',
+      description: 'Chat with agents',
+      color: 'from-indigo-500 to-purple-600',
     },
   ]
 
@@ -692,7 +701,11 @@ const AddButton: React.FC<{
       {tiles.length > 0 && (
         <button
           onClick={() => {
-            tiles.forEach((tile) => handleRemoveTileWithCollab(tile.id))
+            // Clear all tiles
+            tiles.forEach((tile) => {
+              // Just call the prop function directly
+              onRemoveTile(tile.id);
+            })
           }}
           className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
           title="Clear workspace"

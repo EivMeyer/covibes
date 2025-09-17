@@ -12,6 +12,7 @@
     "test": "cd server && npm run test && cd ../client && npm run test"
   },
   "dependencies": {
+    "puppeteer": "^24.22.0",
     "ssh2": "^1.16.0",
     "ws": "^8.18.3"
   },

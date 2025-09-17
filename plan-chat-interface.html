@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Mode - Claude Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #161b22;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-left: 20%;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .assistant-message {
+            background: #1f2937;
+            margin-right: 20%;
+            border: 1px solid #30363d;
+        }
+
+        .message-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .message-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .code-block {
+            background: #0d1117;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            border: 1px solid #30363d;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #161b22;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #messageInput {
+            width: 100%;
+            padding: 12px 15px;
+            background: #0d1117;
+            border: 2px solid #30363d;
+            color: #e6edf3;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 50px;
+            max-height: 200px;
+            transition: all 0.3s ease;
+        }
+
+        #messageInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .thinking-indicator {
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .thinking-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            margin: 0 2px;
+            animation: bounce 1.4s ease infinite;
+        }
+
+        .thinking-indicator span:nth-child(1) { animation-delay: 0s; }
+        .thinking-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #0d1117;
+            border-top: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .error-message {
+            background: #f85149;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .tool-request {
+            background: #1f2937;
+            border: 2px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .tool-request h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .shortcuts {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #161b22;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 Plan Mode - Claude Chat Interface</h1>
+        <p>Based on sugyan/claude-code-webui - Interactive planning with Claude</p>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages-container" id="messagesContainer">
+            <div class="assistant-message message">
+                <div class="message-header">🤖 Claude Assistant</div>
+                <div class="message-content">Hello! I'm ready to help you plan your project. Ask me anything about architecture, design patterns, implementation strategies, or any coding questions.</div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea
+                    id="messageInput"
+                    placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
+                    rows="1"
+                ></textarea>
+            </div>
+            <button class="button" id="sendButton">Send</button>
+            <button class="button" id="clearButton" style="background: linear-gradient(135deg, #f85149 0%, #da3633 100%);">Clear</button>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span id="statusText">Ready</span>
+        </div>
+        <div id="charCount">0 characters</div>
+    </div>
+
+    <div class="shortcuts">
+        <strong>Shortcuts:</strong><br>
+        Enter: Send message<br>
+        Shift+Enter: New line<br>
+        Ctrl+L: Clear chat
+    </div>
+
+    <script>
+        // Configuration
+        const API_URL = 'http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001';
+        const WS_URL = 'ws://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001';
+
+        // State
+        let messages = [];
+        let isProcessing = false;
+
+        // DOM elements
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const clearButton = document.getElementById('clearButton');
+        const statusText = document.getElementById('statusText');
+        const charCount = document.getElementById('charCount');
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+            charCount.textContent = `${this.value.length} characters`;
+        });
+
+        // Handle Enter key
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Handle Ctrl+L
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                clearChat();
+            }
+        });
+
+        sendButton.addEventListener('click', sendMessage);
+        clearButton.addEventListener('click', clearChat);
+
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'message-header';
+            headerDiv.textContent = role === 'user' ? '👤 You' : '🤖 Claude';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = formatContent(content);
+
+            messageDiv.appendChild(headerDiv);
+            messageDiv.appendChild(contentDiv);
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            messages.push({ role, content });
+        }
+
+        function formatContent(content) {
+            // Simple markdown-like formatting
+            let formatted = content
+                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<div class="code-block">$2</div>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+
+            return formatted;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || isProcessing) return;
+
+            isProcessing = true;
+            sendButton.disabled = true;
+            statusText.textContent = 'Processing...';
+
+            // Add user message
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            charCount.textContent = '0 characters';
+
+            // Add thinking indicator
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message assistant-message';
+            thinkingDiv.innerHTML = `
+                <div class="message-header">🤖 Claude</div>
+                <div class="message-content">
+                    Thinking<span class="thinking-indicator">
+                        <span></span><span></span><span></span>
+                    </span>
+                </div>
+            `;
+            messagesContainer.appendChild(thinkingDiv);
+
+            try {
+                // Simulate API call with mock response
+                await simulateClaudeResponse(message, thinkingDiv);
+            } catch (error) {
+                console.error('Error:', error);
+                thinkingDiv.remove();
+                addMessage('assistant', `Error: ${error.message}`);
+            } finally {
+                isProcessing = false;
+                sendButton.disabled = false;
+                statusText.textContent = 'Ready';
+            }
+        }
+
+        async function simulateClaudeResponse(userMessage, thinkingDiv) {
+            // Simulate delay
+            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+            // Remove thinking indicator
+            thinkingDiv.remove();
+
+            // Generate mock response based on keywords
+            let response = '';
+
+            if (userMessage.toLowerCase().includes('plan')) {
+                response = `Here's a structured plan for your request:
+
+## 📋 Planning Phase
+
+1. **Requirements Analysis**
+   - Define clear objectives
+   - Identify constraints and dependencies
+   - Establish success criteria
+
+2. **Architecture Design**
+   - Choose appropriate design patterns
+   - Define component structure
+   - Plan data flow and state management
+
+3. **Implementation Strategy**
+   - Break down into manageable tasks
+   - Prioritize features
+   - Set up development environment
+
+4. **Testing & Validation**
+   - Unit testing approach
+   - Integration testing plan
+   - User acceptance criteria
+
+Would you like me to elaborate on any of these phases?`;
+            } else if (userMessage.toLowerCase().includes('help')) {
+                response = `I can help you with:
+
+- **Architecture Planning**: Design patterns, system architecture
+- **Code Organization**: Project structure, module design
+- **Implementation Strategies**: Best practices, optimization techniques
+- **Testing Approaches**: Test-driven development, testing strategies
+- **Documentation**: Code documentation, API design
+- **Performance**: Optimization tips, profiling strategies
+
+What specific area would you like to explore?`;
+            } else if (userMessage.toLowerCase().includes('terminal') || userMessage.toLowerCase().includes('xterm')) {
+                response = `For terminal implementation with xterm.js:
+
+\`\`\`javascript
+// Basic xterm.js setup
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
+
+const terminal = new Terminal({
+    cursorBlink: true,
+    fontSize: 14,
+    fontFamily: 'Monaco, monospace',
+    theme: {
+        background: '#1e1e1e',
+        foreground: '#d4d4d4'
+    }
+});
+
+const fitAddon = new FitAddon();
+terminal.loadAddon(fitAddon);
+terminal.open(document.getElementById('terminal'));
+fitAddon.fit();
+
+// WebSocket connection
+const ws = new WebSocket('ws://localhost:3001');
+ws.onmessage = (event) => {
+    terminal.write(event.data);
+};
+
+terminal.onData(data => {
+    ws.send(JSON.stringify({ type: 'input', data }));
+});
+\`\`\`
+
+Key considerations:
+- Handle resize events properly
+- Implement reconnection logic
+- Buffer management for large outputs
+- Proper cleanup on unmount`;
+            } else {
+                // Default response
+                response = `I understand you're asking about "${userMessage}".
+
+Let me break this down:
+
+1. **Analysis**: First, we need to understand the core requirements and constraints.
+
+2. **Approach**: Based on the context, I recommend considering:
+   - Modular design for maintainability
+   - Clear separation of concerns
+   - Proper error handling
+
+3. **Implementation**: Start with a minimal viable solution and iterate.
+
+Would you like me to provide more specific guidance on any aspect?`;
+            }
+
+            // Simulate streaming effect
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message assistant-message';
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'message-header';
+            headerDiv.textContent = '🤖 Claude';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            messageDiv.appendChild(headerDiv);
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+
+            // Simulate character-by-character streaming
+            let charIndex = 0;
+            const streamInterval = setInterval(() => {
+                if (charIndex < response.length) {
+                    const chunk = response.substring(0, charIndex + 10);
+                    contentDiv.innerHTML = formatContent(chunk);
+                    charIndex += 10;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                } else {
+                    clearInterval(streamInterval);
+                    contentDiv.innerHTML = formatContent(response);
+                    messages.push({ role: 'assistant', content: response });
+                }
+            }, 20);
+        }
+
+        function clearChat() {
+            messagesContainer.innerHTML = `
+                <div class="assistant-message message">
+                    <div class="message-header">🤖 Claude Assistant</div>
+                    <div class="message-content">Chat cleared. How can I help you plan your project?</div>
+                </div>
+            `;
+            messages = [];
+        }
+
+        // Initialize
+        messageInput.focus();
+    </script>
+</body>
+</html>

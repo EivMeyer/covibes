@@ -89,7 +89,9 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
         skipPermissions: true,
         interactive: !options.task, // Interactive if no specific task
         appendSystemPrompt: true, // Add agent development guidelines
-        agentName: options.agentName // Pass agent name for coordination
+        ...(options.agentName ? { agentName: options.agentName } : {}), // Only include if defined
+        mode: options.mode,
+        sessionId: options.sessionId
       });
 
     // Build simple Claude command with proper shell escaping
@@ -155,8 +157,8 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
       '\;', 'set', '-t', sessionName, 'window-active-style', 'default'
     ], {
       name: 'xterm-256color',  // Use 256 color terminal
-      cols: 80,
-      rows: 24,
+      cols: 100,  // Start with wider default to reduce resize events
+      rows: 30,   // And taller default
       cwd: workspaceDir,
       env: {
         ...process.env,
@@ -208,9 +210,9 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     
     // Attach to existing session via PTY
     const ptyProcess = pty.spawn('tmux', ['attach-session', '-t', sessionName], {
-      name: 'xterm-color',
-      cols: 80,
-      rows: 24,
+      name: 'xterm-256color',  // Match the TERM environment variable
+      cols: 100,  // Start with wider default to reduce resize events
+      rows: 30,   // And taller default
       env: {
         ...process.env,
         TERM: 'xterm-256color'

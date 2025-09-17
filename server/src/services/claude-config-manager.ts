@@ -203,9 +203,22 @@ export class ClaudeConfigManager {
     interactive?: boolean;
     appendSystemPrompt?: boolean | string;
     agentName?: string;
+    mode?: 'terminal' | 'chat';
+    sessionId?: string;
   } = {}): { command: string; args: string[]; env: Record<string, string> } {
     const command = 'claude';
     const args: string[] = [];
+
+    // Add print mode for chat agents
+    if (options.mode === 'chat') {
+      args.push('--print');
+      args.push('--output-format', 'text');
+
+      // Add session ID for conversation continuity
+      if (options.sessionId) {
+        args.push('--session-id', options.sessionId);
+      }
+    }
 
     // Add dangerous skip permissions flag for sandbox safety
     if (options.skipPermissions !== false) {

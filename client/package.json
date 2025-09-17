@@ -38,6 +38,7 @@
     "axios": "^1.11.0",
     "dockview": "^4.6.2",
     "flexlayout-react": "^0.8.17",
+    "lucide-react": "^0.544.0",
     "muuri": "^0.9.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

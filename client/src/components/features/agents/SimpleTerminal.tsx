@@ -132,24 +132,33 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         let lastWidth = terminalRef.current.offsetWidth
         let lastHeight = terminalRef.current.offsetHeight
         
+        // Use debounced resize observer to prevent excessive resize events
+        let resizeTimeout: NodeJS.Timeout | null = null
         resizeObserverRef.current = new ResizeObserver((entries) => {
           const entry = entries[0]
           if (!entry) return
-          
+
           const width = entry.contentRect.width
           const height = entry.contentRect.height
-          
-          // Only trigger resize if size changed by more than 20 pixels (reduce sensitivity)
-          if (Math.abs(width - lastWidth) > 20 || Math.abs(height - lastHeight) > 20) {
+
+          // Only trigger resize if size changed significantly (reduce sensitivity)
+          if (Math.abs(width - lastWidth) > 30 || Math.abs(height - lastHeight) > 30) {
             lastWidth = width
             lastHeight = height
-            
-            const timeoutId = setTimeout(() => {
+
+            // Cancel previous timeout if exists
+            if (resizeTimeout) {
+              clearTimeout(resizeTimeout)
+            }
+
+            // Debounce resize to prevent flickering
+            resizeTimeout = setTimeout(() => {
               if (mountedRef.current && terminalInstanceRef.current) {
                 resizeTerminal()
               }
-            }, 200)
-            ;(resizeObserverRef.current as any)._timeoutId = timeoutId
+              resizeTimeout = null
+            }, 300)  // Increased delay for more stability
+            ;(resizeObserverRef.current as any)._timeoutId = resizeTimeout
           }
         })
 
@@ -199,13 +208,13 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       } else {
         setStatus('Connected')
       }
-      
-      // Trigger initial resize after terminal setup
+
+      // Single delayed resize after terminal is ready - no immediate resize
       setTimeout(() => {
         if (mountedRef.current && terminalInstanceRef.current) {
           resizeTerminal()
         }
-      }, 100)
+      }, 500)  // Give more time for terminal to stabilize
 
       // Store resize observer reference for cleanup
       resizeObserver = resizeObserverRef.current
@@ -255,7 +264,8 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         const terminal = TerminalManager.getTerminal(agentId)
         if (terminal) {
           try {
-            // Just write the data directly - exactly like the working demo
+            // Write data directly to terminal - xterm handles ANSI sequences
+            // No filtering needed - let xterm.js handle all escape sequences
             terminal.write(data.data)
           } catch (e) {
             console.error(`[SimpleTerminal] Error writing PTY data to terminal:`, e)
@@ -272,18 +282,9 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
           try {
             let output = data.output
             
-            // MINIMAL FILTERING - Only remove the most problematic sequences
-            // Keep most escape sequences to maintain proper terminal functionality
-            
-            // Only filter out tmux status bar updates that clutter the output
-            // These often contain timestamps and session names like "claude-cm0:claude*"
-            if (output.includes('claude-') && output.includes(':claude')) {
-              // Remove standalone tmux status lines
-              const simpleStatusPattern = /\[claude-[a-z0-9]+:claude\*?\s+.*?\d+:\d+\s+\d+-\w+-\d+\]/g
-              output = output.replace(simpleStatusPattern, '')
-            }
-            
-            // Write output directly to terminal, let xterm.js handle escape sequences properly
+            // Write output directly without any filtering
+            // Let xterm.js handle all terminal escape sequences properly
+            // This prevents issues with line updates and cursor movements
             terminal.write(output)
           } catch (e) {
             console.error(`[SimpleTerminal] Error writing to terminal:`, e)

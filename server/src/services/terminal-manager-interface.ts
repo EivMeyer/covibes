@@ -27,6 +27,8 @@ export interface TerminalOptions {
   isolation: 'none' | 'docker' | 'tmux';
   vmConfig?: VMConfig;
   workspaceRepo?: string;
+  mode?: 'terminal' | 'chat';
+  sessionId?: string;
 }
 
 export interface TerminalSession {

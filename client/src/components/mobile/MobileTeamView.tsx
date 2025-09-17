@@ -123,6 +123,9 @@ export const MobileTeamView: React.FC<MobileTeamViewProps> = ({
         ) : (
           chatMessages.map((msg: any, index: number) => {
             const isOwnMessage = msg.userId === user?.id;
+            const messageContent = msg.message || msg.content || '';
+            const messageTime = msg.timestamp || msg.createdAt;
+
             return (
               <div
                 key={msg.id || index}
@@ -131,22 +134,24 @@ export const MobileTeamView: React.FC<MobileTeamViewProps> = ({
                 <div className={`max-w-[80%] ${isOwnMessage ? 'order-2' : ''}`}>
                   {!isOwnMessage && (
                     <div className="text-xs text-gray-400 mb-1">
-                      {msg.userName}
+                      {msg.userName || 'Unknown'}
                     </div>
                   )}
                   <div className={`px-3 py-2 rounded-lg ${
-                    isOwnMessage 
-                      ? 'bg-electric text-midnight-900' 
+                    isOwnMessage
+                      ? 'bg-electric text-midnight-900'
                       : 'bg-midnight-700 text-gray-200'
                   }`}>
-                    <p className="text-sm break-words">{msg.message}</p>
+                    <p className="text-sm break-words">{messageContent}</p>
                   </div>
-                  <div className="text-[10px] text-gray-500 mt-1">
-                    {new Date(msg.timestamp).toLocaleTimeString(undefined, {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
+                  {messageTime && (
+                    <div className="text-[10px] text-gray-500 mt-1">
+                      {new Date(messageTime).toLocaleTimeString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             );

@@ -23,6 +23,8 @@ model agents {
   terminalLocation    String                @default("local")
   isSessionPersistent Boolean               @default(false)
   tmuxSessionName     String?
+  mode                String                @default("terminal") // "terminal" or "chat"
+  sessionId           String?               // Claude session ID for chat mode
   teams               teams                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
   users               users                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   container_instances container_instances[]

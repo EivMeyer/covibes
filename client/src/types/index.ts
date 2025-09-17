@@ -33,6 +33,7 @@ export interface Agent {
   vmInstance?: string;
   lastActivity?: string;
   agentName?: string; // Random generated name like "Alice Code" or "Bob Debug"
+  mode?: 'terminal' | 'chat'; // Agent interface mode
   // Container information
   container?: ContainerInfo;
 }
@@ -118,6 +119,7 @@ export interface SpawnAgentRequest {
   agentType?: 'claude' | 'mock';
   terminalLocation?: 'local' | 'remote';
   terminalIsolation?: 'none' | 'docker' | 'tmux';
+  mode?: 'terminal' | 'chat';
   containerOptions?: ContainerSpawnOptions;
 }
 
@@ -264,7 +266,7 @@ export type Environment = 'development' | 'production' | 'test';
 // Grid Tile interface for workspace management
 export interface GridTile {
   id: string;
-  type: 'terminal' | 'chat' | 'preview' | 'ide';
+  type: 'terminal' | 'chat' | 'preview' | 'ide' | 'agentchat';
   agentId?: string | undefined; // For terminal tiles - explicit undefined for exactOptionalPropertyTypes
   title: string;
   minimized?: boolean | undefined; // Explicit undefined for exactOptionalPropertyTypes

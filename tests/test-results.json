@@ -50,7 +50,7 @@
         "testMatch": [
           "**/playwright-*.test.js"
         ],
-        "timeout": 30000
+        "timeout": 90000
       },
       {
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
@@ -66,7 +66,7 @@
         "testMatch": [
           "**/playwright-*.test.js"
         ],
-        "timeout": 30000
+        "timeout": 90000
       },
       {
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
@@ -82,7 +82,7 @@
         "testMatch": [
           "**/playwright-*.test.js"
         ],
-        "timeout": 30000
+        "timeout": 90000
       }
     ],
     "shard": null,
@@ -99,25 +99,25 @@
   },
   "suites": [
     {
-      "title": "playwright-production-verify.test.js",
-      "file": "playwright-production-verify.test.js",
+      "title": "playwright-mobile-agent-chat.test.js",
+      "file": "playwright-mobile-agent-chat.test.js",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Production Demo Preview Verification",
-          "file": "playwright-production-verify.test.js",
-          "line": 3,
+          "title": "Mobile Agent Chat E2E Test",
+          "file": "playwright-mobile-agent-chat.test.js",
+          "line": 10,
           "column": 6,
           "specs": [
             {
-              "title": "should load demo team preview in production with no MIME errors",
-              "ok": true,
+              "title": "mobile agent chat functionality works end-to-end",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 90000,
                   "annotations": [],
                   "expectedStatus": "passed",
                   "projectId": "chromium",
@@ -126,206 +126,159 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 4015,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 13840,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21",
+                        "location": {
+                          "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
+                          "column": 21,
+                          "line": 149
+                        },
+                        "snippet": "  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
+                            "column": 21,
+                            "line": 149
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21"
+                        }
+                      ],
                       "stdout": [
                         {
-                          "text": "🚀 ULTRATHINK: Loading production demo preview...\n"
+                          "text": "🎯 Starting mobile agent chat E2E test...\n"
                         },
                         {
-                          "text": "📡 Loading: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001/preview/demo-team-001/\n"
+                          "text": "📸 Initial mobile page loaded\n"
                         },
                         {
-                          "text": "✅ Page loaded successfully\n"
+                          "text": "🔐 Not authenticated, attempting auto-login...\n"
                         },
                         {
-                          "text": "⏳ Waiting for React content...\n"
+                          "text": "🖥️ Desktop interface detected, looking for Add Panel button...\n"
                         },
                         {
-                          "text": "🔍 MIME errors detected: 0\n"
+                          "text": "📱 Found agents list, testing with existing agent...\n"
                         },
                         {
-                          "text": "🔍 Total console errors: 0\n"
-                        },
-                        {
-                          "text": "📋 Page title: Alice's Fixed CoVibes App\n"
-                        },
-                        {
-                          "text": "📝 Main heading: 🚀 HMR TEST - LIVE UPDATE!\n"
-                        },
-                        {
-                          "text": "📊 Testing tab navigation...\n"
-                        },
-                        {
-                          "text": "✅ All 3 tabs visible\n"
-                        },
-                        {
-                          "text": "✅ Status tab works\n"
-                        },
-                        {
-                          "text": "✅ About tab works\n"
-                        },
-                        {
-                          "text": "✅ Home tab works\n"
-                        },
-                        {
-                          "text": "✅ Counter button interactive\n"
-                        },
-                        {
-                          "text": "✅ Live time display working\n"
-                        },
-                        {
-                          "text": "🎉 ULTRATHINK VERIFICATION COMPLETE:\n"
-                        },
-                        {
-                          "text": "✅ Production demo preview loads successfully\n"
-                        },
-                        {
-                          "text": "✅ Zero MIME type errors detected\n"
-                        },
-                        {
-                          "text": "✅ React app fully functional with 3 tabs\n"
-                        },
-                        {
-                          "text": "✅ Interactive elements working\n"
-                        },
-                        {
-                          "text": "✅ Live state updates working\n"
-                        },
-                        {
-                          "text": "📸 Screenshot saved as evidence\n"
+                          "text": "❌ No agents found or visible\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-09-14T20:03:15.378Z",
+                      "startTime": "2025-09-17T17:25:39.626Z",
                       "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                },
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
+                        "column": 21,
+                        "line": 149
+                      }
+                    },
                     {
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 7,
+                      "duration": 15702,
                       "error": {
-                        "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/firefox-1489/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/firefox-1489/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21",
+                        "location": {
+                          "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
+                          "column": 21,
+                          "line": 149
+                        },
+                        "snippet": "  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });"
                       },
                       "errors": [
                         {
-                          "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/firefox-1489/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                          "location": {
+                            "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
+                            "column": 21,
+                            "line": 149
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21"
                         }
                       ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-14T20:03:20.568Z",
-                      "annotations": [],
-                      "attachments": []
-                    },
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 8,
-                      "error": {
-                        "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/firefox-1489/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/firefox-1489/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
+                      "stdout": [
                         {
-                          "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/firefox-1489/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
+                          "text": "🎯 Starting mobile agent chat E2E test...\n"
+                        },
+                        {
+                          "text": "📸 Initial mobile page loaded\n"
+                        },
+                        {
+                          "text": "🔐 Not authenticated, attempting auto-login...\n"
+                        },
+                        {
+                          "text": "🖥️ Desktop interface detected, looking for Add Panel button...\n"
+                        },
+                        {
+                          "text": "📱 Found agents list, testing with existing agent...\n"
+                        },
+                        {
+                          "text": "❌ No agents found or visible\n"
                         }
                       ],
-                      "stdout": [],
                       "stderr": [],
                       "retry": 1,
-                      "startTime": "2025-09-14T20:03:21.605Z",
+                      "startTime": "2025-09-17T17:25:56.041Z",
                       "annotations": [],
                       "attachments": [
                         {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-production-veri-66b57-duction-with-no-MIME-errors-firefox-retry1/trace.zip"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "unexpected"
-                },
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "webkit",
-                  "projectName": "webkit",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 9,
-                      "error": {
-                        "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/webkit-2191/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/webkit-2191/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/test-failed-1.png"
+                        },
                         {
-                          "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/webkit-2191/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-14T20:03:22.725Z",
-                      "annotations": [],
-                      "attachments": []
-                    },
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 8,
-                      "error": {
-                        "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/webkit-2191/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/webkit-2191/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/video.webm"
+                        },
                         {
-                          "message": "Error: browserType.launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/webkit-2191/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 1,
-                      "startTime": "2025-09-14T20:03:23.766Z",
-                      "annotations": [],
-                      "attachments": [
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/error-context.md"
+                        },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-production-veri-66b57-duction-with-no-MIME-errors-webkit-retry1/trace.zip"
+                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
+                        "column": 21,
+                        "line": 149
+                      }
                     }
                   ],
                   "status": "unexpected"
                 }
               ],
-              "id": "e0bf888d8cb2a43843e6-8d39c73915eeb9e7c3a4",
-              "file": "playwright-production-verify.test.js",
-              "line": 4,
+              "id": "1538ba8538173356d95c-feb25236e75cae318b65",
+              "file": "playwright-mobile-agent-chat.test.js",
+              "line": 12,
               "column": 3
             }
           ]
@@ -335,11 +288,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-09-14T20:03:14.409Z",
-    "duration": 9451.728,
-    "expected": 1,
+    "startTime": "2025-09-17T17:25:37.116Z",
+    "duration": 36554.505,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 2,
+    "unexpected": 1,
     "flaky": 0
   }
 }
