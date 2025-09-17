@@ -12,6 +12,10 @@ import { NotificationProvider } from './components/ui/Notification';
 // Import types from types module
 import type { ChatMessage } from '@/types';
 
+// Import demo terminal
+import { DemoTerminal } from './pages/DemoTerminal';
+import { DemoList } from './pages/DemoList';
+
 // Simple App with working state management
 function AppContent() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -661,9 +665,22 @@ function AppContent() {
 
   // DEBUG: Removed excessive logging to reduce console noise
 
+  // Check for demo routes
+  if (window.location.pathname === '/demo') {
+    // Get agent ID from URL params if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const agentId = urlParams.get('agentId') || undefined;
+
+    return <DemoTerminal agentId={agentId} socket={socket} />;
+  }
+
+  if (window.location.pathname === '/demo-list') {
+    return <DemoList />;
+  }
+
   // Route based on authentication status
   return user ? (
-    <Dashboard 
+    <Dashboard
       {...appState}
       previewUrl={previewUrl}
       setPreviewStatus={setPreviewStatus}
