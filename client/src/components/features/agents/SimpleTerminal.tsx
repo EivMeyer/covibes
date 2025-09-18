@@ -64,19 +64,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
     setFontSize(currentSize)
   }, [agentId])
 
-  // Handle 5-second warmup period
-  useEffect(() => {
-    setIsWarming(true)
-    isWarmingRef.current = true
-    const warmupTimer = setTimeout(() => {
-      setIsWarming(false)
-      isWarmingRef.current = false
-    }, 5000) // 5 second warmup
-
-    return () => clearTimeout(warmupTimer)
-  }, [agentId]) // Reset warmup when agent changes
-
-
   // Function to resize terminal using FitAddon
   const resizeTerminal = useCallback(() => {
     if (!terminalRef.current || !mountedRef.current) return
@@ -108,6 +95,28 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       console.debug('Terminal resize skipped:', error)
     }
   }, [agentId, socket, isReadOnly])
+
+  // Handle 5-second warmup period (only for starting agents)
+  useEffect(() => {
+    // Only show warmup for agents that are starting, not existing running agents
+    const shouldWarmup = containerInfo?.status === 'starting'
+
+    setIsWarming(shouldWarmup)
+    isWarmingRef.current = shouldWarmup
+
+    if (shouldWarmup) {
+      const warmupTimer = setTimeout(() => {
+        setIsWarming(false)
+        isWarmingRef.current = false
+        // Refit terminal after warmup period
+        if (mountedRef.current && terminalInstanceRef.current) {
+          resizeTerminal()
+        }
+      }, 5000) // 5 second warmup
+
+      return () => clearTimeout(warmupTimer)
+    }
+  }, [agentId, containerInfo?.status, resizeTerminal])
 
   // Initialize terminal
   useEffect(() => {
@@ -228,12 +237,19 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         setStatus('Connected')
       }
 
-      // Single delayed resize after terminal is ready - no immediate resize
+      // Initial refit after terminal is ready
       setTimeout(() => {
         if (mountedRef.current && terminalInstanceRef.current) {
           resizeTerminal()
         }
-      }, 500)  // Give more time for terminal to stabilize
+      }, 500)  // Initial refit
+
+      // Second refit to ensure proper sizing
+      setTimeout(() => {
+        if (mountedRef.current && terminalInstanceRef.current) {
+          resizeTerminal()
+        }
+      }, 1500)  // Secondary refit for stability
 
       // Store resize observer reference for cleanup
       resizeObserver = resizeObserverRef.current
@@ -495,96 +511,6 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
         </div>
       )}
 
-      {/* Terminal Header with Container Info */}
-      {containerInfo && (
-        <div className="bg-gray-800 border-b border-gray-700 px-3 py-1.5 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-3">
-            {isReadOnly && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-blue-900/50 text-blue-300">
-                👁️ Observer{userName ? ` • ${userName}` : ''}
-              </span>
-            )}
-            <span className="text-gray-300">
-              Agent: {currentAgent?.agentName || `A-${agentId.slice(0, 6)}`}
-            </span>
-            <span className="text-gray-500">
-              Container: {containerInfo.containerId.slice(-8)}
-            </span>
-            {containerInfo.terminalPort && (
-              <span className="text-gray-500">
-                Port: {containerInfo.terminalPort}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 border-l border-gray-600 pl-2 mr-2">
-              <button
-                onClick={zoomOut}
-                className="p-1 text-gray-400 hover:text-white transition-colors"
-                title="Zoom out"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
-                </svg>
-              </button>
-              <span className="text-xs text-gray-500 min-w-[1.5rem] text-center">{fontSize}px</span>
-              <button
-                onClick={zoomIn}
-                className="p-1 text-gray-400 hover:text-white transition-colors"
-                title="Zoom in"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                </svg>
-              </button>
-              <button
-                onClick={resetZoom}
-                className="p-1 text-gray-400 hover:text-white transition-colors"
-                title="Reset zoom"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </button>
-            </div>
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
-              containerInfo.status === 'running' ? 'bg-green-900/50 text-green-300' :
-              containerInfo.status === 'starting' ? 'bg-yellow-900/50 text-yellow-300' :
-              containerInfo.status === 'stopped' ? 'bg-red-900/50 text-red-300' :
-              'bg-gray-700 text-gray-400'
-            }`}>
-              {getContainerStatusIcon(containerInfo.status)}
-              {containerInfo.status}
-            </span>
-            <span className={`text-xs ${
-              status.includes('Error') ? 'text-red-400' :
-              status === 'Connected' ? 'text-green-400' :
-              'text-gray-500'
-            }`}>
-              {status}
-            </span>
-            {status.includes('Error') && (
-              <button
-                onClick={handleRetryConnection}
-                className="text-xs px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-                title="Retry connection"
-              >
-                🔄 Retry
-              </button>
-            )}
-            <button
-              onClick={handleForceResize}
-              className="text-xs px-2 py-0.5 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
-              title="Fix terminal width if it becomes too narrow"
-            >
-              📐 Fix Width
-            </button>
-          </div>
-        </div>
-      )}
       
       {/* Terminal Container */}
       <div

@@ -349,6 +349,15 @@ const TerminalTileComponent: React.FC<TerminalTileProps> = ({
             agentId={currentAgentId}
             socket={socket}
             onClose={() => {}} // No close action in tile
+            containerInfo={agent?.container ? {
+              containerId: agent.container.containerId || '',
+              status: agent?.status || 'running',
+              terminalPort: agent.container.terminalPort,
+              previewPort: agent.container.previewPort
+            } : {
+              containerId: '',
+              status: agent?.status || 'running'
+            }}
           />
         ) : (
           <div className="h-full flex items-center justify-center text-gray-400">

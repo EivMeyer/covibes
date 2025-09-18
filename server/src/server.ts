@@ -1895,6 +1895,19 @@ io.on('connection', (socket: Socket) => {
       // Check if this socket is already connected to this agent
       if (sockets.has(socket.id)) {
         console.log(`⚠️ Socket ${socket.id} already connected to agent ${data.agentId}`);
+
+        // Send buffered history when reconnecting
+        const history = terminalBuffer.getHistory(data.agentId);
+        if (history.length > 0) {
+          console.log(`📜 Sending ${history.length} history entries for agent ${data.agentId}`);
+          for (const entry of history) {
+            socket.emit('terminal_data', {
+              agentId: data.agentId,
+              data: entry.output
+            });
+          }
+        }
+
         socket.emit('terminal_connected', { agentId: data.agentId });
         return;
       }
@@ -1927,7 +1940,20 @@ io.on('connection', (socket: Socket) => {
       const existingPTY = dockerManager.getPTYProcess(data.agentId);
       if (existingPTY) {
         console.log('♻️ Reusing existing PTY process for agent:', data.agentId);
-        socket.emit('terminal_connected', { 
+
+        // Send buffered history when reconnecting to existing PTY
+        const history = terminalBuffer.getHistory(data.agentId);
+        if (history.length > 0) {
+          console.log(`📜 Sending ${history.length} history entries for existing PTY agent ${data.agentId}`);
+          for (const entry of history) {
+            socket.emit('terminal_data', {
+              agentId: data.agentId,
+              data: entry.output
+            });
+          }
+        }
+
+        socket.emit('terminal_connected', {
           agentId: data.agentId,
           message: 'Connected to existing PTY session'
         });
