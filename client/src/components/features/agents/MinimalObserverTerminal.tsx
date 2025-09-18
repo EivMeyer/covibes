@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Terminal } from 'xterm'
 import 'xterm/css/xterm.css'
 
@@ -14,6 +14,17 @@ export const MinimalObserverTerminal: React.FC<MinimalObserverTerminalProps> = (
 }) => {
   const terminalRef = useRef<HTMLDivElement>(null)
   const terminalInstanceRef = useRef<Terminal | null>(null)
+  const [isWarming, setIsWarming] = useState(true) // 5-second warmup period
+
+  // Handle 5-second warmup period
+  useEffect(() => {
+    setIsWarming(true)
+    const warmupTimer = setTimeout(() => {
+      setIsWarming(false)
+    }, 5000) // 5 second warmup
+
+    return () => clearTimeout(warmupTimer)
+  }, [agentId]) // Reset warmup when agent changes
 
   useEffect(() => {
     if (!terminalRef.current || !socket || !agentId) {
@@ -91,7 +102,27 @@ export const MinimalObserverTerminal: React.FC<MinimalObserverTerminalProps> = (
   }, [agentId, socket])
 
   return (
-    <div className="h-full flex flex-col bg-gray-900">
+    <div className="h-full flex flex-col bg-gray-900 relative">
+      {/* Warmup Overlay */}
+      {isWarming && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900/90 backdrop-blur-sm">
+          <div className="text-center">
+            <div className="mb-4">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Starting Observer Session
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Connecting to agent terminal...
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Please wait 5 seconds
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-gray-800 border-b border-gray-700 px-3 py-1.5 flex items-center justify-between text-xs">
         <div className="flex items-center gap-3">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-orange-900/50 text-orange-300">

@@ -35,6 +35,8 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
   const [status, setStatus] = useState('initializing')
   const [showAgentDropdown, setShowAgentDropdown] = useState(false)
   const [fontSize, setFontSize] = useState(13)
+  const [isWarming, setIsWarming] = useState(true) // 5-second warmup period
+  const isWarmingRef = useRef(true) // Ref to track warming state in callbacks
   const mountedRef = useRef(true)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -61,6 +63,18 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
     const currentSize = TerminalManager.getFontSize(agentId)
     setFontSize(currentSize)
   }, [agentId])
+
+  // Handle 5-second warmup period
+  useEffect(() => {
+    setIsWarming(true)
+    isWarmingRef.current = true
+    const warmupTimer = setTimeout(() => {
+      setIsWarming(false)
+      isWarmingRef.current = false
+    }, 5000) // 5 second warmup
+
+    return () => clearTimeout(warmupTimer)
+  }, [agentId]) // Reset warmup when agent changes
 
 
   // Function to resize terminal using FitAddon
@@ -169,6 +183,11 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
       if (!isReadOnly) {
         // Terminal is always fresh now, no need to clear old handlers
         dataDisposable = terminal.onData((data: string) => {
+          // Block input during warmup period (use ref for real-time value)
+          if (isWarmingRef.current) {
+            return // Ignore all input during warmup
+          }
+
           // Check for Ctrl+L (clear screen)
           if (data === '\x0c') {
             TerminalManager.clearTerminal(agentId)
@@ -455,7 +474,27 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900">
+    <div className="h-full flex flex-col bg-gray-900 relative">
+      {/* Warmup Overlay */}
+      {isWarming && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-900/90 backdrop-blur-sm">
+          <div className="text-center">
+            <div className="mb-4">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Starting Terminal Session
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Initializing secure connection...
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Please wait 5 seconds
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Terminal Header with Container Info */}
       {containerInfo && (
         <div className="bg-gray-800 border-b border-gray-700 px-3 py-1.5 flex items-center justify-between text-xs">
