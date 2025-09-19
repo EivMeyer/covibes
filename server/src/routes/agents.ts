@@ -38,7 +38,7 @@ const spawnAgentSchema = z.object({
   task: z.string().max(1000).transform(val => val || '').default(''), // Allow empty strings for interactive sessions
   agentType: z.enum(['claude']).optional().default('claude'), // Client sends agentType, not type
   terminalLocation: z.enum(['local', 'remote']).optional().default('local'),
-  terminalIsolation: z.enum(['none', 'docker', 'tmux']).optional().default('tmux'), // Tmux provides persistent sessions with proper system prompt
+  terminalIsolation: z.enum(['none', 'docker', 'tmux']).optional().default('tmux'), // Tmux is default: full user permissions on customer-owned VMs
   mode: z.enum(['terminal', 'chat']).optional().default('terminal') // New mode field for chat vs terminal
 });
 

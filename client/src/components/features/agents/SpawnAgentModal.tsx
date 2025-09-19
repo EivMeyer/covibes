@@ -233,7 +233,7 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
                 <span className="text-2xl">💻</span>
                 <div className="text-center">
                   <p className="font-semibold text-white">Terminal Mode</p>
-                  <p className="text-xs text-gray-400">Full coding terminal with file access</p>
+                  <p className="text-xs text-gray-400">Full VM access with sudo & Docker</p>
                 </div>
                 <div className={`w-4 h-4 border-2 rounded-full ${
                   formData.mode === 'terminal'
@@ -269,7 +269,7 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
 
           <p className="text-xs text-gray-500 italic">
             {formData.mode === 'terminal'
-              ? 'Terminal mode provides a full coding environment with file access and command execution.'
+              ? 'Terminal mode runs with your full VM permissions including sudo, Docker, and system package installation.'
               : 'Chat mode provides clean conversation for planning and discussion while still able to coordinate with other agents.'}
           </p>
         </div>

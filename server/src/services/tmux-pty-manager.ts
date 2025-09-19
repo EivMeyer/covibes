@@ -125,14 +125,19 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     
     // Send the startup commands to the bash shell in tmux
     const startupCommands = [
-      `echo "🚀 Covibes Agent Terminal (Persistent)"`,
+      `echo "🚀 Covibes Agent Terminal (Full Permissions)"`,
       `echo "📋 Agent ID: ${options.agentId}"`,
       `echo "📁 Workspace: ${workspaceDir}"`,
       `echo "🎯 Task: ${options.task || 'Interactive Claude Session'}"`,
       `echo "⚙️ Claude Config: ${claudeConfigManager.getUserConfigDir(options.userId)}"`,
+      `echo "🔓 Permissions: Full user access (sudo available)"`,
+      `echo "🐳 Docker: Available at /var/run/docker.sock"`,
       `echo ""`,
       `cd "${workspaceDir}"`, // Ensure we're in the workspace directory
       `export CLAUDE_CONFIG_DIR="${claudeEnv['CLAUDE_CONFIG_DIR']}"`,
+      `export DOCKER_HOST="unix:///var/run/docker.sock"`,  // Make Docker access explicit
+      `export SUDO_AVAILABLE="true"`,  // Indicate sudo is available
+      `export AGENT_PERMISSIONS="full"`,  // Indicate full permissions
       claudeCmd
     ];
     
@@ -167,7 +172,12 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
         HOME: process.env['HOME'] || os.homedir(),
         // Disable tmux's alternate screen to preserve ANSI sequences
         TMUX_TMPDIR: '/tmp',
-        TMUX_DISABLE_ALTERNATE_SCREEN: '1'
+        TMUX_DISABLE_ALTERNATE_SCREEN: '1',
+        // Full permissions environment
+        DOCKER_HOST: 'unix:///var/run/docker.sock',
+        SUDO_AVAILABLE: 'true',
+        AGENT_PERMISSIONS: 'full',
+        PATH: `${process.env['PATH']}:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin`
       }
     });
 

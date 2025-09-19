@@ -339,8 +339,10 @@ DEVELOPMENT COMMANDS:
       "createdBy": "ColabVibe",
       "createdAt": new Date().toISOString(),
       "allowDangerousCommands": true,
+      "allowSudo": true,  // Enable sudo for customer-owned VMs
+      "allowSystemPackages": true,  // Allow apt-get, npm -g, etc.
       "sandbox": {
-        "enabled": true,
+        "enabled": false,  // Disable sandbox for full permissions
         "skipPermissions": true
       },
       "hooks": {
