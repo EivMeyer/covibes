@@ -15,6 +15,7 @@ import { TmuxPtyManager } from './tmux-pty-manager.js';
 import { LocalDockerManager } from './local-docker-manager.js';
 import { RemotePtyManager } from './remote-pty-manager.js';
 import { RemoteDockerManager } from './remote-docker-manager.js';
+import { ChatPtyManager } from './chat-pty-manager.js';
 
 export class TerminalManagerFactory extends EventEmitter {
   private static instance: TerminalManagerFactory;
@@ -35,17 +36,35 @@ export class TerminalManagerFactory extends EventEmitter {
   /**
    * Get or create appropriate terminal manager for given configuration
    */
-  getManager(location: 'local' | 'remote', isolation: 'none' | 'docker' | 'tmux'): TerminalManager {
+  getManager(location: 'local' | 'remote', isolation: 'none' | 'docker' | 'tmux', mode?: 'terminal' | 'chat'): TerminalManager {
+    // Use chat manager for chat mode regardless of other settings
+    if (mode === 'chat') {
+      const key = 'chat-pty';
+
+      if (this.managers.has(key)) {
+        return this.managers.get(key)!;
+      }
+
+      console.log(`🏭 Creating chat PTY manager: ${key}`);
+      const manager = new ChatPtyManager();
+
+      // Forward events from manager to factory
+      this.setupManagerEventForwarding(manager);
+
+      this.managers.set(key, manager);
+      return manager;
+    }
+
     const key = `${location}-${isolation}`;
-    
+
     if (this.managers.has(key)) {
       return this.managers.get(key)!;
     }
 
     console.log(`🏭 Creating terminal manager: ${key}`);
-    
+
     let manager: TerminalManager;
-    
+
     if (location === 'local' && isolation === 'none') {
       manager = new LocalPtyManager();
     } else if (location === 'local' && isolation === 'tmux') {
@@ -62,7 +81,7 @@ export class TerminalManagerFactory extends EventEmitter {
 
     // Forward events from manager to factory
     this.setupManagerEventForwarding(manager);
-    
+
     this.managers.set(key, manager);
     return manager;
   }
@@ -71,7 +90,7 @@ export class TerminalManagerFactory extends EventEmitter {
    * Get appropriate manager for an agent based on options
    */
   getManagerForAgent(options: TerminalOptions): TerminalManager {
-    return this.getManager(options.location, options.isolation);
+    return this.getManager(options.location, options.isolation, options.mode);
   }
 
   /**
@@ -177,6 +196,15 @@ export class TerminalManagerFactory extends EventEmitter {
       
       emitter.on('terminal-error', (agentId: string, error: string) => {
         this.emit('terminal-error', agentId, error);
+      });
+
+      // Chat-specific events
+      emitter.on('chat-response', (agentId: string, response: string) => {
+        this.emit('chat-response', agentId, response);
+      });
+
+      emitter.on('chat-error', (agentId: string, error: string) => {
+        this.emit('chat-error', agentId, error);
       });
     }
   }

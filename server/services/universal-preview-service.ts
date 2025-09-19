@@ -482,7 +482,7 @@ export default defineConfig({
   }
 
   // Keeping this for reference but now using template instead
-  private async createViteReactProject(projectDir: string, teamId: string, _port: number): Promise<void> {
+  /* private async createViteReactProject(projectDir: string, teamId: string, _port: number): Promise<void> {
     console.log('🔥 Creating REAL Vite + React project with HOT RELOAD...');
     
     // Remove existing directory and create fresh
@@ -918,7 +918,7 @@ footer {
     await fs.writeFile(path.join(projectDir, 'src', 'App.css'), appCss);
     
     console.log('✅ Created full Vite + React project structure with hot reload support');
-  }
+  } */
 
   // REMOVED: _createSampleProject method - superseded by createViteReactProject with better template
 

@@ -60,12 +60,13 @@ const ChatAgentDemo: React.FC = () => {
       });
 
       newSocket.on('connect', () => {
-        console.log('Demo WebSocket connected');
+        console.log('🔌 [CLIENT-WS-CONNECTED] Demo WebSocket connected');
+        console.log('📤 [CLIENT-WS-JOIN-TEAM] Emitting join-team event with teamId:', demo.teamId);
         newSocket.emit('join-team', { teamId: demo.teamId, token: demo.token });
       });
 
       newSocket.on('agent-spawned', (data: { agent: Agent }) => {
-        console.log('Agent spawned:', data.agent);
+        console.log('🤖 [CLIENT-AGENT-SPAWNED] Agent spawned:', data.agent);
         setAgents(prev => {
           const newAgents = [...prev, data.agent];
           // Auto-select the first agent
@@ -88,7 +89,7 @@ const ChatAgentDemo: React.FC = () => {
 
       // Listen for agent status updates
       newSocket.on('agent-status', (data: { agentId: string, status: string, message?: string }) => {
-        console.log('Agent status update:', data);
+        console.log('📊 [CLIENT-AGENT-STATUS] Agent status update:', data);
         setAgents(prev => prev.map(agent =>
           agent.id === data.agentId
             ? { ...agent, status: data.status }
@@ -109,6 +110,7 @@ const ChatAgentDemo: React.FC = () => {
       });
 
       newSocket.on('agent_chat_response', (data: { agentId: string, response: string }) => {
+        console.log(`💬 [CLIENT-CHAT-RESPONSE] Received agent response for ${data.agentId}:`, data.response.substring(0, 100) + (data.response.length > 100 ? '...' : ''));
         const agentMessage: ChatMessage = {
           id: `agent-${Date.now()}`,
           role: 'agent',
@@ -117,6 +119,19 @@ const ChatAgentDemo: React.FC = () => {
           agentId: data.agentId
         };
         setMessages(prev => [...prev, agentMessage]);
+      });
+
+      // Add error event listeners
+      newSocket.on('agent_chat_error', (data: { agentId: string, error: string }) => {
+        console.error(`❌ [CLIENT-CHAT-ERROR] Chat error for agent ${data.agentId}:`, data.error);
+      });
+
+      newSocket.on('error', (error: any) => {
+        console.error(`❌ [CLIENT-WS-ERROR] WebSocket error:`, error);
+      });
+
+      newSocket.on('disconnect', (reason: string) => {
+        console.warn(`🔌 [CLIENT-WS-DISCONNECT] WebSocket disconnected:`, reason);
       });
 
       setSocket(newSocket);
@@ -132,6 +147,7 @@ const ChatAgentDemo: React.FC = () => {
 
     setIsSpawning(true);
     try {
+      console.log(`🚀 [CLIENT-SPAWN-START] Starting to spawn chat agent with task: "${spawnTask}"`);
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
       const response = await axios.post(
         `${backendUrl}/api/agents/spawn`,
@@ -147,7 +163,7 @@ const ChatAgentDemo: React.FC = () => {
       );
 
       const agent = response.data.agent;
-      console.log('Spawned chat agent:', agent);
+      console.log('✅ [CLIENT-SPAWN-SUCCESS] Spawned chat agent:', agent);
       setSpawnTask('');
     } catch (error) {
       console.error('Failed to spawn agent:', error);
@@ -161,6 +177,8 @@ const ChatAgentDemo: React.FC = () => {
   const sendMessage = () => {
     if (!socket || !selectedAgent || !inputMessage) return;
 
+    console.log(`📤 [CLIENT-SEND-MESSAGE] Sending message to agent ${selectedAgent.id}: "${inputMessage}"`);
+
     // Add user message to UI
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -171,6 +189,7 @@ const ChatAgentDemo: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
 
     // Send to backend
+    console.log(`🚀 [CLIENT-WS-EMIT] Emitting agent_chat_message event to server`);
     socket.emit('agent_chat_message', {
       agentId: selectedAgent.id,
       message: inputMessage

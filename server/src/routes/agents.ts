@@ -14,15 +14,13 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import crypto, { randomUUID } from 'crypto';
-import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import { authenticateToken } from '../middleware/auth.js';
 import { getIO } from '../server.js';
 import { generateAgentName } from '../utils/nameGenerator.js';
 import { agentChatService } from '../../services/agent-chat.js';
 import { dockerManager } from '../services/docker-manager-compat.js';
 import { terminalManagerFactory } from '../services/terminal-manager-factory.js';
-import { claudeExecutor } from '../services/claude-executor.js';
 // import fs from 'fs/promises';
 // import path from 'path';
 // import os from 'os';
@@ -89,7 +87,7 @@ async function executeAgentAsync(
       return;
     }
 
-    // For all modes (terminal and chat), use the same tmux-based terminal manager approach
+    // Use unified PTY approach for all modes (terminal and chat)
     console.log(`🚀 Starting Claude agent (${mode} mode) with ${terminalLocation}/${terminalIsolation} terminal for agent: ${agentId}`);
 
     try {
@@ -105,9 +103,9 @@ async function executeAgentAsync(
           task,
           workspaceRepo: repositoryUrl || undefined
         });
-        
+
         const { container, sessionId } = containerResult;
-        
+
         console.log(`✅ Agent ${agentId} spawned in container ${container.containerId} with session ${sessionId}`);
 
         // Update agent status to running with container info
@@ -118,7 +116,7 @@ async function executeAgentAsync(
             output: `Claude agent running in Docker container\nContainer ID: ${container.containerId}\nSession: ${sessionId}\n\nExecuting: claude "${task}"\n\nFiles created/modified by this agent will appear in the preview.`
           }
         });
-        
+
         // Notify team that agent is running in container
         if (teamId && io) {
           io.to(teamId).emit('agent-status', {
@@ -131,10 +129,10 @@ async function executeAgentAsync(
           });
         }
       } else {
-        // Use new terminal manager factory for simple PTY mode
-        const manager = terminalManagerFactory.getManager(terminalLocation, terminalIsolation);
-        
-        console.log(`🔧 Creating terminalOptions with agentName: ${agentName}`);
+        // Use unified terminal manager factory for both terminal and chat modes
+        const manager = terminalManagerFactory.getManager(terminalLocation, terminalIsolation, mode);
+
+        console.log(`🔧 Creating terminalOptions with agentName: ${agentName} for ${mode} mode`);
         const terminalOptions: any = {
           agentId,
           agentName,
@@ -150,27 +148,51 @@ async function executeAgentAsync(
           terminalOptions.workspaceRepo = repositoryUrl;
         }
         await manager.spawnTerminal(terminalOptions);
-        
-        console.log(`✅ Agent ${agentId} spawned with ${terminalLocation}/${terminalIsolation} terminal`);
+
+        console.log(`✅ Agent ${agentId} spawned with ${mode} mode using ${terminalLocation}/${terminalIsolation} terminal`);
 
         // Update agent status to running
+        const modeDescription = mode === 'chat' ? 'chat PTY session' : `${terminalLocation}/${terminalIsolation} terminal`;
         await prisma.agents.update({
           where: { id: agentId },
           data: {
             status: 'running',
-            output: `Claude agent running with ${terminalLocation}/${terminalIsolation} terminal\nAgent: ${agentId}\n\nExecuting: claude "${task}"\n\nAgent is ready for interactive commands.`
+            output: `Claude agent running with ${modeDescription}\nAgent: ${agentId}\nMode: ${mode}\n\nTask: ${task}\n\nAgent is ready for ${mode === 'chat' ? 'chat messages' : 'interactive commands'}.`
           }
         });
-        
+
         // Notify team that agent is running
         if (teamId && io) {
           io.to(teamId).emit('agent-status', {
             agentId,
             status: 'running',
-            message: `Agent running with ${terminalLocation}/${terminalIsolation} terminal`,
+            message: `Agent running in ${mode} mode with ${modeDescription}`,
+            mode,
             terminalLocation,
             terminalIsolation,
             userId
+          });
+        }
+
+        // Set up chat response listener for chat mode agents
+        if (mode === 'chat') {
+          terminalManagerFactory.on('chat-response', (responseAgentId: string, response: string) => {
+            if (responseAgentId === agentId) {
+              // Send response through agent chat service
+              agentChatService.sendAgentMessage({
+                agentId,
+                agentName: agentName || `Agent ${agentId.slice(-6)}`,
+                message: response,
+                teamId: teamId!,
+                type: 'success'
+              });
+            }
+          });
+
+          terminalManagerFactory.on('chat-error', (errorAgentId: string, error: string) => {
+            if (errorAgentId === agentId) {
+              agentChatService.sendAgentErrorMessage(agentId, error);
+            }
           });
         }
       }
@@ -861,64 +883,33 @@ router.post('/:id/input', async (req: express.Request, res) => {
       return res.status(404).json({ error: 'Agent not found or access denied' });
     }
 
-    // Send input to the running agent process based on agent mode
-    console.log(`💬 Sending input to agent ${agentId}: ${input}`);
+    // Send input to the running agent process using unified PTY approach
+    console.log(`💬 Sending input to agent ${agentId} (${agent.mode} mode): ${input}`);
 
-    if (agent.mode === 'chat') {
-      // For chat mode agents, use claudeExecutor to send message
-      try {
-        const { claudeExecutor } = await import('../../services/claude-executor.js');
-        const response = await claudeExecutor.executeCommand({
-          agentId,
-          message: input,
-          userId: req.user?.userId!,
-          teamId: user.teamId,
-          sessionId: agent.sessionId || undefined
-        });
+    try {
+      const { terminalManagerFactory } = await import('../services/terminal-manager-factory.js');
+      const manager = terminalManagerFactory.getManager(
+        (agent.terminalLocation as 'local' | 'remote') || 'local',
+        (agent.terminalIsolation as 'none' | 'docker' | 'tmux') || 'tmux',
+        (agent.mode as 'terminal' | 'chat') || 'terminal'
+      );
 
-        // Send response through agent chat service
-        const { agentChatService } = await import('../../services/agent-chat.js');
-        await agentChatService.sendAgentMessage({
-          agentId,
-          agentName: agent.agentName || `Agent ${agentId.slice(-6)}`,
-          message: response,
-          teamId: user.teamId,
-          type: 'success'
-        });
+      const success = manager.sendInput(agentId, input + (agent.mode === 'chat' ? '' : '\n'));
 
+      if (success) {
         res.json({
-          message: 'Input sent to chat agent successfully',
-          response: response
+          message: `Input sent to ${agent.mode} agent successfully`
         });
-      } catch (executeError) {
-        console.error(`❌ Error sending input to chat agent ${agentId}:`, executeError);
-        res.status(500).json({
-          error: `Failed to send input to chat agent: ${executeError instanceof Error ? executeError.message : String(executeError)}`
+      } else {
+        res.status(404).json({
+          error: `Agent ${agent.mode} session not found or not ready`
         });
       }
-    } else {
-      // For terminal mode agents, send input to tmux session
-      try {
-        const { terminalManagerFactory } = await import('../services/terminal-manager-factory.js');
-        const manager = terminalManagerFactory.getManager(agent.terminalLocation || 'local', agent.terminalIsolation || 'tmux');
-
-        const success = manager.sendInput(agentId, input + '\n');
-
-        if (success) {
-          res.json({
-            message: 'Input sent to terminal agent successfully'
-          });
-        } else {
-          res.status(404).json({
-            error: 'Agent terminal session not found or not ready'
-          });
-        }
-      } catch (terminalError) {
-        console.error(`❌ Error sending input to terminal agent ${agentId}:`, terminalError);
-        res.status(500).json({
-          error: `Failed to send input to terminal agent: ${terminalError instanceof Error ? terminalError.message : String(terminalError)}`
-        });
-      }
+    } catch (terminalError) {
+      console.error(`❌ Error sending input to ${agent.mode} agent ${agentId}:`, terminalError);
+      res.status(500).json({
+        error: `Failed to send input to ${agent.mode} agent: ${terminalError instanceof Error ? terminalError.message : String(terminalError)}`
+      });
     }
 
   } catch (error) {

@@ -100,6 +100,31 @@ playwright/.cache/
 /coverage/
 jest-coverage/
 
+# Screenshots and test artifacts
+*.png
+*.jpg
+*.jpeg
+screenshots/
+terminal-screenshots/
+test-screenshots/
+
+# Test debug files
+test-*.js
+test-*.html
+*-test.js
+*-test.html
+debug-*.js
+debug-*.html
+*-debug.js
+*-debug.html
+capture-*.js
+screenshot-*.js
+*-demo.js
+*-demo-*.js
+
+# PDF files (usually not for version control)
+*.pdf
+
 # ===================================
 # Development Tools & IDEs
 # ===================================
@@ -279,25 +304,21 @@ vite.config.*.timestamp-*
 
 # ColabVibe specific
 .server.lock
-workspace-*.png
-test-*.js
-test-*.html
 update-*.mjs
-*-debug.png
-*-after-*.png
 
-# Development artifacts
-test-check-buttons.js
-test-dashboard-manual.html
-test-direct-save.js
+# Development artifacts (now covered by patterns above)
 test-file.txt
-test-with-console.js
-test-workspace-*.js
-test-workspace-*.html
 
 # Manual test files
 manual-*.md
-hmr-test-*.png
+
+# One-off debug/test files in root
+create-*-preview*.js
+fix-*.js
+check-*.js
+setup-*.js
+get-*.js
+simple-*.js
 
 # ===================================
 # Documentation Build

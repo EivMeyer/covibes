@@ -53,7 +53,7 @@ import { universalPreviewService } from '../services/universal-preview-service.j
 // import { mockAgentService, isMockAgentEnabled } from '../services/mock-agent.js';
 import { previewService } from '../services/preview-service.js';
 import { agentChatService } from '../services/agent-chat.js';
-import { claudeExecutor } from './services/claude-executor.js';
+import { terminalManagerFactory } from './services/terminal-manager-factory.js';
 import terminalBuffer from './services/terminal-buffer.js';
 import { dockerManager } from './services/docker-manager-compat.js';
 
@@ -1313,7 +1313,7 @@ app.get('/pitch/viewer', (_req, res) => {
 });
 
 // Demo endpoints (public, no auth required)
-app.get('/api/agents/demo/chat-agent', async (req: express.Request, res: express.Response) => {
+app.get('/api/agents/demo/chat-agent', async (_req: express.Request, res: express.Response) => {
   try {
     const crypto = await import('crypto');
     const jwtModule = await import('jsonwebtoken');
@@ -2321,25 +2321,16 @@ io.on('connection', (socket: Socket) => {
       });
 
       try {
-        // Execute Claude command non-interactively
-        const response = await claudeExecutor.executeCommand({
-          agentId: data.agentId,
-          message: data.input,
-          userId: socket.userId,
-          teamId: socket.teamId,
-          ...(agent.sessionId ? { sessionId: agent.sessionId } : {})
-        });
+        // Use unified PTY approach for agent input
+        const manager = terminalManagerFactory.getManager('local', 'tmux', agent.mode);
+        const success = manager.sendInput(data.agentId, data.input);
 
-        // Send Claude's response to chat
-        await agentChatService.sendAgentMessage({
-          agentId: data.agentId,
-          agentName: `Agent`,
-          message: response,
-          teamId: socket.teamId,
-          type: 'success'
-        });
-
-        console.log(`✅ Agent input processed successfully for agent ${data.agentId}`);
+        if (success) {
+          console.log(`✅ Agent input processed successfully for agent ${data.agentId} via PTY`);
+        } else {
+          console.warn(`⚠️ Failed to send input to agent ${data.agentId} - session not ready`);
+          await agentChatService.sendAgentErrorMessage(data.agentId, 'Agent session not ready for input');
+        }
 
       } catch (executeError) {
         console.error(`❌ Error executing agent input for ${data.agentId}:`, executeError);
@@ -2363,12 +2354,16 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('agent_chat_message', async (data: { agentId: string; message: string }) => {
+    console.log(`📨 [CHAT-MESSAGE-RECEIVED] Agent: ${data.agentId}, User: ${socket.userId}, Team: ${socket.teamId}, Message: "${data.message}"`);
+
     if (!socket.userId || !socket.teamId) {
+      console.log(`❌ [CHAT-MESSAGE-AUTH-FAIL] No userId or teamId in socket`);
       return;
     }
 
     try {
       // SECURITY CHECK: Verify agent ownership and chat mode
+      console.log(`🔍 [CHAT-MESSAGE-LOOKUP] Looking up agent ${data.agentId} for user ${socket.userId}`);
       const agent = await prisma.agents.findUnique({
         where: { id: data.agentId },
         select: { userId: true, status: true, mode: true, sessionId: true }
@@ -2420,38 +2415,25 @@ io.on('connection', (socket: Socket) => {
       });
 
       try {
-        // Execute Claude command non-interactively
-        const response = await claudeExecutor.executeCommand({
-          agentId: data.agentId,
-          message: data.message,
-          userId: socket.userId,
-          teamId: socket.teamId,
-          ...(agent.sessionId ? { sessionId: agent.sessionId } : {})
-        });
+        // Use unified PTY approach for chat message
+        console.log(`💬 [CHAT-MESSAGE-START] Starting PTY chat execution for agent ${data.agentId} with message: "${data.message}"`);
+        const manager = terminalManagerFactory.getManager('local', 'tmux', agent.mode);
+        const success = manager.sendInput(data.agentId, data.message);
 
-        // Send Claude's response to chat
-        const agentInfo = await prisma.agents.findUnique({
-          where: { id: data.agentId },
-          select: { agentName: true }
-        });
+        if (success) {
+          console.log(`✅ [CHAT-MESSAGE-SUCCESS] Sent message to chat agent ${data.agentId} via PTY`);
+          // Response will be handled by chat-response event listener from ChatPtyManager
+        } else {
+          console.warn(`⚠️ [CHAT-MESSAGE-WARNING] Failed to send message to chat agent ${data.agentId} - session not ready`);
 
-        await agentChatService.sendAgentMessage({
-          agentId: data.agentId,
-          agentName: agentInfo?.agentName || `Agent ${data.agentId.slice(-6)}`,
-          message: response,
-          teamId: socket.teamId,
-          type: 'success'
-        });
-
-        // Also emit the response directly for immediate UI update
-        socket.emit('agent_chat_response', {
-          agentId: data.agentId,
-          response: response,
-          timestamp: new Date().toISOString()
-        });
+          socket.emit('agent_chat_error', {
+            agentId: data.agentId,
+            error: 'Agent session not ready for messages'
+          });
+        }
 
       } catch (executeError) {
-        console.error(`❌ Failed to execute Claude command for agent ${data.agentId}:`, executeError);
+        console.error(`❌ [CLAUDE-EXECUTION-ERROR] Failed to execute Claude command for agent ${data.agentId}:`, executeError);
 
         const errorMessage = executeError instanceof Error ? executeError.message : 'Failed to execute command';
 
@@ -3230,7 +3212,67 @@ async function startServer(): Promise<void> {
         socket.destroy();
       }
     });
-    
+
+    // Set up global chat response listeners for ChatPtyManager
+    terminalManagerFactory.on('chat-response', async (agentId: string, response: string) => {
+      console.log(`💬 [GLOBAL-CHAT-RESPONSE] Received chat response for agent ${agentId}: ${response.substring(0, 100)}...`);
+
+      try {
+        // Get agent info for proper messaging
+        const agent = await prisma.agents.findUnique({
+          where: { id: agentId },
+          include: { users: true }
+        });
+
+        if (agent) {
+          // Send response through agent chat service
+          await agentChatService.sendAgentMessage({
+            agentId,
+            agentName: agent.agentName || `Agent ${agentId.slice(-6)}`,
+            message: response,
+            teamId: agent.teamId,
+            type: 'success'
+          });
+
+          // Also emit directly to WebSocket for immediate UI update
+          io.to(agent.teamId).emit('agent_chat_response', {
+            agentId,
+            response,
+            timestamp: new Date().toISOString()
+          });
+
+          console.log(`✅ [GLOBAL-CHAT-RESPONSE] Sent chat response for agent ${agentId} to team ${agent.teamId}`);
+        }
+      } catch (error) {
+        console.error(`❌ [GLOBAL-CHAT-RESPONSE-ERROR] Failed to handle chat response for agent ${agentId}:`, error);
+      }
+    });
+
+    terminalManagerFactory.on('chat-error', async (agentId: string, error: string) => {
+      console.log(`❌ [GLOBAL-CHAT-ERROR] Received chat error for agent ${agentId}: ${error}`);
+
+      try {
+        // Get agent info
+        const agent = await prisma.agents.findUnique({
+          where: { id: agentId }
+        });
+
+        if (agent) {
+          // Send error through agent chat service
+          await agentChatService.sendAgentErrorMessage(agentId, error);
+
+          // Also emit directly to WebSocket
+          io.to(agent.teamId).emit('agent_chat_error', {
+            agentId,
+            error,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (handlingError) {
+        console.error(`❌ [GLOBAL-CHAT-ERROR-HANDLING] Failed to handle chat error for agent ${agentId}:`, handlingError);
+      }
+    });
+
     // Start listening
     server.listen(PORT, () => {
       console.log(`🚀 CoVibe server running on port ${PORT}`);

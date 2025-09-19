@@ -90,8 +90,8 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
         interactive: !options.task, // Interactive if no specific task
         appendSystemPrompt: true, // Add agent development guidelines
         ...(options.agentName ? { agentName: options.agentName } : {}), // Only include if defined
-        mode: options.mode,
-        sessionId: options.sessionId
+        ...(options.mode ? { mode: options.mode } : {}),
+        ...(options.sessionId ? { sessionId: options.sessionId } : {})
       });
 
     // Build simple Claude command with proper shell escaping

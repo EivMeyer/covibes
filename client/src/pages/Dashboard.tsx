@@ -286,9 +286,8 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       // Default to terminal mode for backwards compatibility
       handleAddTile('terminal', agentId);
     } else if (agent?.mode === 'chat') {
-      // For chat mode agents, we could optionally create a chat tile
-      // For now, we don't create any tile - users can interact via the chat interface
-      console.log(`Chat agent ${agentId} spawned - no terminal tile needed`);
+      // Create agent chat tile for chat mode agents
+      handleAddTile('agentchat', agentId);
     }
   };
 

@@ -638,35 +638,7 @@ function AppContent() {
     setOnlineUsers: () => {},
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-midnight-900 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-electric/10 rounded-full blur-xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-team-purple/10 rounded-full blur-xl float" />
-        </div>
-        
-        <div className="text-center space-y-6 relative z-10">
-          <div className="flex items-center justify-center space-x-1 mb-4">
-            <h1 className="text-3xl font-bold text-white tracking-wide">
-              Colab<span className="text-electric">Vibe</span>
-            </h1>
-          </div>
-          
-          <LoadingSpinner size="lg" />
-          
-          <div className="space-y-2">
-            <p className="text-white font-semibold text-lg">Loading CoVibe...</p>
-            <p className="text-electric text-sm font-medium">Setting up your workspace</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // DEBUG: Removed excessive logging to reduce console noise
-
-  // Check for demo routes
+  // Check for demo routes FIRST - before any auth/loading logic
   if (window.location.pathname === '/demo') {
     // Get agent ID from URL params if available
     const urlParams = new URLSearchParams(window.location.search);
@@ -681,6 +653,32 @@ function AppContent() {
 
   if (window.location.pathname === '/demo/chat-agent') {
     return <ChatAgentDemo />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-midnight-900 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-electric/10 rounded-full blur-xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-team-purple/10 rounded-full blur-xl float" />
+        </div>
+
+        <div className="text-center space-y-6 relative z-10">
+          <div className="flex items-center justify-center space-x-1 mb-4">
+            <h1 className="text-3xl font-bold text-white tracking-wide">
+              Colab<span className="text-electric">Vibe</span>
+            </h1>
+          </div>
+
+          <LoadingSpinner size="lg" />
+
+          <div className="space-y-2">
+            <p className="text-white font-semibold text-lg">Loading CoVibe...</p>
+            <p className="text-electric text-sm font-medium">Setting up your workspace</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Route based on authentication status
