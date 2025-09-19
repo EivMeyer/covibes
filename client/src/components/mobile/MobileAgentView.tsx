@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AgentList } from '@/components/features/agents/AgentList';
 import { AgentChatTile } from '@/components/tiles/AgentChatTile';
+import { SimpleTerminal } from '@/components/features/agents/SimpleTerminal';
 
 interface MobileAgentViewProps {
   agents: any[];
@@ -141,7 +142,7 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
         </div>
       )}
 
-      {/* AGENT CHAT - DYNAMIC HEIGHT BASED ON KEYBOARD */}
+      {/* AGENT TERMINAL/CHAT - DYNAMIC HEIGHT BASED ON KEYBOARD */}
       {showChat && selectedAgent && (
         <div 
           className="fixed top-0 left-0 right-0 z-50 bg-midnight-800"
@@ -190,41 +191,52 @@ export const MobileAgentView: React.FC<MobileAgentViewProps> = ({
               </button>
             </div>
             
-            {/* FULL SCREEN TERMINAL CONTENT */}
-            <div 
-              className="h-full overflow-hidden chat-container" 
-              style={{ 
+            {/* FULL SCREEN TERMINAL OR CHAT CONTENT */}
+            <div
+              className="h-full overflow-hidden chat-container"
+              style={{
                 height: 'calc(100% - 60px)',
-                // Ensure chat content is focusable and scrollable
+                // Ensure content is focusable and scrollable
                 position: 'relative',
                 zIndex: 1000,
-                backgroundColor: '#0d0d0d' // Chat background
+                backgroundColor: '#0d0d0d' // Background
               }}
               onTouchStart={(e) => {
-                // Focus on chat input
-                e.stopPropagation();
-
-                // Find and focus the chat textarea
-                const chatTextarea = e.currentTarget.querySelector('textarea') as HTMLTextAreaElement;
-                if (chatTextarea) {
-                  setTimeout(() => {
-                    chatTextarea.focus();
-                  }, 100);
+                // Only focus on chat input if in chat mode
+                if (selectedAgent.mode === 'chat') {
+                  e.stopPropagation();
+                  // Find and focus the chat textarea
+                  const chatTextarea = e.currentTarget.querySelector('textarea') as HTMLTextAreaElement;
+                  if (chatTextarea) {
+                    setTimeout(() => {
+                      chatTextarea.focus();
+                    }, 100);
+                  }
                 }
               }}
               onTouchMove={(e) => {
-                // Allow scrolling within chat
+                // Allow scrolling within content
                 e.stopPropagation();
               }}
               tabIndex={0}
             >
-              <AgentChatTile
-                agent={selectedAgent}
-                agentId={selectedAgent.id}
-                agents={agents}
-                user={user}
-                socket={socket}
-              />
+              {/* Render based on agent mode */}
+              {selectedAgent.mode === 'chat' ? (
+                <AgentChatTile
+                  agent={selectedAgent}
+                  agentId={selectedAgent.id}
+                  agents={agents}
+                  user={user}
+                  socket={socket}
+                />
+              ) : (
+                <SimpleTerminal
+                  agentId={selectedAgent.id}
+                  isVisible={true}
+                  socket={socket}
+                  className="h-full"
+                />
+              )}
             </div>
           </div>
         </div>
