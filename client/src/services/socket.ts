@@ -132,9 +132,18 @@ class SocketService {
       this.connectionState = 'connecting';
       
       // Create new socket connection with both polling and WebSocket for real-time terminal
-      // Use environment variable for WebSocket URL with fallbacks
-      const wsUrl = import.meta.env.VITE_WS_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      this.socket = io(wsUrl, {
+      // In dev mode, don't specify URL to use relative path (enables proxy)
+      // In production, use the configured WebSocket URL
+      const isDev = import.meta.env.DEV;
+      const wsUrl = isDev
+        ? undefined  // No URL = relative path = uses proxy
+        : (import.meta.env.VITE_WS_URL || window.location.origin);
+
+      console.log('🔌 Socket connecting:', isDev ? 'via proxy (relative path)' : `to ${wsUrl}`);
+      console.log('🔍 Environment:', { isDev, origin: window.location.origin, VITE_WS_URL: import.meta.env.VITE_WS_URL });
+
+      // When wsUrl is undefined, io() uses relative path automatically
+      this.socket = io(wsUrl || '/', {
         transports: ['polling', 'websocket'], // Match server configuration - enable both transports
         timeout: 20000,
         reconnection: true,

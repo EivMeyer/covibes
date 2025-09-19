@@ -15,6 +15,7 @@ import type { ChatMessage } from '@/types';
 // Import demo terminal
 import { DemoTerminal } from './pages/DemoTerminal';
 import { DemoList } from './pages/DemoList';
+import ChatAgentDemo from './pages/ChatAgentDemo';
 
 // Simple App with working state management
 function AppContent() {
@@ -676,6 +677,10 @@ function AppContent() {
 
   if (window.location.pathname === '/demo-list') {
     return <DemoList />;
+  }
+
+  if (window.location.pathname === '/demo/chat-agent') {
+    return <ChatAgentDemo />;
   }
 
   // Route based on authentication status

@@ -225,8 +225,8 @@ export class ClaudeConfigManager {
       args.push('--dangerously-skip-permissions');
     }
 
-    // Add task if provided
-    if (options.task && options.task.trim()) {
+    // Add task if provided (but not for chat mode with --print, since we send via stdin)
+    if (options.task && options.task.trim() && options.mode !== 'chat') {
       args.push(options.task.trim());
     }
 

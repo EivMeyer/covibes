@@ -23,8 +23,8 @@ model agents {
   terminalLocation    String                @default("local")
   isSessionPersistent Boolean               @default(false)
   tmuxSessionName     String?
-  mode                String                @default("terminal") // "terminal" or "chat"
-  sessionId           String?               // Claude session ID for chat mode
+  mode                String                @default("terminal")
+  sessionId           String?
   teams               teams                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
   users               users                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   container_instances container_instances[]
@@ -90,21 +90,21 @@ model preview_deployments {
 }
 
 model teams {
-  id                     String                     @id
-  name                   String
-  teamCode               String                     @unique
-  repositoryUrl          String?
-  createdAt              DateTime                   @default(now())
-  updatedAt              DateTime
-  sidebarWidth           Int                        @default(256)
-  workspaceLayouts       Json?
-  workspaceTiles         Json?
-  agents                 agents[]
-  container_instances    container_instances[]
-  messages               messages[]
-  preview_deployments    preview_deployments?
-  users                  users[]
-  userLayoutPreferences  userLayoutPreference[]
+  id                    String                 @id
+  name                  String
+  teamCode              String                 @unique
+  repositoryUrl         String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime
+  sidebarWidth          Int                    @default(256)
+  workspaceLayouts      Json?
+  workspaceTiles        Json?
+  agents                agents[]
+  container_instances   container_instances[]
+  messages              messages[]
+  preview_deployments   preview_deployments?
+  userLayoutPreferences userLayoutPreference[]
+  users                 users[]
 }
 
 model terminal_history {
@@ -117,24 +117,24 @@ model terminal_history {
 }
 
 model users {
-  id                     String                     @id
-  email                  String                     @unique
-  userName               String
-  password               String?
-  teamId                 String
-  vmId                   String?
-  createdAt              DateTime                   @default(now())
-  updatedAt              DateTime
-  accessToken            String?
-  avatarUrl              String?
-  githubId               String?                    @unique
-  githubUsername         String?
-  claudeConfigDir        String?
-  agents                 agents[]
-  container_instances    container_instances[]
-  messages               messages[]
-  userLayoutPreferences  userLayoutPreference[]
-  teams                  teams                      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  id                    String                 @id
+  email                 String                 @unique
+  userName              String
+  password              String?
+  teamId                String
+  vmId                  String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime
+  accessToken           String?
+  avatarUrl             String?
+  githubId              String?                @unique
+  githubUsername        String?
+  claudeConfigDir       String?
+  agents                agents[]
+  container_instances   container_instances[]
+  messages              messages[]
+  userLayoutPreferences userLayoutPreference[]
+  teams                 teams                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
 model userLayoutPreference {
@@ -145,8 +145,8 @@ model userLayoutPreference {
   layoutData Json
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  users      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
   teams      teams    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  users      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, teamId, layoutType])
 }

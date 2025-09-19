@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: backendUrl,
+          target: 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
           configure: (proxy) => {
@@ -68,12 +68,12 @@ export default defineConfig(({ mode }) => {
               console.log('Proxy error:', err);
             });
             proxy.on('proxyReq', (proxyReq, req) => {
-              console.log(`Proxying ${req.method} ${req.url} to ${backendUrl}`);
+              console.log(`Proxying ${req.method} ${req.url} to http://localhost:3001`);
             });
           },
         },
         '/socket.io': {
-          target: backendUrl,
+          target: 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
           ws: true,

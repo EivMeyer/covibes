@@ -277,8 +277,19 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
   };
 
   const handleAgentSpawned = async (agentId: string) => {
-    // Automatically create a terminal tile for the new agent
-    handleAddTile('terminal', agentId);
+    // Find the agent to check its mode
+    const agent = agents.find(a => a.id === agentId);
+
+    // Only create a terminal tile if the agent is in terminal mode
+    // Chat mode agents don't need a terminal tile
+    if (agent?.mode === 'terminal' || !agent?.mode) {
+      // Default to terminal mode for backwards compatibility
+      handleAddTile('terminal', agentId);
+    } else if (agent?.mode === 'chat') {
+      // For chat mode agents, we could optionally create a chat tile
+      // For now, we don't create any tile - users can interact via the chat interface
+      console.log(`Chat agent ${agentId} spawned - no terminal tile needed`);
+    }
   };
 
   // Container management functions

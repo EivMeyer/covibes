@@ -53,6 +53,7 @@ import { universalPreviewService } from '../services/universal-preview-service.j
 // import { mockAgentService, isMockAgentEnabled } from '../services/mock-agent.js';
 import { previewService } from '../services/preview-service.js';
 import { agentChatService } from '../services/agent-chat.js';
+import { claudeExecutor } from './services/claude-executor.js';
 import terminalBuffer from './services/terminal-buffer.js';
 import { dockerManager } from './services/docker-manager-compat.js';
 
@@ -1311,6 +1312,101 @@ app.get('/pitch/viewer', (_req, res) => {
   res.send(html);
 });
 
+// Demo endpoints (public, no auth required)
+app.get('/api/agents/demo/chat-agent', async (req: express.Request, res: express.Response) => {
+  try {
+    const crypto = await import('crypto');
+    const jwtModule = await import('jsonwebtoken');
+    const jwt = jwtModule.default;
+
+    // Create a demo team and user for this session
+    const demoId = crypto.randomBytes(8).toString('hex');
+    const teamId = `demo-team-${demoId}`;
+    const userId = `demo-user-${demoId}`;
+
+    // Create demo team
+    await prisma.teams.create({
+      data: {
+        id: teamId,
+        name: 'Chat Agent Demo',
+        teamCode: `DEMO${demoId}`,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
+
+    // Create demo user
+    await prisma.users.create({
+      data: {
+        id: userId,
+        email: `demo-${demoId}@example.com`,
+        userName: 'Demo User',
+        password: 'demo-password',
+        teamId: teamId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
+
+    // Generate a temporary JWT token for the demo session
+    const token = jwt.sign(
+      {
+        userId,
+        email: `demo-${demoId}@example.com`,
+        teamId
+      },
+      process.env['JWT_SECRET'] || 'demo-secret',
+      { expiresIn: '1h' }
+    );
+
+    // Return demo credentials
+    res.json({
+      success: true,
+      demo: {
+        token,
+        teamId,
+        userId,
+        teamCode: `DEMO${demoId}`,
+        expiresIn: '1 hour',
+        features: {
+          chatAgents: true,
+          terminalAgents: false,
+          persistentData: false
+        },
+        instructions: [
+          'This is a temporary demo session that expires in 1 hour',
+          'Chat agents run without spawning terminal sessions',
+          'Messages are processed using Claude\'s non-interactive mode',
+          'No persistent data - session will be cleaned up after expiry'
+        ]
+      }
+    });
+
+    // Schedule cleanup after 1 hour
+    setTimeout(async () => {
+      try {
+        // Clean up demo agents
+        await prisma.agents.deleteMany({ where: { teamId } });
+        // Clean up demo messages
+        await prisma.messages.deleteMany({ where: { teamId } });
+        // Clean up demo user
+        await prisma.users.delete({ where: { id: userId } });
+        // Clean up demo team
+        await prisma.teams.delete({ where: { id: teamId } });
+      } catch (error) {
+        console.error(`Failed to cleanup demo session ${demoId}:`, error);
+      }
+    }, 60 * 60 * 1000); // 1 hour
+
+  } catch (error: any) {
+    console.error('Demo session creation error:', error);
+    res.status(500).json({
+      error: 'Failed to create demo session',
+      message: error.message
+    });
+  }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', authenticateToken, agentRoutes);
@@ -1322,6 +1418,7 @@ app.use('/api/ide', ideRoutes);
 app.use('/api/terminal', terminalRoutes); // No auth required for testing
 app.use('/api/layout', authenticateToken, layoutRoutes); // Layout persistence requires authentication
 app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace persistence requires authentication
+console.log('🎯 Demo routes registered');
 
 
 // Special-case proxy for Vite dev absolute module paths when loaded via
@@ -1456,6 +1553,23 @@ io.on('connection', (socket: Socket) => {
       console.log(`🔍 WebSocket event: ${eventName}`, args);
     }
   });
+
+  // DEBUG: Log ALL incoming WebSocket events to debug message sending
+  socket.onAny((eventName, ...args) => {
+    // Log everything except heartbeat events
+    if (!eventName.includes('ping') && !eventName.includes('pong') && !eventName.includes('heartbeat')) {
+      console.log(`🔍 [WEBSOCKET] Event received: "${eventName}"`, args.length > 0 ? JSON.stringify(args[0]).substring(0, 200) : 'no data');
+    }
+  });
+
+  // Also log when messages are sent FROM server
+  const originalEmit = socket.emit;
+  socket.emit = function(eventName: string, ...args: any[]) {
+    if (!eventName.includes('ping') && !eventName.includes('pong')) {
+      console.log(`📤 [WEBSOCKET] Event sent: "${eventName}"`, args.length > 0 ? JSON.stringify(args[0]).substring(0, 100) : 'no data');
+    }
+    return originalEmit.apply(this, [eventName, ...args]);
+  };
 
   // Handle team joining
   socket.on('join-team', async (data: { teamId: string; token: string }) => {
@@ -2140,6 +2254,114 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  // Handle agent_input events from frontend (same as agent_chat_message but different event name)
+  socket.on('agent_input', async (data: { agentId: string; input: string }) => {
+    console.log(`🔍 [DEBUG] Received agent_input event:`, {
+      agentId: data.agentId,
+      input: data.input,
+      userId: socket.userId,
+      teamId: socket.teamId
+    });
+
+    if (!socket.userId || !socket.teamId) {
+      console.log(`❌ [DEBUG] Missing auth - userId: ${socket.userId}, teamId: ${socket.teamId}`);
+      return;
+    }
+
+    try {
+      // SECURITY CHECK: Verify agent ownership and chat mode
+      const agent = await prisma.agents.findUnique({
+        where: { id: data.agentId },
+        select: { userId: true, status: true, mode: true, sessionId: true }
+      });
+
+      if (!agent) {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'Agent not found'
+        });
+        return;
+      }
+
+      if (agent.userId !== socket.userId) {
+        console.warn(`🚨 User ${socket.userId} attempted to send input to agent ${data.agentId} owned by ${agent.userId}`);
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'Permission denied: You can only send input to your own agents'
+        });
+        return;
+      }
+
+      if (agent.mode !== 'chat') {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: 'This agent is in terminal mode, not chat mode'
+        });
+        return;
+      }
+
+      if (agent.status !== 'running') {
+        socket.emit('agent_chat_error', {
+          agentId: data.agentId,
+          error: `Cannot send input to ${agent.status} agent`
+        });
+        return;
+      }
+
+      // For chat mode, execute Claude command non-interactively
+      console.log(`💬 Processing agent input for agent ${data.agentId}: ${data.input}`);
+
+      // Send user message to chat
+      await agentChatService.sendAgentMessage({
+        agentId: data.agentId,
+        agentName: `User`,
+        message: data.input,
+        teamId: socket.teamId,
+        type: 'info'
+      });
+
+      try {
+        // Execute Claude command non-interactively
+        const response = await claudeExecutor.executeCommand({
+          agentId: data.agentId,
+          message: data.input,
+          userId: socket.userId,
+          teamId: socket.teamId,
+          ...(agent.sessionId ? { sessionId: agent.sessionId } : {})
+        });
+
+        // Send Claude's response to chat
+        await agentChatService.sendAgentMessage({
+          agentId: data.agentId,
+          agentName: `Agent`,
+          message: response,
+          teamId: socket.teamId,
+          type: 'success'
+        });
+
+        console.log(`✅ Agent input processed successfully for agent ${data.agentId}`);
+
+      } catch (executeError) {
+        console.error(`❌ Error executing agent input for ${data.agentId}:`, executeError);
+
+        await agentChatService.sendAgentMessage({
+          agentId: data.agentId,
+          agentName: `Agent`,
+          message: `Error: ${executeError instanceof Error ? executeError.message : String(executeError)}`,
+          teamId: socket.teamId,
+          type: 'error'
+        });
+      }
+
+    } catch (error) {
+      console.error('Agent input error:', error);
+      socket.emit('agent_chat_error', {
+        agentId: data.agentId,
+        error: 'Failed to process agent input'
+      });
+    }
+  });
+
   socket.on('agent_chat_message', async (data: { agentId: string; message: string }) => {
     if (!socket.userId || !socket.teamId) {
       return;
@@ -2185,14 +2407,59 @@ io.on('connection', (socket: Socket) => {
         return;
       }
 
-      // For chat mode, send the message with a newline to execute
-      // Claude in print mode will process and return clean response
-      const success = dockerManager.writeToPTY(data.agentId, data.message + '\r');
+      // For chat mode, execute Claude command non-interactively
+      console.log(`💬 Processing chat message for agent ${data.agentId}`);
 
-      if (!success) {
+      // Send user message to chat
+      await agentChatService.sendAgentMessage({
+        agentId: data.agentId,
+        agentName: `User`,
+        message: data.message,
+        teamId: socket.teamId,
+        type: 'info'
+      });
+
+      try {
+        // Execute Claude command non-interactively
+        const response = await claudeExecutor.executeCommand({
+          agentId: data.agentId,
+          message: data.message,
+          userId: socket.userId,
+          teamId: socket.teamId,
+          ...(agent.sessionId ? { sessionId: agent.sessionId } : {})
+        });
+
+        // Send Claude's response to chat
+        const agentInfo = await prisma.agents.findUnique({
+          where: { id: data.agentId },
+          select: { agentName: true }
+        });
+
+        await agentChatService.sendAgentMessage({
+          agentId: data.agentId,
+          agentName: agentInfo?.agentName || `Agent ${data.agentId.slice(-6)}`,
+          message: response,
+          teamId: socket.teamId,
+          type: 'success'
+        });
+
+        // Also emit the response directly for immediate UI update
+        socket.emit('agent_chat_response', {
+          agentId: data.agentId,
+          response: response,
+          timestamp: new Date().toISOString()
+        });
+
+      } catch (executeError) {
+        console.error(`❌ Failed to execute Claude command for agent ${data.agentId}:`, executeError);
+
+        const errorMessage = executeError instanceof Error ? executeError.message : 'Failed to execute command';
+
+        await agentChatService.sendAgentErrorMessage(data.agentId, errorMessage);
+
         socket.emit('agent_chat_error', {
           agentId: data.agentId,
-          error: 'Failed to send message to agent'
+          error: errorMessage
         });
       }
 

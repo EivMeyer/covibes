@@ -10,9 +10,7 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
+    "metadata": {},
     "preserveOutput": "always",
     "reporter": [
       [
@@ -40,9 +38,7 @@
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "chromium",
         "name": "chromium",
         "testDir": "/home/ubuntu/covibes/tests",
@@ -50,15 +46,13 @@
         "testMatch": [
           "**/playwright-*.test.js"
         ],
-        "timeout": 90000
+        "timeout": 60000
       },
       {
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "firefox",
         "name": "firefox",
         "testDir": "/home/ubuntu/covibes/tests",
@@ -66,15 +60,13 @@
         "testMatch": [
           "**/playwright-*.test.js"
         ],
-        "timeout": 90000
+        "timeout": 60000
       },
       {
         "outputDir": "/home/ubuntu/covibes/tests/test-results",
         "repeatEach": 1,
         "retries": 1,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "webkit",
         "name": "webkit",
         "testDir": "/home/ubuntu/covibes/tests",
@@ -82,7 +74,7 @@
         "testMatch": [
           "**/playwright-*.test.js"
         ],
-        "timeout": 90000
+        "timeout": 60000
       }
     ],
     "shard": null,
@@ -97,202 +89,19 @@
       "reuseExistingServer": true
     }
   },
-  "suites": [
+  "suites": [],
+  "errors": [
     {
-      "title": "playwright-mobile-agent-chat.test.js",
-      "file": "playwright-mobile-agent-chat.test.js",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "Mobile Agent Chat E2E Test",
-          "file": "playwright-mobile-agent-chat.test.js",
-          "line": 10,
-          "column": 6,
-          "specs": [
-            {
-              "title": "mobile agent chat functionality works end-to-end",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 90000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 13840,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21",
-                        "location": {
-                          "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
-                          "column": 21,
-                          "line": 149
-                        },
-                        "snippet": "  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
-                            "column": 21,
-                            "line": 149
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🎯 Starting mobile agent chat E2E test...\n"
-                        },
-                        {
-                          "text": "📸 Initial mobile page loaded\n"
-                        },
-                        {
-                          "text": "🔐 Not authenticated, attempting auto-login...\n"
-                        },
-                        {
-                          "text": "🖥️ Desktop interface detected, looking for Add Panel button...\n"
-                        },
-                        {
-                          "text": "📱 Found agents list, testing with existing agent...\n"
-                        },
-                        {
-                          "text": "❌ No agents found or visible\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-09-17T17:25:39.626Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
-                        "column": 21,
-                        "line": 149
-                      }
-                    },
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 15702,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21",
-                        "location": {
-                          "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
-                          "column": 21,
-                          "line": 149
-                        },
-                        "snippet": "  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
-                            "column": 21,
-                            "line": 149
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  147 |       }\n  148 |\n> 149 |       expect(false).toBe(true); // Force failure for investigation\n      |                     ^\n  150 |     }\n  151 |   });\n  152 | });\n    at /home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js:149:21"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🎯 Starting mobile agent chat E2E test...\n"
-                        },
-                        {
-                          "text": "📸 Initial mobile page loaded\n"
-                        },
-                        {
-                          "text": "🔐 Not authenticated, attempting auto-login...\n"
-                        },
-                        {
-                          "text": "🖥️ Desktop interface detected, looking for Add Panel button...\n"
-                        },
-                        {
-                          "text": "📱 Found agents list, testing with existing agent...\n"
-                        },
-                        {
-                          "text": "❌ No agents found or visible\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 1,
-                      "startTime": "2025-09-17T17:25:56.041Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "/home/ubuntu/covibes/tests/test-results/playwright-mobile-agent-ch-0c610-ctionality-works-end-to-end-chromium-retry1/trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/home/ubuntu/covibes/tests/playwright-mobile-agent-chat.test.js",
-                        "column": 21,
-                        "line": 149
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "1538ba8538173356d95c-feb25236e75cae318b65",
-              "file": "playwright-mobile-agent-chat.test.js",
-              "line": 12,
-              "column": 3
-            }
-          ]
-        }
-      ]
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
     }
   ],
-  "errors": [],
   "stats": {
-    "startTime": "2025-09-17T17:25:37.116Z",
-    "duration": 36554.505,
+    "startTime": "2025-09-19T16:46:59.879Z",
+    "duration": 124.71500000000015,
     "expected": 0,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }

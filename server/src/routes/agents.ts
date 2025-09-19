@@ -14,13 +14,15 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { randomUUID } from 'crypto';
+import crypto, { randomUUID } from 'crypto';
+import jwt from 'jsonwebtoken';
 import { authenticateToken } from '../middleware/auth.js';
 import { getIO } from '../server.js';
 import { generateAgentName } from '../utils/nameGenerator.js';
 import { agentChatService } from '../../services/agent-chat.js';
 import { dockerManager } from '../services/docker-manager-compat.js';
 import { terminalManagerFactory } from '../services/terminal-manager-factory.js';
+import { claudeExecutor } from '../services/claude-executor.js';
 // import fs from 'fs/promises';
 // import path from 'path';
 // import os from 'os';
@@ -87,12 +89,12 @@ async function executeAgentAsync(
       return;
     }
 
-    // Route to appropriate terminal manager based on configuration
-    console.log(`🚀 Starting Claude agent with ${terminalLocation}/${terminalIsolation} terminal for agent: ${agentId}`);
-    
+    // For all modes (terminal and chat), use the same tmux-based terminal manager approach
+    console.log(`🚀 Starting Claude agent (${mode} mode) with ${terminalLocation}/${terminalIsolation} terminal for agent: ${agentId}`);
+
     try {
       const io = getIO();
-      
+
       if (terminalIsolation === 'docker') {
         // Use Docker manager (backward compatibility)
         const containerResult = await dockerManager.spawnAgentInContainer({
@@ -295,8 +297,8 @@ router.post('/spawn', async (req: express.Request, res) => {
     const agentName = generateAgentName();
     console.log(`🎯 Generated agent name: ${agentName} for agent ${randomUUID()}`);
 
-    // Generate session ID for chat mode agents
-    const sessionId = mode === 'chat' ? `chat-${user.teamId}-${randomUUID()}` : null;
+    // Generate session ID for chat mode agents (must be valid UUID for Claude CLI)
+    const sessionId = mode === 'chat' ? randomUUID() : null;
 
     // Create agent record
     const agent = await prisma.agents.create({
@@ -347,6 +349,7 @@ router.post('/spawn', async (req: express.Request, res) => {
           task: agent.task,
           status: agent.status,
           type: agent.type,
+          mode: agent.mode,  // Include the mode field
           teamId: agent.teamId,
           userId: agent.userId,
           userName: agent.users.userName,
@@ -369,6 +372,7 @@ router.post('/spawn', async (req: express.Request, res) => {
         task: agent.task,
         status: agent.status,
         agentType: agent.type,
+        mode: agent.mode,  // Include the mode field
         teamId: agent.teamId,
         userId: agent.userId,
         startedAt: agent.createdAt.toISOString(),
@@ -857,13 +861,65 @@ router.post('/:id/input', async (req: express.Request, res) => {
       return res.status(404).json({ error: 'Agent not found or access denied' });
     }
 
-    // In a real implementation, this would send input to the running agent process
-    // For now, we'll just acknowledge the input
-    console.log(`Input sent to agent ${agentId}: ${input}`);
+    // Send input to the running agent process based on agent mode
+    console.log(`💬 Sending input to agent ${agentId}: ${input}`);
 
-    res.json({
-      message: 'Input sent to agent successfully'
-    });
+    if (agent.mode === 'chat') {
+      // For chat mode agents, use claudeExecutor to send message
+      try {
+        const { claudeExecutor } = await import('../../services/claude-executor.js');
+        const response = await claudeExecutor.executeCommand({
+          agentId,
+          message: input,
+          userId: req.user?.userId!,
+          teamId: user.teamId,
+          sessionId: agent.sessionId || undefined
+        });
+
+        // Send response through agent chat service
+        const { agentChatService } = await import('../../services/agent-chat.js');
+        await agentChatService.sendAgentMessage({
+          agentId,
+          agentName: agent.agentName || `Agent ${agentId.slice(-6)}`,
+          message: response,
+          teamId: user.teamId,
+          type: 'success'
+        });
+
+        res.json({
+          message: 'Input sent to chat agent successfully',
+          response: response
+        });
+      } catch (executeError) {
+        console.error(`❌ Error sending input to chat agent ${agentId}:`, executeError);
+        res.status(500).json({
+          error: `Failed to send input to chat agent: ${executeError instanceof Error ? executeError.message : String(executeError)}`
+        });
+      }
+    } else {
+      // For terminal mode agents, send input to tmux session
+      try {
+        const { terminalManagerFactory } = await import('../services/terminal-manager-factory.js');
+        const manager = terminalManagerFactory.getManager(agent.terminalLocation || 'local', agent.terminalIsolation || 'tmux');
+
+        const success = manager.sendInput(agentId, input + '\n');
+
+        if (success) {
+          res.json({
+            message: 'Input sent to terminal agent successfully'
+          });
+        } else {
+          res.status(404).json({
+            error: 'Agent terminal session not found or not ready'
+          });
+        }
+      } catch (terminalError) {
+        console.error(`❌ Error sending input to terminal agent ${agentId}:`, terminalError);
+        res.status(500).json({
+          error: `Failed to send input to terminal agent: ${terminalError instanceof Error ? terminalError.message : String(terminalError)}`
+        });
+      }
+    }
 
   } catch (error) {
     console.error('Send agent input error:', error);
