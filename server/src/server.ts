@@ -42,6 +42,7 @@ import ideRoutes from './routes/ide.js';
 import terminalRoutes from './routes/terminal.js';
 import layoutRoutes from './routes/layout.js';
 import workspaceRoutes from './routes/workspace.js';
+import settingsRoutes from './routes/settings.js';
 
 // Import middleware
 import { authenticateToken } from './middleware/auth.js';
@@ -1418,6 +1419,7 @@ app.use('/api/ide', ideRoutes);
 app.use('/api/terminal', terminalRoutes); // No auth required for testing
 app.use('/api/layout', authenticateToken, layoutRoutes); // Layout persistence requires authentication
 app.use('/api/workspace', authenticateToken, workspaceRoutes); // Workspace persistence requires authentication
+app.use('/api/settings', authenticateToken, settingsRoutes); // Settings routes
 console.log('🎯 Demo routes registered');
 
 

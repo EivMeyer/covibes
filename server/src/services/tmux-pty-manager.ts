@@ -50,7 +50,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
       const workspaceDir = await this.ensureTeamWorkspace(options.teamId, options.workspaceRepo);
       
       // Initialize user's Claude configuration
-      await claudeConfigManager.initializeUserConfig(options.userId);
+      await claudeConfigManager.initializeUserConfig(options.userId, options.teamId);
       
       // Create new tmux session with Claude
       return await this.createTmuxSession(sessionName, options, workspaceDir);
@@ -83,7 +83,7 @@ export class TmuxPtyManager extends EventEmitter implements TerminalManager {
     // Build Claude command with user's configuration
     console.log(`🎯 TmuxPtyManager received agentName: ${options.agentName}`);
     const { command: claudeCommand, args: claudeArgs, env: claudeEnv } =
-      claudeConfigManager.buildClaudeCommand(options.userId, {
+      await claudeConfigManager.buildClaudeCommand(options.userId, {
         task: options.task,
         teamId: options.teamId,
         skipPermissions: true,

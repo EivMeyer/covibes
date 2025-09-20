@@ -12,12 +12,44 @@ import path from 'path';
 import fs from 'fs/promises';
 import fsSync from 'fs';
 import os from 'os';
+import { PrismaClient } from '@prisma/client';
 
 export class ClaudeConfigManager {
+  private prisma = new PrismaClient();
   private readonly CONFIG_BASE_DIR = path.join(os.homedir(), '.covibes', 'claude-configs');
   private readonly DEFAULT_CLAUDE_DIR = path.join(os.homedir(), '.claude');
   private readonly SYSTEM_PROMPT_FILE = path.join(process.cwd(), 'config', 'agent-system-prompt.txt');
   private AGENT_SYSTEM_PROMPT: string = '';
+
+  private readonly TEAM_COORDINATION_PROMPT = `
+TEAM COORDINATION:
+
+1. CHECK: cat .covibes/active.json
+
+2. MANDATORY REGISTER - NO EXCEPTIONS:
+Step A: Find your WORKER CALLSIGN at the top of this prompt (e.g., "WORKER CALLSIGN: River Compiler")
+Step B: Run this command BUT replace "YOUR_CALLSIGN_HERE" with your actual callsign and "WHAT_YOU_ARE_DOING" with your task:
+
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['YOUR_CALLSIGN_HERE']='WHAT_YOU_ARE_DOING'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
+
+REAL EXAMPLE: If your callsign is "River Compiler" and you're making background blue:
+python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['River Compiler']='making background blue'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
+
+3. MANDATORY UNREGISTER when done - NO EXCEPTIONS:
+Replace "YOUR_CALLSIGN_HERE" with your actual callsign:
+python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('YOUR_CALLSIGN_HERE',None); json.dump(data,open('.covibes/active.json','w'),indent=2)"
+
+When you see other agents working:
+1. MANDATORY STOP for CONTRADICTORY tasks:
+   - If agent is setting property A to value X, DON'T set property A to value Y
+   - If agent is adding feature X, DON'T remove feature X
+   - If agent is implementing approach A, DON'T implement conflicting approach B
+   - If two tasks would overwrite each other's changes, it's CONTRADICTORY
+
+2. ALWAYS ASK USER: "Agent [NAME] is already [TASK]. This conflicts with your request. Should I wait or do something else?"
+
+3. NO EXCEPTIONS - Even if user asks directly, CHECK FIRST and STOP for contradictions
+`;
 
   constructor() {
     this.ensureBaseDirectory();
@@ -50,7 +82,7 @@ export class ClaudeConfigManager {
   /**
    * Initialize Claude configuration for a user
    */
-  async initializeUserConfig(userId: string): Promise<string> {
+  async initializeUserConfig(userId: string, teamId?: string): Promise<string> {
     const userConfigDir = this.getUserConfigDir(userId);
     
     try {
@@ -66,9 +98,9 @@ export class ClaudeConfigManager {
 
       // Copy default config if available
       await this.copyDefaultConfig(userConfigDir);
-      
+
       // Create basic settings if none exist
-      await this.createBasicSettings(userConfigDir);
+      await this.createBasicSettings(userConfigDir, teamId);
       
       console.log(`✅ Initialized Claude config for user ${userId}: ${userConfigDir}`);
       return userConfigDir;
@@ -196,7 +228,7 @@ export class ClaudeConfigManager {
   /**
    * Build Claude command with proper configuration
    */
-  buildClaudeCommand(userId: string, options: {
+  async buildClaudeCommand(userId: string, options: {
     task?: string;
     teamId?: string;
     skipPermissions?: boolean;
@@ -205,7 +237,7 @@ export class ClaudeConfigManager {
     agentName?: string;
     mode?: 'terminal' | 'chat';
     sessionId?: string;
-  } = {}): { command: string; args: string[]; env: Record<string, string> } {
+  } = {}): Promise<{ command: string; args: string[]; env: Record<string, string> }> {
     const command = 'claude';
     const args: string[] = [];
 
@@ -238,6 +270,43 @@ export class ClaudeConfigManager {
       let systemPrompt = typeof options.appendSystemPrompt === 'string'
         ? options.appendSystemPrompt
         : this.AGENT_SYSTEM_PROMPT;
+
+      // Check if context sharing is enabled for the team
+      if (options.teamId) {
+        try {
+          const team = await this.prisma.teams.findUnique({
+            where: { id: options.teamId },
+            select: { enableContextSharing: true }
+          });
+
+          // ADD the TEAM COORDINATION section when context sharing is enabled
+          if (team && team.enableContextSharing) {
+            // Find the position to insert the coordination section
+            // Insert it after the FULL-STACK DEVELOPMENT APPROACH section
+            const lines = systemPrompt.split('\n');
+            const insertIndex = lines.findIndex(line =>
+              line.includes('THEN IMPLEMENT BACKEND')
+            );
+
+            if (insertIndex !== -1) {
+              // Insert the TEAM COORDINATION section after the current section
+              lines.splice(insertIndex + 1, 0, '', this.TEAM_COORDINATION_PROMPT);
+              systemPrompt = lines.join('\n');
+              console.log('✅ Context sharing enabled - added TEAM COORDINATION section to system prompt');
+            } else {
+              // Fallback: append to the end if we can't find the insertion point
+              systemPrompt = systemPrompt + '\n' + this.TEAM_COORDINATION_PROMPT;
+              console.log('✅ Context sharing enabled - appended TEAM COORDINATION section to system prompt');
+            }
+          } else {
+            console.log('🚫 Context sharing disabled - TEAM COORDINATION section not included');
+          }
+        } catch (error) {
+          console.error('Failed to check context sharing setting:', error);
+          // Default to NOT including the coordination section if we can't check
+          console.log('⚠️ Could not verify context sharing setting - TEAM COORDINATION section not included');
+        }
+      }
 
       // Inject worker callsign if provided
       console.log(`🔍 buildClaudeCommand received agentName: ${options.agentName}`);
@@ -325,7 +394,7 @@ DEVELOPMENT COMMANDS:
     }
   }
 
-  private async createBasicSettings(userConfigDir: string): Promise<void> {
+  private async createBasicSettings(userConfigDir: string, teamId?: string): Promise<void> {
     const settingsPath = path.join(userConfigDir, 'settings.json');
 
     // Only create if settings don't exist
@@ -334,7 +403,23 @@ DEVELOPMENT COMMANDS:
       return;
     }
 
-    const basicSettings = {
+    // Check team's context sharing setting
+    let enableContextSharing = true; // Default to true
+    if (teamId) {
+      try {
+        const team = await this.prisma.teams.findUnique({
+          where: { id: teamId },
+          select: { enableContextSharing: true }
+        });
+        if (team) {
+          enableContextSharing = team.enableContextSharing;
+        }
+      } catch (error) {
+        console.warn('Could not fetch team settings, using default:', error);
+      }
+    }
+
+    const basicSettings: any = {
       "version": "1.0",
       "createdBy": "ColabVibe",
       "createdAt": new Date().toISOString(),
@@ -344,8 +429,12 @@ DEVELOPMENT COMMANDS:
       "sandbox": {
         "enabled": false,  // Disable sandbox for full permissions
         "skipPermissions": true
-      },
-      "hooks": {
+      }
+    };
+
+    // Only add context sharing hooks if enabled
+    if (enableContextSharing) {
+      basicSettings.hooks = {
         "UserPromptSubmit": [{
           "hooks": [{
             "type": "command",
@@ -358,8 +447,8 @@ DEVELOPMENT COMMANDS:
             "command": "jq 'del(.\"'$USER'-'$$'\")' .covibes/active.json > tmp && mv tmp .covibes/active.json 2>/dev/null || true"
           }]
         }]
-      }
-    };
+      };
+    }
 
     try {
       await fs.writeFile(settingsPath, JSON.stringify(basicSettings, null, 2));

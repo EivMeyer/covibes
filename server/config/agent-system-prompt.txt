@@ -36,31 +36,3 @@ When tasks require both frontend AND backend changes:
 1. START WITH FRONTEND - Create UI components first for immediate visual feedback
 2. ADD PLACEHOLDER STATES - Use loading indicators, "Coming soon", or mock data
 3. THEN IMPLEMENT BACKEND - Make it actually functional after UI is visible
-
-TEAM COORDINATION:
-
-1. CHECK: cat .covibes/active.json
-
-2. MANDATORY REGISTER - NO EXCEPTIONS:
-Step A: Find your WORKER CALLSIGN at the top of this prompt (e.g., "WORKER CALLSIGN: River Compiler")
-Step B: Run this command BUT replace "YOUR_CALLSIGN_HERE" with your actual callsign and "WHAT_YOU_ARE_DOING" with your task:
-
-python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['YOUR_CALLSIGN_HERE']='WHAT_YOU_ARE_DOING'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
-
-REAL EXAMPLE: If your callsign is "River Compiler" and you're making background blue:
-python3 -c "import json; data=json.load(open('.covibes/active.json')) if open('.covibes/active.json').read().strip() else {}; data['River Compiler']='making background blue'; json.dump(data,open('.covibes/active.json','w'),indent=2)"
-
-3. MANDATORY UNREGISTER when done - NO EXCEPTIONS:
-Replace "YOUR_CALLSIGN_HERE" with your actual callsign:
-python3 -c "import json; data=json.load(open('.covibes/active.json')); data.pop('YOUR_CALLSIGN_HERE',None); json.dump(data,open('.covibes/active.json','w'),indent=2)"
-
-When you see other agents working:
-1. MANDATORY STOP for CONTRADICTORY tasks:
-   - If agent is setting property A to value X, DON'T set property A to value Y
-   - If agent is adding feature X, DON'T remove feature X
-   - If agent is implementing approach A, DON'T implement conflicting approach B
-   - If two tasks would overwrite each other's changes, it's CONTRADICTORY
-
-2. ALWAYS ASK USER: "Agent [NAME] is already [TASK]. This conflicts with your request. Should I wait or do something else?"
-
-3. NO EXCEPTIONS - Even if user asks directly, CHECK FIRST and STOP for contradictions

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import type { ComponentProps } from '@/types';
 
 interface NotificationProps extends ComponentProps {
@@ -13,12 +13,17 @@ interface NotificationProps extends ComponentProps {
 class NotificationSounds {
   private static instance: NotificationSounds;
   private context: AudioContext | null = null;
+  private soundsEnabled: boolean = true;
 
   static getInstance(): NotificationSounds {
     if (!NotificationSounds.instance) {
       NotificationSounds.instance = new NotificationSounds();
     }
     return NotificationSounds.instance;
+  }
+
+  setSoundsEnabled(enabled: boolean) {
+    this.soundsEnabled = enabled;
   }
 
   private async initContext() {
@@ -51,6 +56,11 @@ class NotificationSounds {
   }
 
   async playSound(type: 'info' | 'success' | 'warning' | 'error') {
+    // Check if sounds are enabled
+    if (!this.soundsEnabled) {
+      return;
+    }
+
     try {
       await this.initContext();
       
@@ -234,8 +244,16 @@ export const useNotification = () => {
   return context;
 };
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Create a context for sound settings integration
+const SoundSettingsIntegrationContext = React.createContext<{ soundsEnabled?: boolean }>({});
+
+export const NotificationProvider: React.FC<{ children: React.ReactNode; soundsEnabled?: boolean }> = ({ children, soundsEnabled = true }) => {
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
+
+  // Update the NotificationSounds singleton when soundsEnabled changes
+  React.useEffect(() => {
+    NotificationSounds.getInstance().setSoundsEnabled(soundsEnabled);
+  }, [soundsEnabled]);
 
   const addNotification = (notification: Omit<NotificationData, 'id'>) => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2);

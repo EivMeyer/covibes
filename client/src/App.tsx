@@ -8,6 +8,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 import { NotificationProvider } from './components/ui/Notification';
+import { SoundSettingsProvider, useSoundSettings } from './context/SoundSettingsContext';
 
 // Import types from types module
 import type { ChatMessage } from '@/types';
@@ -841,13 +842,24 @@ function AppContent() {
   );
 }
 
+// Intermediate component to connect sound settings to notifications
+function AppWithNotifications() {
+  const { soundsEnabled } = useSoundSettings();
+
+  return (
+    <NotificationProvider soundsEnabled={soundsEnabled}>
+      <AppContent />
+    </NotificationProvider>
+  );
+}
+
 // Root App component with providers
 export default function App() {
   return (
     <ErrorBoundary>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
+      <SoundSettingsProvider>
+        <AppWithNotifications />
+      </SoundSettingsProvider>
     </ErrorBoundary>
   );
 }

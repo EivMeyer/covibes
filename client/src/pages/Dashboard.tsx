@@ -7,6 +7,7 @@ import { ActiveHumans } from '@/components/features/humans/ActiveHumans';
 import { SpawnAgentModal } from '@/components/features/agents/SpawnAgentModal';
 import { VMConfigModal } from '@/components/features/config/VMConfigModal';
 import { RepoConfigModal } from '@/components/features/config/RepoConfigModal';
+import { SettingsPage } from './SettingsPage';
 
 // Tile Components
 import { TerminalTile } from '@/components/tiles/TerminalTile';
@@ -101,6 +102,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [fullscreenIDE, setFullscreenIDE] = useState(false);
   const [mobileTab, setMobileTab] = useState<'agents' | 'team' | 'preview'>('agents');
+  const [showSettings, setShowSettings] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(256); // Default 256px (w-64)
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [gridTiles, setGridTiles] = useState<GridTile[]>(() => {
@@ -858,6 +860,19 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
   // FIXED: Memoize gridTiles to prevent infinite re-renders in DynamicDashboard
   const memoizedGridTiles = useMemo(() => gridTiles, [gridTiles]);
 
+  // Show settings page if settings state is true
+  if (showSettings) {
+    return (
+      <SettingsPage
+        user={user}
+        team={team}
+        token={token || undefined}
+        logout={logout}
+        onBack={() => setShowSettings(false)}
+      />
+    );
+  }
+
   return (
     <div 
       data-testid="dashboard"
@@ -873,6 +888,8 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         isSocketConnected={isSocketConnected}
         onConfigureVM={() => setShowVMConfig(true)}
         onConfigureRepo={() => setShowRepoConfig(true)}
+        onOpenSettings={() => setShowSettings(true)}
+        token={token || undefined}
       />
 
       {/* Main Content */}

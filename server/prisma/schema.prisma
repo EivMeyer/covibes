@@ -99,6 +99,7 @@ model teams {
   sidebarWidth          Int                    @default(256)
   workspaceLayouts      Json?
   workspaceTiles        Json?
+  enableContextSharing  Boolean                @default(true)
   agents                agents[]
   container_instances   container_instances[]
   messages              messages[]
@@ -130,6 +131,7 @@ model users {
   githubId              String?                @unique
   githubUsername        String?
   claudeConfigDir       String?
+  soundsEnabled         Boolean                @default(true)
   agents                agents[]
   container_instances   container_instances[]
   messages              messages[]

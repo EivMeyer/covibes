@@ -51,7 +51,7 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
       const workspaceDir = await this.ensureTeamWorkspace(options.teamId, options.workspaceRepo);
 
       // Initialize user's Claude configuration
-      await claudeConfigManager.initializeUserConfig(options.userId);
+      await claudeConfigManager.initializeUserConfig(options.userId, options.teamId);
 
       // Create lightweight chat session (no PTY/tmux)
       const session: ChatSession = {
