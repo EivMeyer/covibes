@@ -1,7 +1,7 @@
 #!/bin/bash
-# Run all ColabVibe tests
+# Run all Covibes tests
 
-echo "🧪 ColabVibe Test Suite"
+echo "🧪 Covibes Test Suite"
 echo "======================="
 echo ""
 

@@ -3,7 +3,7 @@
 # Workspace Setup Script
 #
 # Creates and configures the shared workspace volume structure
-# for ColabVibe multi-agent environments
+# for Covibes multi-agent environments
 
 set -euo pipefail
 
@@ -36,8 +36,8 @@ create_team_workspace() {
     chmod -R 755 "$workspace_path"
     
     # Create workspace configuration
-    cat > "$workspace_path/.colabvibe.yml" <<EOF
-# ColabVibe Workspace Configuration
+    cat > "$workspace_path/.covibes.yml" <<EOF
+# Covibes Workspace Configuration
 team_id: $team_id
 created_at: $(date -Iseconds)
 workspace_version: "1.0"
@@ -72,7 +72,7 @@ EOF
         cat > "$workspace_path/README.md" <<EOF
 # Team $team_id Workspace
 
-This is a shared workspace for ColabVibe team \`$team_id\`.
+This is a shared workspace for Covibes team \`$team_id\`.
 
 ## Structure
 
@@ -92,8 +92,8 @@ EOF
     # Create gitignore if it doesn't exist
     if [[ ! -f "$workspace_path/.gitignore" ]]; then
         cat > "$workspace_path/.gitignore" <<EOF
-# ColabVibe
-.colabvibe/
+# Covibes
+.covibes/
 *.log
 
 # Dependencies
@@ -168,13 +168,13 @@ init_git_workspace() {
         git checkout -b "$branch"
         
         # Add initial files
-        git add README.md .gitignore .colabvibe.yml
+        git add README.md .gitignore .covibes.yml
         git commit -m "Initial workspace setup"
     fi
     
     # Configure git
-    git config user.name "ColabVibe Workspace"
-    git config user.email "workspace@colabvibe.dev"
+    git config user.name "Covibes Workspace"
+    git config user.email "workspace@covibes.ai"
     git config core.autocrlf false
     git config core.fileMode false  # Ignore file permission changes
     

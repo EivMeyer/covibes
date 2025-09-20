@@ -10,7 +10,7 @@ const { test, expect } = require('@playwright/test');
 const TEST_CONFIG = {
   BASE_URL: 'http://localhost:3000',
   TEST_USER: {
-    email: `test${Date.now()}@colabvibe.com`, // Unique email to avoid conflicts
+    email: `test${Date.now()}@covibes.com`, // Unique email to avoid conflicts
     password: 'testpass123',
     userName: 'TestUser',
     teamName: `TestTeam${Date.now()}` // Unique team name

@@ -1,4 +1,4 @@
--- Development Seed Data for ColabVibe
+-- Development Seed Data for Covibes
 -- This script adds sample data for development and testing
 
 -- Note: This will be run after Prisma migrations in actual development

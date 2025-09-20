@@ -64,7 +64,7 @@ RUN echo 'set -g default-terminal "screen-256color"' > /etc/tmux.conf && \
 # Set up git configuration template (users will override with their own)
 RUN git config --global init.defaultBranch main && \
     git config --global user.name "Claude Agent" && \
-    git config --global user.email "agent@colabvibe.dev"
+    git config --global user.email "agent@covibes.ai"
 
 # Install common development tools
 RUN npm install -g \
@@ -86,7 +86,7 @@ USER developer
 WORKDIR /workspace
 
 # Create a welcome message for new sessions
-RUN echo 'echo "🚀 ColabVibe Claude Agent Container"' >> /home/developer/.bashrc && \
+RUN echo 'echo "🚀 Covibes Claude Agent Container"' >> /home/developer/.bashrc && \
     echo 'echo "📁 Workspace: /workspace"' >> /home/developer/.bashrc && \
     echo 'echo "🤖 Claude CLI: $(claude --version 2>/dev/null || echo '\''Run: claude login'\'')"' >> /home/developer/.bashrc && \
     echo 'echo "📋 List tmux sessions: tmux list-sessions"' >> /home/developer/.bashrc && \
@@ -107,14 +107,14 @@ echo "📝 Dockerfile created"
 
 # Build the Docker image
 echo "🔨 Building Docker image..."
-docker build -t colabvibe-claude-agent:latest .
+docker build -t covibes-claude-agent:latest .
 
 if [ $? -eq 0 ]; then
     echo "✅ Docker image built successfully!"
     
     # Verify the image exists
     echo "🔍 Verifying image..."
-    docker images colabvibe-claude-agent
+    docker images covibes-claude-agent
     
     echo "🎉 Claude Agent Docker image is ready on EC2 VM!"
 else

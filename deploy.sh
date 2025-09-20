@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# ColabVibe Deployment Script
+# Covibes Deployment Script
 # Usage: ./deploy.sh [development|production]
 
 set -e
 
 ENVIRONMENT=${1:-development}
 
-echo "🚀 Starting ColabVibe deployment for environment: $ENVIRONMENT"
+echo "🚀 Starting Covibes deployment for environment: $ENVIRONMENT"
 
 # Validate environment parameter
 if [ "$ENVIRONMENT" != "development" ] && [ "$ENVIRONMENT" != "production" ]; then

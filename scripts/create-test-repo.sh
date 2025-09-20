@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Create a test repository for ColabVibe testing
+# Create a test repository for Covibes testing
 # This sets up a local git repository with a simple project
 
 set -euo pipefail
@@ -8,7 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEST_REPO_DIR="$SCRIPT_DIR/../test-repo"
 
-echo "🧪 Creating test repository for ColabVibe..."
+echo "🧪 Creating test repository for Covibes..."
 
 # Clean up existing test repo
 if [ -d "$TEST_REPO_DIR" ]; then
@@ -23,8 +23,8 @@ cd "$TEST_REPO_DIR"
 git init
 
 # Configure git for test repo
-git config user.name "ColabVibe Test"
-git config user.email "test@colabvibe.local"
+git config user.name "Covibes Test"
+git config user.email "test@covibes.local"
 
 # Create a simple web project structure
 mkdir -p src css js docs tests
@@ -32,9 +32,9 @@ mkdir -p src css js docs tests
 # Create package.json
 cat > package.json << 'EOF'
 {
-  "name": "colabvibe-test-project",
+  "name": "covibes-test-project",
   "version": "1.0.0",
-  "description": "A simple test project for ColabVibe agent collaboration",
+  "description": "A simple test project for Covibes agent collaboration",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
@@ -42,15 +42,15 @@ cat > package.json << 'EOF'
     "build": "echo 'Building project...' && mkdir -p dist && cp src/* dist/",
     "dev": "echo 'Starting dev server...' && node src/app.js"
   },
-  "keywords": ["colabvibe", "test", "collaboration"],
-  "author": "ColabVibe",
+  "keywords": ["covibes", "test", "collaboration"],
+  "author": "Covibes",
   "license": "MIT"
 }
 EOF
 
 # Create main application file
 cat > src/app.js << 'EOF'
-// Simple Node.js web application for testing ColabVibe
+// Simple Node.js web application for testing Covibes
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -64,12 +64,12 @@ const server = http.createServer((req, res) => {
             <!DOCTYPE html>
             <html>
             <head>
-                <title>ColabVibe Test App</title>
+                <title>Covibes Test App</title>
                 <link rel="stylesheet" href="/style.css">
             </head>
             <body>
                 <div class="container">
-                    <h1>🤝 ColabVibe Test Application</h1>
+                    <h1>🤝 Covibes Test Application</h1>
                     <p>This is a simple test application for demonstrating agent collaboration.</p>
                     <div class="features">
                         <h2>Features to Add:</h2>
@@ -96,7 +96,7 @@ const server = http.createServer((req, res) => {
         res.end('/* CSS will be added by agents */\nbody { font-family: Arial, sans-serif; margin: 20px; }');
     } else if (req.url === '/app.js') {
         res.writeHead(200, { 'Content-Type': 'application/javascript' });
-        res.end('// JavaScript functionality will be added by agents\nconsole.log("ColabVibe Test App loaded");');
+        res.end('// JavaScript functionality will be added by agents\nconsole.log("Covibes Test App loaded");');
     } else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not Found');
@@ -104,7 +104,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`🚀 ColabVibe Test App running on http://localhost:${PORT}`);
+    console.log(`🚀 Covibes Test App running on http://localhost:${PORT}`);
     console.log('📝 This app is designed for agent collaboration testing');
 });
 
@@ -113,7 +113,7 @@ EOF
 
 # Create CSS file
 cat > css/style.css << 'EOF'
-/* Basic styling for ColabVibe test app */
+/* Basic styling for Covibes test app */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
@@ -155,9 +155,9 @@ EOF
 
 # Create JavaScript file
 cat > js/app.js << 'EOF'
-// Client-side JavaScript for ColabVibe test app
+// Client-side JavaScript for Covibes test app
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 ColabVibe Test App initialized');
+    console.log('🚀 Covibes Test App initialized');
     
     // Add some basic interactivity that agents can enhance
     const featureList = document.getElementById('feature-list');
@@ -187,9 +187,9 @@ EOF
 
 # Create README
 cat > README.md << 'EOF'
-# ColabVibe Test Project
+# Covibes Test Project
 
-This is a simple web application designed for testing ColabVibe agent collaboration features.
+This is a simple web application designed for testing Covibes agent collaboration features.
 
 ## Purpose
 
@@ -260,7 +260,7 @@ EOF
 
 # Create a simple test file
 cat > tests/test.js << 'EOF'
-// Simple tests for the ColabVibe test application
+// Simple tests for the Covibes test application
 const http = require('http');
 const assert = require('assert');
 
@@ -271,7 +271,7 @@ function testHomePage() {
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
                 assert(res.statusCode === 200, 'Home page should return 200');
-                assert(data.includes('ColabVibe'), 'Home page should contain ColabVibe');
+                assert(data.includes('Covibes'), 'Home page should contain Covibes');
                 console.log('✅ Home page test passed');
                 resolve();
             });
@@ -282,7 +282,7 @@ function testHomePage() {
 }
 
 async function runTests() {
-    console.log('🧪 Running ColabVibe Test Suite...');
+    console.log('🧪 Running Covibes Test Suite...');
     
     try {
         await testHomePage();
@@ -390,7 +390,7 @@ EOF
 
 # Initial commit
 git add .
-git commit -m "Initial commit: ColabVibe test project setup
+git commit -m "Initial commit: Covibes test project setup
 
 - Added basic Node.js web application
 - Created project structure with src/, css/, js/, tests/, docs/
@@ -421,9 +421,9 @@ echo "📍 Location: $TEST_REPO_DIR"
 echo "📊 Repository status:"
 git log --oneline -5
 echo ""
-echo "🔧 Repository is ready for ColabVibe agent testing"
+echo "🔧 Repository is ready for Covibes agent testing"
 echo ""
 echo "Next steps:"
-echo "1. Configure ColabVibe team to use this repository"
+echo "1. Configure Covibes team to use this repository"
 echo "2. Set repository URL to: file://$TEST_REPO_DIR"
 echo "3. Test with multiple agents working on different features"

@@ -116,7 +116,7 @@ export interface SpawnPreviewOptions {
 class DockerManager extends EventEmitter implements TerminalManager {
   private containers: Map<string, ContainerInfo> = new Map();
   private activePTYSessions: Map<string, PTYInfo> = new Map();
-  private readonly AGENT_IMAGE = 'colabvibe-claude-agent';
+  private readonly AGENT_IMAGE = 'covibes-claude-agent';
   private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
   private readonly LOCAL_WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
   private isEC2Available = false;
@@ -525,7 +525,7 @@ class DockerManager extends EventEmitter implements TerminalManager {
       
       // CRITICAL FIX: Set developer user password for SSH access on EC2
       console.log(`Setting developer password for EC2 container ${containerId}`);
-      const passwordCmd = `echo 'developer:colabvibe123' | docker exec -i ${containerId} chpasswd`;
+      const passwordCmd = `echo 'developer:covibes123' | docker exec -i ${containerId} chpasswd`;
       const passwordResult = await sshService.executeCommand(DEFAULT_VM.vmId, {
         command: passwordCmd,
         timeout: 10000

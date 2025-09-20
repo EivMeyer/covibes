@@ -17,7 +17,7 @@ const execAsync = promisify(exec);
 
 export class TmuxRawPtyManager extends EventEmitter implements TerminalManager {
   private sessions: Map<string, TerminalSession> = new Map();
-  private readonly SESSION_PREFIX = 'colabvibe-agent-';
+  private readonly SESSION_PREFIX = 'covibes-agent-';
 
   constructor() {
     super();

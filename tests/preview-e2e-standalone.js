@@ -10,7 +10,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Test repository as specified in CLAUDE.md
-const TEST_REPO = 'https://github.com/EivMeyer/colabvibe-test-repo';
+const TEST_REPO = 'https://github.com/EivMeyer/covibes-test-repo';
 
 // Create screenshots directory if it doesn't exist
 const screenshotsDir = path.join(__dirname, 'screenshots', 'preview-e2e');
@@ -171,7 +171,7 @@ async function runPreviewE2ETest() {
     
     if (proxyResponse.status === 200) {
       console.log('✅ Preview proxy is working!');
-      const hasContent = proxyResponse.text.includes('ColabVibe Live Preview');
+      const hasContent = proxyResponse.text.includes('Covibes Live Preview');
       console.log(`   Content check: ${hasContent ? '✅ Valid' : '❌ Invalid'}`);
     } else {
       console.log(`⚠️  Proxy returned status: ${proxyResponse.status}`);
@@ -225,7 +225,7 @@ async function runPreviewE2ETest() {
       const heading = await previewPage.textContent('h1');
       console.log(`   Heading: ${heading}`);
       
-      if (title.includes('ColabVibe Live Preview') || heading?.includes('ColabVibe Live Preview')) {
+      if (title.includes('Covibes Live Preview') || heading?.includes('Covibes Live Preview')) {
         console.log('✅ Preview content verified!');
       }
       

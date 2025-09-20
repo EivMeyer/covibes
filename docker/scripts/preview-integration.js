@@ -207,7 +207,7 @@ services:
     build:
       context: ${containerOutputDir}
       dockerfile: Dockerfile
-    container_name: colabvibe_preview_${teamId}_${branch}
+    container_name: covibes_preview_${teamId}_${branch}
     restart: unless-stopped
     environment:
       - PROJECT_TYPE=${projectType.type}
@@ -227,7 +227,7 @@ services:
       - preview_cache_${teamId}_${branch}:/app/.cache:rw
       - preview_modules_${teamId}_${branch}:/app/node_modules:rw
     networks:
-      - colabvibe_preview_network
+      - covibes_preview_network
     deploy:
       resources:
         limits:
@@ -250,7 +250,7 @@ volumes:
   preview_modules_${teamId}_${branch}:
 
 networks:
-  colabvibe_preview_network:
+  covibes_preview_network:
     external: true
 `;
         
@@ -259,7 +259,7 @@ networks:
         
         // Start the container
         const { stdout, stderr } = await execAsync(`cd ${containerOutputDir} && docker-compose up -d`, {
-            env: { ...process.env, COMPOSE_PROJECT_NAME: `colabvibe-preview-${teamId}-${branch}` }
+            env: { ...process.env, COMPOSE_PROJECT_NAME: `covibes-preview-${teamId}-${branch}` }
         });
         
         log('info', 'Preview container started', { 
@@ -306,7 +306,7 @@ async function stopPreviewContainer(teamId, branch) {
         
         // Stop and remove containers
         const { stdout, stderr } = await execAsync(`cd ${containerOutputDir} && docker-compose down`, {
-            env: { ...process.env, COMPOSE_PROJECT_NAME: `colabvibe-preview-${teamId}-${branch}` }
+            env: { ...process.env, COMPOSE_PROJECT_NAME: `covibes-preview-${teamId}-${branch}` }
         });
         
         log('info', 'Preview container stopped', { 
@@ -342,7 +342,7 @@ async function getPreviewStatus(teamId, branch) {
         
         // Get container status
         const { stdout } = await execAsync(`cd ${containerOutputDir} && docker-compose ps --services --filter "status=running"`, {
-            env: { ...process.env, COMPOSE_PROJECT_NAME: `colabvibe-preview-${teamId}-${branch}` }
+            env: { ...process.env, COMPOSE_PROJECT_NAME: `covibes-preview-${teamId}-${branch}` }
         });
         
         const runningServices = stdout.trim().split('\n').filter(s => s.length > 0);

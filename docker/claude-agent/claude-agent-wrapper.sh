@@ -49,7 +49,7 @@ initialize_workspace() {
     # Set up git configuration
     if [[ -d ".git" ]]; then
         git config user.name "Claude Agent $AGENT_ID"
-        git config user.email "agent-$AGENT_ID@colabvibe.dev"
+        git config user.email "agent-$AGENT_ID@covibes.ai"
         
         # Fetch latest changes
         log "Syncing with remote repository"

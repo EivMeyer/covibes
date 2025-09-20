@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Setup script for ColabVibe git hooks
+# Setup script for Covibes git hooks
 # This script installs pre-commit and post-commit hooks
 
 set -e
@@ -14,14 +14,14 @@ MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║           ${MAGENTA}ColabVibe Git Hooks Installation${BLUE}                  ║${NC}"
+echo -e "${BLUE}║           ${MAGENTA}Covibes Git Hooks Installation${BLUE}                  ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
 # Check if we're in the right directory
-if [ ! -f "package.json" ] || [ ! -d "colabvibe" ]; then
-    echo -e "${RED}❌ Error: Not in ColabVibe root directory${NC}"
-    echo "Please run this script from the ColabVibe project root."
+if [ ! -f "package.json" ] || [ ! -d "covibes" ]; then
+    echo -e "${RED}❌ Error: Not in Covibes root directory${NC}"
+    echo "Please run this script from the Covibes project root."
     exit 1
 fi
 
@@ -60,7 +60,7 @@ create_hook() {
             cat > "$hook_file" << 'EOF'
 #!/bin/bash
 
-# Pre-commit hook for ColabVibe
+# Pre-commit hook for Covibes
 # Runs type checking and unit tests before allowing commit
 # To bypass (NOT RECOMMENDED): git commit --no-verify
 
@@ -77,8 +77,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Check if we're in the right directory
-if [ ! -f "package.json" ] || [ ! -d "colabvibe" ]; then
-    echo -e "${RED}❌ Error: Not in ColabVibe root directory${NC}"
+if [ ! -f "package.json" ] || [ ! -d "covibes" ]; then
+    echo -e "${RED}❌ Error: Not in Covibes root directory${NC}"
     exit 1
 fi
 
@@ -149,10 +149,10 @@ run_checks() {
 }
 
 # Check backend
-run_checks "colabvibe/server" "Backend"
+run_checks "covibes/server" "Backend"
 
 # Check frontend
-run_checks "colabvibe/client" "Frontend"
+run_checks "covibes/client" "Frontend"
 
 echo "=========================================="
 
@@ -160,8 +160,8 @@ if [ $FAILED -eq 1 ]; then
     echo -e "${RED}❌ Pre-commit checks failed!${NC}"
     echo ""
     echo "To fix type errors:"
-    echo "  - Backend: cd colabvibe/server && npm run lint"
-    echo "  - Frontend: cd colabvibe/client && npm run type-check"
+    echo "  - Backend: cd covibes/server && npm run lint"
+    echo "  - Frontend: cd covibes/client && npm run type-check"
     echo ""
     echo -e "${YELLOW}⚠️  To bypass checks (NOT RECOMMENDED):${NC}"
     echo "  git commit --no-verify"
@@ -189,7 +189,7 @@ EOF
             cat > "$hook_file" << 'EOF'
 #!/bin/bash
 
-# Post-commit hook for ColabVibe
+# Post-commit hook for Covibes
 # Reminds AI assistants about proper git practices
 
 # Colors for output

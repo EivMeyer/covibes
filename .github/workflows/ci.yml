@@ -16,7 +16,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: colabvibe_test
+          POSTGRES_DB: covibes_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -51,7 +51,7 @@ jobs:
       working-directory: ./server
       run: |
         cp .env.example .env || echo "No .env.example found"
-        echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/colabvibe_test" >> .env
+        echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/covibes_test" >> .env
         echo "JWT_SECRET=test-secret-key-for-ci" >> .env
         echo "ENCRYPTION_KEY=test-encryption-key-32-characters" >> .env
         echo "PORT=3001" >> .env
@@ -92,7 +92,7 @@ jobs:
     - name: Setup backend environment
       working-directory: ./server
       run: |
-        echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/colabvibe_test" > .env
+        echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/covibes_test" > .env
         echo "JWT_SECRET=test-secret-key-for-ci" >> .env
         echo "ENCRYPTION_KEY=test-encryption-key-32-characters" >> .env
         echo "PORT=3001" >> .env
@@ -101,8 +101,8 @@ jobs:
       run: |
         sudo systemctl start postgresql.service
         sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'password';" || true
-        sudo -u postgres psql -c "CREATE DATABASE colabvibe_test;" || true
-        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE colabvibe_test TO postgres;" || true
+        sudo -u postgres psql -c "CREATE DATABASE covibes_test;" || true
+        sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE covibes_test TO postgres;" || true
     
     - name: Run Prisma setup
       working-directory: ./server

@@ -23,11 +23,11 @@ async function seedDemoData() {
     
     // Create demo users
     const users = [
-      { name: 'Demo User', email: 'demo@colabvibe.dev', password: 'demo123' },
-      { name: 'Alice Developer', email: 'alice@colabvibe.dev', password: 'alice123' },
-      { name: 'Bob Coder', email: 'bob@colabvibe.dev', password: 'bob123' },
-      { name: 'Charlie Smith', email: 'charlie@colabvibe.dev', password: 'charlie123' },
-      { name: 'Diana Jones', email: 'diana@colabvibe.dev', password: 'diana123' }
+      { name: 'Demo User', email: 'demo@covibes.ai', password: 'demo123' },
+      { name: 'Alice Developer', email: 'alice@covibes.ai', password: 'alice123' },
+      { name: 'Bob Coder', email: 'bob@covibes.ai', password: 'bob123' },
+      { name: 'Charlie Smith', email: 'charlie@covibes.ai', password: 'charlie123' },
+      { name: 'Diana Jones', email: 'diana@covibes.ai', password: 'diana123' }
     ];
     
     for (const userData of users) {
@@ -49,7 +49,7 @@ async function seedDemoData() {
     
     // Create a sample message
     const demoUser = await prisma.user.findUnique({
-      where: { email: 'demo@colabvibe.dev' }
+      where: { email: 'demo@covibes.ai' }
     });
     
     if (demoUser) {
@@ -71,11 +71,11 @@ async function seedDemoData() {
     
     console.log('\n🎉 Demo data seeded successfully!');
     console.log('\n🚀 You can now login with any of these accounts:');
-    console.log('   📧 demo@colabvibe.dev / 🔑 demo123');
-    console.log('   📧 alice@colabvibe.dev / 🔑 alice123');
-    console.log('   📧 bob@colabvibe.dev / 🔑 bob123');
-    console.log('   📧 charlie@colabvibe.dev / 🔑 charlie123');
-    console.log('   📧 diana@colabvibe.dev / 🔑 diana123');
+    console.log('   📧 demo@covibes.ai / 🔑 demo123');
+    console.log('   📧 alice@covibes.ai / 🔑 alice123');
+    console.log('   📧 bob@covibes.ai / 🔑 bob123');
+    console.log('   📧 charlie@covibes.ai / 🔑 charlie123');
+    console.log('   📧 diana@covibes.ai / 🔑 diana123');
     console.log('\n   🏢 Team: DemoTeam');
     
   } catch (error) {

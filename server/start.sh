@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ColabVibe Server Start Script
-# This script sets up and starts the ColabVibe TypeScript server
+# Covibes Server Start Script
+# This script sets up and starts the Covibes TypeScript server
 
-echo "🚀 Starting ColabVibe Server..."
+echo "🚀 Starting Covibes Server..."
 
 # Check if .env exists, create from example if not
 if [ ! -f .env ]; then

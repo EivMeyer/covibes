@@ -468,7 +468,7 @@ test.describe('Preview Content Scenarios', () => {
                 <li>🚀 Instant deployment previews</li>
               </ul>
               <div class="tags">
-                <span class="tag">colabvibe</span>
+                <span class="tag">covibes</span>
                 <span class="tag">collaboration</span>
                 <span class="tag">ai-agents</span>
                 <span class="tag">web-development</span>

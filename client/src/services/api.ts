@@ -121,7 +121,7 @@ export class ApiError extends Error {
 class ApiService {
   private api: AxiosInstance;
 
-  private authTokenKey = 'colabvibe_auth_token';
+  private authTokenKey = 'covibes_auth_token';
 
   constructor() {
     this.api = axios.create({

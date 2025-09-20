@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          ColabVibe Docker Environment                        │
+│                          Covibes Docker Environment                        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐         │
@@ -51,7 +51,7 @@ Each team has an isolated environment with the following components:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                colabvibe_agent_network (172.21.0.0/16)             │   │
+│  │                covibes_agent_network (172.21.0.0/16)             │   │
 │  │                                                                     │   │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐ │   │
 │  │  │Claude Agent │  │Claude Agent │  │     Workspace Sync          │ │   │
@@ -62,7 +62,7 @@ Each team has an isolated environment with the following components:
 │                                    │                                       │
 │                                    │                                       │
 │  ┌─────────────────────────────────┼───────────────────────────────────┐   │
-│  │            colabvibe_preview_network (172.22.0.0/16)             │   │
+│  │            covibes_preview_network (172.22.0.0/16)             │   │
 │  │                                 │                                   │   │
 │  │  ┌──────────────────────────────┼──────────────────────────────────┐│   │
 │  │  │          Host Network        │                                  ││   │
@@ -85,11 +85,11 @@ Each team has an isolated environment with the following components:
 │                            Volume Structure                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Host: /var/colabvibe/workspaces/                                           │
+│  Host: /var/covibes/workspaces/                                           │
 │  │                                                                          │
 │  ├── team_alpha/                    ← Bind Mount                            │
 │  │   ├── .git/                      ← workspace_team_alpha volume          │
-│  │   ├── .colabvibe.yml                                                     │
+│  │   ├── .covibes.yml                                                     │
 │  │   ├── src/                                                               │
 │  │   ├── docs/                                                              │
 │  │   ├── tests/                                                             │
@@ -238,7 +238,7 @@ Each team has an isolated environment with the following components:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  Host System                                                                │
-│  ├── /var/colabvibe/workspaces/                                             │
+│  ├── /var/covibes/workspaces/                                             │
 │  │   └── team_alpha/            (1000:1000, 755)                           │
 │  │       ├── .git/              (1000:1000, 755)                           │
 │  │       ├── src/               (1000:1000, 755)                           │
@@ -248,21 +248,21 @@ Each team has an isolated environment with the following components:
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │   Claude Agent Container                                            │   │
 │  │   ├── User: claude (1000:1000)                                     │   │
-│  │   ├── /workspace → /var/colabvibe/workspaces/team_alpha/ (rw)      │   │
+│  │   ├── /workspace → /var/covibes/workspaces/team_alpha/ (rw)      │   │
 │  │   └── Can read/write all files                                     │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │   Preview Container                                                 │   │
 │  │   ├── User: preview (1000:1000)                                    │   │
-│  │   ├── /workspace → /var/colabvibe/workspaces/team_alpha/ (ro)      │   │
+│  │   ├── /workspace → /var/covibes/workspaces/team_alpha/ (ro)      │   │
 │  │   └── Can read all files, cannot write                             │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │   Workspace Sync Container                                          │   │
 │  │   ├── User: sync (1000:1000)                                       │   │
-│  │   ├── /workspace → /var/colabvibe/workspaces/team_alpha/ (rw)      │   │
+│  │   ├── /workspace → /var/covibes/workspaces/team_alpha/ (rw)      │   │
 │  │   └── Can read/write for git operations                            │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
@@ -391,4 +391,4 @@ Each team has an isolated environment with the following components:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-This architecture provides a robust, scalable, and secure foundation for ColabVibe's multi-agent collaborative development environment. The design ensures proper isolation between teams while enabling seamless collaboration within team environments.
+This architecture provides a robust, scalable, and secure foundation for Covibes's multi-agent collaborative development environment. The design ensures proper isolation between teams while enabling seamless collaboration within team environments.

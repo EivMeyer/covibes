@@ -1,6 +1,6 @@
 {
-  "name": "ColabVibe - AI-Powered Collaborative Development Platform",
-  "short_name": "ColabVibe",
+  "name": "Covibes - AI-Powered Collaborative Development Platform",
+  "short_name": "Covibes",
   "description": "Real-time collaborative coding platform with AI agents, live chat, and remote development",
   "start_url": "/",
   "display": "standalone",

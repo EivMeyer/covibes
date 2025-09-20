@@ -18,19 +18,19 @@ const { test, expect } = require('@playwright/test');
 const TEST_CONFIG = {
   BASE_URL: 'http://localhost:3000',
   TEST_USER: {
-    email: `e2e${Date.now()}@colabvibe.com`,
+    email: `e2e${Date.now()}@covibes.com`,
     password: 'e2etest123',
     userName: 'E2ETestUser',
     teamName: `E2ETeam${Date.now()}`
   }
 };
 
-test.describe('🚀 COMPLETE COLABVIBE USER FLOW', () => {
+test.describe('🚀 COMPLETE COVIBES USER FLOW', () => {
 
   test('🎯 ENTIRE USER JOURNEY: Registration → Dashboard → Agent Spawn → Collaboration', async ({ page }) => {
     test.setTimeout(120000); // 2 minutes for complete flow
     
-    console.log('\n🎯 STARTING COMPLETE COLABVIBE USER FLOW TEST\n');
+    console.log('\n🎯 STARTING COMPLETE COVIBES USER FLOW TEST\n');
     
     // ==========================================
     // STEP 1: Load Application
@@ -288,7 +288,7 @@ test.describe('🚀 COMPLETE COLABVIBE USER FLOW', () => {
     console.log('✅ System stability');
     
     if (allFeaturesWorking) {
-      console.log('\n🚀 COLABVIBE IS READY FOR PRODUCTION USE!');
+      console.log('\n🚀 COVIBES IS READY FOR PRODUCTION USE!');
       console.log('👥 Users can register, create teams, spawn AI agents, and collaborate in real-time');
       console.log('💬 Chat, agent management, and code preview all functional');
       console.log('🔌 WebSocket connections stable and reliable');

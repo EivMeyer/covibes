@@ -37,7 +37,7 @@ test.describe('Preview Feature E2E', () => {
     console.log('🧪 Starting Preview E2E Test...\n');
     
     // 1. Navigate to app
-    console.log('1. Navigating to ColabVibe...');
+    console.log('1. Navigating to Covibes...');
     await page.goto('http://localhost:3001');
     await page.waitForTimeout(2000);
     

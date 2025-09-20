@@ -186,7 +186,7 @@ export default defineConfig({
     const indexHtml = `<!DOCTYPE html>
 <html>
 <head>
-    <title>ColabVibe Preview - Local HMR</title>
+    <title>Covibes Preview - Local HMR</title>
     <style>
         body {
             font-family: system-ui;
@@ -268,7 +268,7 @@ export default defineConfig({
     <div class="hmr-indicator" id="hmr-indicator">🔥 HMR Loading...</div>
     
     <div class="container">
-        <h1>🚀 ColabVibe Local Preview</h1>
+        <h1>🚀 Covibes Local Preview</h1>
         <p><strong>✨ Hot Module Replacement Active</strong></p>
         <p>🌐 Port: ${port} | 🔄 Live Reload Enabled</p>
         
@@ -373,7 +373,7 @@ if (import.meta.hot) {
 
 // Auto-update timestamp
 setInterval(() => {
-  document.title = \`ColabVibe Preview - \${new Date().toLocaleTimeString()}\`
+  document.title = \`Covibes Preview - \${new Date().toLocaleTimeString()}\`
 }, 1000)
 
 log("✅ Application initialized successfully")`;

@@ -1,4 +1,4 @@
-# ColabVibe: AI Workforce Management Platform
+# Covibes: AI Workforce Management Platform
 **"Spawn AI developers for your team from anywhere"**
 
 ---
@@ -18,7 +18,7 @@
 
 ## 💡 The Solution: Democratized AI Agent Spawning
 
-**ColabVibe creates the first team-wide AI workforce platform:**
+**Covibes creates the first team-wide AI workforce platform:**
 
 ### 🎯 Core Innovation (Available Today)
 - **Any team member can spawn AI agents** with full workspace access
@@ -71,7 +71,7 @@
 - **Development happens 24/7 with human guidance**
 
 ### Desktop Experience: Multi-Agent Command Center
-![Desktop Dashboard](tests/screenshots/colabvibe-04-main-app.png)
+![Desktop Dashboard](tests/screenshots/covibes-04-main-app.png)
 - Spawn multiple specialized agents simultaneously
 - Monitor agent progress in real-time  
 - Chat with agents and team members
@@ -95,7 +95,7 @@
 - **Single AI instances helping human teams** (GitHub Copilot)  
 - **Desktop-focused AI development tools** (Cursor)
 
-### What ColabVibe Has
+### What Covibes Has
 - **Multi-agent spawning** by any team member
 - **Mobile-first agent orchestration**  
 - **Team-wide AI visibility** and coordination
@@ -166,7 +166,7 @@
 - Competitive pressure for 24/7 development
 - **Gap:** AI development stops when humans log off
 
-**ColabVibe sits at the intersection of all three trends.**
+**Covibes sits at the intersection of all three trends.**
 
 ### Roadmap: Building the AI Workforce Platform
 
@@ -207,7 +207,7 @@
 
 ## 🎯 Ready for a Demo?
 
-**See how ColabVibe transforms your development workflow:**
+**See how Covibes transforms your development workflow:**
 
 🚀 **Spawn AI agents from anywhere**  
 👥 **Team-wide AI visibility and coordination**  
@@ -215,15 +215,15 @@
 ⚡ **Always-on development with human guidance**  
 
 ### Live Platform Available
-- **Website**: [colabvibe.com](http://colabvibe.com)
+- **Website**: [covibes.com](http://covibes.com)
 - **Platform**: Fully functional with real-time collaboration
 - **Mobile**: Native mobile experience ready to test
 
 ### Contact
-**demo@colabvibe.com**
+**demo@covibes.com**
 
 ---
 
-**ColabVibe: Where human creativity meets AI productivity, managed from anywhere.**
+**Covibes: Where human creativity meets AI productivity, managed from anywhere.**
 
 *The future of development is not just AI-assisted—it's AI-workforce managed.*

@@ -1,6 +1,6 @@
 # Docker Infrastructure Integration Guide
 
-This document explains how to integrate the new Docker-based multi-agent infrastructure with the existing ColabVibe system.
+This document explains how to integrate the new Docker-based multi-agent infrastructure with the existing Covibes system.
 
 ## Integration Overview
 
@@ -9,7 +9,7 @@ The Docker infrastructure extends the existing preview service and agent managem
 - **Isolated execution environments** for Claude agents
 - **Dynamic preview containers** based on project type detection
 - **Shared workspace management** with Git synchronization
-- **Seamless integration** with existing ColabVibe APIs
+- **Seamless integration** with existing Covibes APIs
 
 ## Integration Points
 
@@ -91,7 +91,7 @@ Add to your `.env` file:
 # Docker Integration
 USE_DOCKER_PREVIEW=true
 DOCKER_INTEGRATION_PATH=/path/to/docker/scripts/preview-integration.js
-WORKSPACE_BASE=/var/colabvibe/workspaces
+WORKSPACE_BASE=/var/covibes/workspaces
 CLAUDE_API_KEY=your-claude-api-key-here
 ```
 
@@ -196,7 +196,7 @@ import { io } from 'socket.io-client';
 
 // Connect to agent containers
 const connectToAgentContainer = (teamId: string, agentId: string) => {
-  const agentUrl = `http://colabvibe_agent_${teamId}_${agentId}:8080`;
+  const agentUrl = `http://covibes_agent_${teamId}_${agentId}:8080`;
   
   // Proxy agent events to main WebSocket
   const agentSocket = io(agentUrl);
@@ -290,7 +290,7 @@ Create a configuration service to manage Docker integration:
 export const dockerConfig = {
   enabled: process.env.USE_DOCKER_CONTAINERS === 'true',
   dockerDir: process.env.DOCKER_DIR || path.join(__dirname, '../../../docker'),
-  workspaceBase: process.env.WORKSPACE_BASE || '/var/colabvibe/workspaces',
+  workspaceBase: process.env.WORKSPACE_BASE || '/var/covibes/workspaces',
   claudeApiKey: process.env.CLAUDE_API_KEY,
   sshKeyPath: process.env.SSH_KEY_PATH,
   
@@ -420,7 +420,7 @@ export class ContainerMonitoringService {
     const containers = [];
     
     for (const line of lines) {
-      if (line.includes('colabvibe_')) {
+      if (line.includes('covibes_')) {
         const [name, status, ports] = line.split(/\s+/);
         containers.push({ name, status, ports });
       }
@@ -479,7 +479,7 @@ describe('Docker Integration', () => {
   beforeAll(async () => {
     // Set up test environment
     process.env.USE_DOCKER_CONTAINERS = 'true';
-    process.env.WORKSPACE_BASE = '/tmp/colabvibe-test';
+    process.env.WORKSPACE_BASE = '/tmp/covibes-test';
   });
   
   afterAll(async () => {

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # commit-now.sh - Auto-commit script for Claude Code hooks
-# Follows ColabVibe git workflow: always commit to staging branch
+# Follows Covibes git workflow: always commit to staging branch
 
 set -e
 

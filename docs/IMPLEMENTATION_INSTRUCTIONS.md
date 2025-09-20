@@ -11,7 +11,7 @@ You are implementing CoVibe, a collaborative development platform where teams sp
 
 ## Repository Structure to Create
 ```
-colabvibe/
+covibes/
 ├── server/
 │   ├── server.js           # Main server file
 │   ├── .env               # Environment variables
@@ -258,7 +258,7 @@ class SSHService {
 #### 1.8 Environment Variables (`.env`)
 ```env
 PORT=3001
-DATABASE_URL=postgresql://postgres:password@localhost:5432/colabvibe_dev
+DATABASE_URL=postgresql://postgres:password@localhost:5432/covibes_dev
 JWT_SECRET=change-this-in-production-to-random-string
 ENCRYPTION_KEY=32-character-key-for-vm-credential-encryption
 ```
@@ -912,7 +912,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: colabvibe_dev
+      POSTGRES_DB: covibes_dev
     ports:
       - "5432:5432"
   

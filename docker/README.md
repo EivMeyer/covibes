@@ -1,6 +1,6 @@
-# ColabVibe Docker Infrastructure
+# Covibes Docker Infrastructure
 
-This directory contains the complete Docker-based infrastructure for ColabVibe's Multi-Agent Collaborative Development Environment. The system provides isolated, scalable containers for Claude agents and preview services with shared workspace functionality.
+This directory contains the complete Docker-based infrastructure for Covibes's Multi-Agent Collaborative Development Environment. The system provides isolated, scalable containers for Claude agents and preview services with shared workspace functionality.
 
 ## Architecture Overview
 
@@ -32,7 +32,7 @@ docker/
 ### 🤖 Claude Agent Containers
 - **Isolated Execution**: Each agent runs in its own container with proper resource limits
 - **Shared Workspace**: All agents access the same `/workspace` volume with consistent UID/GID (1000:1000)
-- **Real-time Communication**: HTTP API and WebSocket connectivity to the main ColabVibe service
+- **Real-time Communication**: HTTP API and WebSocket connectivity to the main Covibes service
 - **Development Tools**: Pre-installed with Node.js, Python, Git, and common development utilities
 
 ### 🔄 Dynamic Preview System
@@ -175,7 +175,7 @@ GIT_BRANCH             # Git branch to work with
 ```
 ~/.covibes/workspaces/{team_id}/
 ├── .git/                    # Git repository
-├── .colabvibe.yml          # Workspace configuration
+├── .covibes.yml          # Workspace configuration
 ├── .gitignore              # Git ignore patterns
 ├── README.md               # Team workspace documentation
 ├── src/                    # Source code
@@ -193,8 +193,8 @@ GIT_BRANCH             # Git branch to work with
 ## Network Architecture
 
 ### Networks
-- **`colabvibe_agent_network`**: Internal network for agents and sync services
-- **`colabvibe_preview_network`**: External network for preview services
+- **`covibes_agent_network`**: Internal network for agents and sync services
+- **`covibes_preview_network`**: External network for preview services
 
 ### Port Allocation
 - **Claude Agents**: 8080 (internal API)
@@ -274,7 +274,7 @@ All containers include comprehensive health checks:
 ./scripts/setup-workspace.sh permissions ~/.covibes/workspaces/team123
 
 # Check container user mapping
-docker exec -it colabvibe_agent_team123_agent-1 id
+docker exec -it covibes_agent_team123_agent-1 id
 ```
 
 #### Port Conflicts
@@ -298,17 +298,17 @@ cat /proc/sys/fs/inotify/max_user_watches
 #### Git Synchronization Problems
 ```bash
 # Check sync container logs
-docker logs colabvibe_sync_team123
+docker logs covibes_sync_team123
 
 # Manual git operations
-docker exec -it colabvibe_sync_team123 git status
+docker exec -it covibes_sync_team123 git status
 ```
 
 ### Debug Mode
 
 Enable verbose logging:
 ```bash
-export DEBUG="colabvibe:*"
+export DEBUG="covibes:*"
 ./scripts/manage-containers.sh start team123
 ```
 
@@ -331,7 +331,7 @@ export DEBUG="colabvibe:*"
 ### Integration Points
 
 The Docker infrastructure integrates with:
-- **ColabVibe Server**: WebSocket communication and API calls
+- **Covibes Server**: WebSocket communication and API calls
 - **Preview Service**: Container orchestration bridge
 - **SSH Service**: VM deployment coordination
 - **Database**: Container metadata and status tracking
@@ -356,4 +356,4 @@ The Docker infrastructure integrates with:
 - Resource quotas and limits per team
 - Container orchestration with Kubernetes (future)
 
-This Docker infrastructure provides a robust, scalable foundation for ColabVibe's multi-agent collaborative development environment, ensuring isolation, security, and seamless integration with the existing platform.
+This Docker infrastructure provides a robust, scalable foundation for Covibes's multi-agent collaborative development environment, ensuring isolation, security, and seamless integration with the existing platform.

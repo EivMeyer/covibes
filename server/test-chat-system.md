@@ -1,4 +1,4 @@
-# Testing Chat Agents in ColabVibe
+# Testing Chat Agents in Covibes
 
 ## Quick Test via API
 

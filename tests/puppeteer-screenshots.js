@@ -1,6 +1,6 @@
 /**
  * Pitch Deck Screenshot Generator with Puppeteer
- * Creates 5 strategic, investor-ready screenshots for ColabVibe pitch deck
+ * Creates 5 strategic, investor-ready screenshots for Covibes pitch deck
  */
 
 const puppeteer = require('puppeteer');
@@ -16,22 +16,22 @@ const BASE_URL = 'http://localhost:3000';
 const TEST_USERS = [
   {
     name: 'Alice Chen',
-    email: 'alice.chen@colabvibe.dev',
-    teamName: 'ColabVibe Demo Team',
+    email: 'alice.chen@covibes.ai',
+    teamName: 'Covibes Demo Team',
     password: 'demo123456',
     role: 'Lead Developer'
   },
   {
     name: 'Bob Rodriguez',
-    email: 'bob.rodriguez@colabvibe.dev',
-    teamName: 'ColabVibe Demo Team',
+    email: 'bob.rodriguez@covibes.ai',
+    teamName: 'Covibes Demo Team',
     password: 'demo123456',
     role: 'Product Manager'
   },
   {
     name: 'Charlie Kim',
-    email: 'charlie.kim@colabvibe.dev',
-    teamName: 'ColabVibe Demo Team',
+    email: 'charlie.kim@covibes.ai',
+    teamName: 'Covibes Demo Team',
     password: 'demo123456',
     role: 'AI Engineer'
   }

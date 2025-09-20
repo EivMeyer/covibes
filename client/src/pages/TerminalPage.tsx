@@ -41,7 +41,7 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
       setStatus('Connected')
       
       // Get agents using existing auth
-      const token = localStorage.getItem('colabvibe_auth_token')
+      const token = localStorage.getItem('covibes_auth_token')
       if (token) {
         fetch('/api/agents', {
           headers: { Authorization: `Bearer ${token}` }
@@ -56,7 +56,7 @@ export const TerminalPage: React.FC<TerminalPageProps> = ({ agentId, user: propU
     }
 
     // Fallback: create own connection if not passed from parent
-    const token = localStorage.getItem('colabvibe_auth_token')
+    const token = localStorage.getItem('covibes_auth_token')
     if (!token) {
       setStatus('Not authenticated - please login first')
       return

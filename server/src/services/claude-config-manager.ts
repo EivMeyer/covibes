@@ -68,7 +68,7 @@ When you see other agents working:
       }
     } catch (error) {
       console.error('Failed to load system prompt file:', error);
-      this.AGENT_SYSTEM_PROMPT = 'ColabVibe Agent Online'; // Minimal fallback
+      this.AGENT_SYSTEM_PROMPT = 'Covibes Agent Online'; // Minimal fallback
     }
   }
 
@@ -421,7 +421,7 @@ DEVELOPMENT COMMANDS:
 
     const basicSettings: any = {
       "version": "1.0",
-      "createdBy": "ColabVibe",
+      "createdBy": "Covibes",
       "createdAt": new Date().toISOString(),
       "allowDangerousCommands": true,
       "allowSudo": true,  // Enable sudo for customer-owned VMs

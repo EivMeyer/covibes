@@ -12,6 +12,6 @@
     }
   ],
   "defaultSSHKeyPath": "./.ssh/ec2.pem",
-  "defaultRepository": "https://github.com/EivMeyer/colabvibe-test-repo",
+  "defaultRepository": "https://github.com/EivMeyer/covibes-test-repo",
   "maxConnectionsPerVM": 10
 }

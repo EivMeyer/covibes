@@ -1,5 +1,5 @@
 /**
- * Socket.IO type extensions for ColabVibe
+ * Socket.IO type extensions for Covibes
  * 
  * Extends Socket.IO types to include custom authentication and session properties
  * This resolves TypeScript errors related to custom properties on Socket instances

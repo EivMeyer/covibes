@@ -58,9 +58,9 @@ test.describe('Live Preview E2E Tests', () => {
     console.log('📝 Step 2: Ensuring repository is configured...');
     
     // Check if repository is already configured
-    const repoStatus = await page.locator('text=EivMeyer/colabvibe-test-repo').first();
+    const repoStatus = await page.locator('text=EivMeyer/covibes-test-repo').first();
     if (await repoStatus.isVisible()) {
-      console.log('✅ Repository already configured: EivMeyer/colabvibe-test-repo');
+      console.log('✅ Repository already configured: EivMeyer/covibes-test-repo');
     } else {
       console.log('⚙️  Configuring repository...');
       
@@ -68,11 +68,11 @@ test.describe('Live Preview E2E Tests', () => {
       await page.click('button:has-text("Configure"), text=Configure Repository');
       
       // Fill in repository URL
-      await page.fill('input[placeholder*="repository"], input[placeholder*="GitHub"]', 'https://github.com/EivMeyer/colabvibe-test-repo.git');
+      await page.fill('input[placeholder*="repository"], input[placeholder*="GitHub"]', 'https://github.com/EivMeyer/covibes-test-repo.git');
       await page.click('button:has-text("Save"), button:has-text("Configure")');
       
       // Wait for success
-      await page.waitForSelector('text=EivMeyer/colabvibe-test-repo', { timeout: 5000 });
+      await page.waitForSelector('text=EivMeyer/covibes-test-repo', { timeout: 5000 });
       console.log('✅ Repository configured successfully');
     }
 
@@ -166,7 +166,7 @@ test.describe('Live Preview E2E Tests', () => {
         
         // Take a screenshot for debugging
         await page.screenshot({ 
-          path: `/home/eivind/repos/colabvibe/colabvibe/tests/screenshots/preview-timeout-${Date.now()}.png`,
+          path: `/home/eivind/repos/covibes/covibes/tests/screenshots/preview-timeout-${Date.now()}.png`,
           fullPage: true 
         });
         
@@ -184,7 +184,7 @@ test.describe('Live Preview E2E Tests', () => {
       } else {
         console.log('❌ No preview content found in any form');
         await page.screenshot({ 
-          path: `/home/eivind/repos/colabvibe/colabvibe/tests/screenshots/no-preview-${Date.now()}.png`,
+          path: `/home/eivind/repos/covibes/covibes/tests/screenshots/no-preview-${Date.now()}.png`,
           fullPage: true 
         });
         throw new Error('No preview content found - preview feature may not be working');
@@ -239,7 +239,7 @@ test.describe('Live Preview E2E Tests', () => {
 
     // Final success screenshot
     await page.screenshot({ 
-      path: `/home/eivind/repos/colabvibe/colabvibe/tests/screenshots/preview-success-${Date.now()}.png`,
+      path: `/home/eivind/repos/covibes/covibes/tests/screenshots/preview-success-${Date.now()}.png`,
       fullPage: true 
     });
 

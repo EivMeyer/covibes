@@ -66,7 +66,7 @@ function AppContent() {
 
     if (authSuccess === 'true' && token) {
       // Store token and authenticate user
-      localStorage.setItem('colabvibe_auth_token', token);
+      localStorage.setItem('covibes_auth_token', token);
       
       apiService.getCurrentUser()
         .then(data => {
@@ -78,7 +78,7 @@ function AppContent() {
         })
         .catch(error => {
           console.error('❌ getCurrentUser() failed:', error);
-          localStorage.removeItem('colabvibe_auth_token');
+          localStorage.removeItem('covibes_auth_token');
           throw new Error(`GitHub OAuth token validation failed: ${error.message || error}`);
         });
       return;
@@ -92,7 +92,7 @@ function AppContent() {
     }
 
     // Check for existing token
-    const existingToken = localStorage.getItem('colabvibe_auth_token');
+    const existingToken = localStorage.getItem('covibes_auth_token');
     if (existingToken) {
       apiService.getCurrentUser()
         .then(data => {
@@ -102,7 +102,7 @@ function AppContent() {
         })
         .catch(error => {
           console.error('❌ Existing token invalid:', error);
-          localStorage.removeItem('colabvibe_auth_token');
+          localStorage.removeItem('covibes_auth_token');
           setIsLoading(false);
           throw new Error(`Existing token validation failed: ${error.message || error}`);
         });
@@ -140,7 +140,7 @@ function AppContent() {
           try {
             const response = await fetch(`/api/preview/status`, {
               headers: {
-                'Authorization': `Bearer ${localStorage.getItem('colabvibe_auth_token')}`
+                'Authorization': `Bearer ${localStorage.getItem('covibes_auth_token')}`
               }
             });
             
@@ -189,7 +189,7 @@ function AppContent() {
   useEffect(() => {
     if (!user || !team) return;
     
-    const token = localStorage.getItem('colabvibe_auth_token');
+    const token = localStorage.getItem('covibes_auth_token');
     if (!token) return;
 
     // Mobile detection for transport selection
@@ -279,7 +279,7 @@ function AppContent() {
       
       // If authentication failed, redirect to login
       if (error.message && (error.message.includes('Authentication') || error.message.includes('token'))) {
-        localStorage.removeItem('colabvibe_auth_token');
+        localStorage.removeItem('covibes_auth_token');
         window.location.href = '/auth';
       }
     });
@@ -355,7 +355,7 @@ function AppContent() {
         
         if (data.url) {
           // Add authentication token to proxy URL
-          const token = localStorage.getItem('colabvibe_auth_token');
+          const token = localStorage.getItem('covibes_auth_token');
           const urlWithToken = `${data.url}?token=${encodeURIComponent(token || '')}`;
           setPreviewUrl(urlWithToken);
         }
@@ -416,7 +416,7 @@ function AppContent() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('colabvibe_auth_token');
+    localStorage.removeItem('covibes_auth_token');
     setUser(null);
     setTeam(null);
     setIsConnected(false);
@@ -481,7 +481,7 @@ function AppContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('colabvibe_auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('covibes_auth_token')}`
         },
         body: JSON.stringify({ branch: 'workspace' }) // Request workspace preview
       });
@@ -494,7 +494,7 @@ function AppContent() {
       
       // Set the preview URL from the response (direct proxy URL like MVP)
       if (result.url) {
-        const token = localStorage.getItem('colabvibe_auth_token');
+        const token = localStorage.getItem('covibes_auth_token');
         const urlWithToken = `${result.url}?token=${encodeURIComponent(token || '')}`;
         setPreviewUrl(urlWithToken);
         setPreviewStatus('loading'); // Will become 'ready' when iframe loads
@@ -537,7 +537,7 @@ function AppContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('colabvibe_auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('covibes_auth_token')}`
         }
       });
       
@@ -549,7 +549,7 @@ function AppContent() {
       
       // Update preview URL if it changed
       if (result.url) {
-        const token = localStorage.getItem('colabvibe_auth_token');
+        const token = localStorage.getItem('covibes_auth_token');
         const urlWithToken = `${result.url}?token=${encodeURIComponent(token || '')}`;
         setPreviewUrl(urlWithToken);
       }
@@ -559,7 +559,7 @@ function AppContent() {
         setPreviewStatus('ready');
         // Update preview URL if it changed
         if (result.url && previewUrl !== result.url) {
-          const token = localStorage.getItem('colabvibe_auth_token');
+          const token = localStorage.getItem('covibes_auth_token');
           const urlWithToken = `${result.url}?token=${encodeURIComponent(token || '')}`;
           setPreviewUrl(urlWithToken);
         }
@@ -586,7 +586,7 @@ function AppContent() {
       console.error('Failed to refresh user/team data:', error);
       // If token is invalid, clear it
       if (error.status === 401) {
-        localStorage.removeItem('colabvibe_auth_token');
+        localStorage.removeItem('covibes_auth_token');
         setUser(null);
         setTeam(null);
       }

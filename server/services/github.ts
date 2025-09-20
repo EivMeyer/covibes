@@ -73,7 +73,7 @@ export class GitHubService {
     // Initialize Octokit with the decrypted token
     this.octokit = new Octokit({
       auth: decryptedToken,
-      userAgent: 'ColabVibe/1.0.0'
+      userAgent: 'Covibes/1.0.0'
     });
 
     return this.octokit;

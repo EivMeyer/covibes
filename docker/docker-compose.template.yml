@@ -1,4 +1,4 @@
-# Docker Compose Template for ColabVibe Multi-Agent Environment
+# Docker Compose Template for Covibes Multi-Agent Environment
 # 
 # This template orchestrates:
 # - Claude agents in isolated containers with shared workspace access
@@ -27,7 +27,7 @@ services:
       args:
         - CLAUDE_VERSION=latest
         - NODE_VERSION=20
-    container_name: colabvibe_agent_${TEAM_ID}_${AGENT_ID}
+    container_name: covibes_agent_${TEAM_ID}_${AGENT_ID}
     restart: unless-stopped
     environment:
       # Claude Configuration
@@ -43,7 +43,7 @@ services:
       
       # Team and Communication
       TEAM_ID: ${TEAM_ID}
-      SOCKET_URL: http://colabvibe_backend:3001
+      SOCKET_URL: http://covibes_backend:3001
       
       # File Watching (Docker compatibility)
       CHOKIDAR_USEPOLLING: "true"
@@ -65,7 +65,7 @@ services:
       - ./config/ssh_config:/home/claude/.ssh/config:ro
     
     networks:
-      - colabvibe_agent_network
+      - covibes_agent_network
     
     # Resource limits to prevent one agent from consuming all resources
     deploy:
@@ -108,7 +108,7 @@ services:
         - PROJECT_TYPE: ${PROJECT_TYPE}
         - NODE_VERSION: ${NODE_VERSION:-20}
         - PREVIEW_PORT: ${PREVIEW_PORT}
-    container_name: colabvibe_preview_${TEAM_ID}_${GIT_BRANCH}
+    container_name: covibes_preview_${TEAM_ID}_${GIT_BRANCH}
     restart: unless-stopped
     environment:
       # Project Configuration
@@ -145,8 +145,8 @@ services:
       - preview_modules_${TEAM_ID}_${GIT_BRANCH}:/app/node_modules:rw
     
     networks:
-      - colabvibe_agent_network
-      - colabvibe_preview_network
+      - covibes_agent_network
+      - covibes_preview_network
     
     # Resource limits
     deploy:
@@ -183,7 +183,7 @@ services:
     build:
       context: ./workspace-sync
       dockerfile: Dockerfile
-    container_name: colabvibe_sync_${TEAM_ID}
+    container_name: covibes_sync_${TEAM_ID}
     restart: unless-stopped
     environment:
       TEAM_ID: ${TEAM_ID}
@@ -200,7 +200,7 @@ services:
       - ${SSH_KEY_PATH:-/dev/null}:/home/sync/.ssh/id_rsa:ro
     
     networks:
-      - colabvibe_agent_network
+      - covibes_agent_network
     
     # Resource limits (minimal for sync service)
     deploy:
@@ -238,7 +238,7 @@ volumes:
 
 networks:
   # Internal network for agents and workspace sync
-  colabvibe_agent_network:
+  covibes_agent_network:
     driver: bridge
     internal: false  # Agents need external access for Claude API
     ipam:
@@ -246,7 +246,7 @@ networks:
         - subnet: 172.21.0.0/16
   
   # Network for preview services (externally accessible)
-  colabvibe_preview_network:
+  covibes_preview_network:
     driver: bridge
     internal: false
     ipam:
@@ -260,10 +260,10 @@ x-common-config: &common-config
   
   # Common labels for identification
   labels:
-    - "colabvibe.team=${TEAM_ID}"
-    - "colabvibe.project=${PROJECT_NAME}"
-    - "colabvibe.type=multi-agent"
-    - "colabvibe.version=1.0"
+    - "covibes.team=${TEAM_ID}"
+    - "covibes.project=${PROJECT_NAME}"
+    - "covibes.type=multi-agent"
+    - "covibes.version=1.0"
   
   # Restart policy
   restart: unless-stopped
@@ -275,8 +275,8 @@ x-common-config: &common-config
 secrets:
   claude_api_key:
     external: true
-    external_name: colabvibe_claude_api_key_${TEAM_ID}
+    external_name: covibes_claude_api_key_${TEAM_ID}
   
   ssh_private_key:
     external: true  
-    external_name: colabvibe_ssh_key_${TEAM_ID}
+    external_name: covibes_ssh_key_${TEAM_ID}

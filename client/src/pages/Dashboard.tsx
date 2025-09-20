@@ -75,7 +75,7 @@ const requestIdleCallbackPolyfill = (callback: () => void) => {
 
 export const Dashboard: React.FC<DashboardProps> = (props) => {
   // Get token for API calls - use the correct key!
-  const token = typeof window !== 'undefined' ? localStorage.getItem('colabvibe_auth_token') : null;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('covibes_auth_token') : null;
   const { 
     loadWorkspace, 
     saveWorkspace, 

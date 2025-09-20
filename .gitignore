@@ -1,5 +1,5 @@
 # ===================================
-# ColabVibe Project .gitignore
+# Covibes Project .gitignore
 # ===================================
 
 # Node.js dependencies
@@ -65,8 +65,8 @@ static/build/
 # ===================================
 
 # PostgreSQL data
-colabvibe/data/postgres/
-colabvibe/data/redis/
+covibes/data/postgres/
+covibes/data/redis/
 
 # Database files
 *.db
@@ -302,7 +302,7 @@ vite.config.*.timestamp-*
 # Project-Specific Ignores
 # ===================================
 
-# ColabVibe specific
+# Covibes specific
 .server.lock
 update-*.mjs
 

@@ -1278,7 +1278,7 @@ router.post('/:id/reconnect', async (req: express.Request, res) => {
   }
 });
 
-// GET /api/agents/tmux-sessions - List all ColabVibe tmux sessions (debug endpoint)
+// GET /api/agents/tmux-sessions - List all Covibes tmux sessions (debug endpoint)
 router.get('/tmux-sessions', async (req: express.Request, res) => {
   try {
     if (!req.user?.userId) {
@@ -1298,8 +1298,8 @@ router.get('/tmux-sessions', async (req: express.Request, res) => {
     // Get tmux manager and list sessions
     const manager = terminalManagerFactory.getManager('local', 'tmux');
     
-    if ('listColabVibeSessions' in manager) {
-      const sessions = await (manager as any).listColabVibeSessions();
+    if ('listCovibesSessions' in manager) {
+      const sessions = await (manager as any).listCovibesSessions();
       
       // Get corresponding database records
       const dbAgents = await prisma.agents.findMany({

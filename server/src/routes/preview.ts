@@ -48,7 +48,7 @@ const inspectorStates = new Map<string, boolean>(); // teamId -> enabled
  */
 function injectInspectorScript(html: string): string {
   const inspectorScript = `
-<script id="colabvibe-inspector">
+<script id="covibes-inspector">
 (function() {
   let hoveredElement = null;
   const originalStyles = new WeakMap();
@@ -96,7 +96,7 @@ function injectInspectorScript(html: string): string {
   window.addEventListener('message', function(event) {
     if (event.data.type === 'enable-inspector') {
       window.__inspectorActive = event.data.active;
-      console.log('ColabVibe Inspector:', window.__inspectorActive ? 'ENABLED' : 'DISABLED');
+      console.log('Covibes Inspector:', window.__inspectorActive ? 'ENABLED' : 'DISABLED');
     }
   });
 
@@ -166,7 +166,7 @@ function injectInspectorScript(html: string): string {
 
   // Mark as ready
   window.__inspectorReady = true;
-  console.log('ColabVibe Inspector injected server-side and ready');
+  console.log('Covibes Inspector injected server-side and ready');
 })();
 </script>`;
 

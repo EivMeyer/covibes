@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Test Organization Script for ColabVibe
+# Test Organization Script for Covibes
 # This script reorganizes tests into a cleaner directory structure
 
-echo "🧹 Organizing ColabVibe Tests..."
+echo "🧹 Organizing Covibes Tests..."
 
 # Create new directory structure
 echo "📁 Creating organized directory structure..."

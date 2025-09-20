@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Test repository as specified in CLAUDE.md
-const TEST_REPO = 'https://github.com/EivMeyer/colabvibe-test-repo';
+const TEST_REPO = 'https://github.com/EivMeyer/covibes-test-repo';
 
 // Create screenshots directory if it doesn't exist
 const screenshotsDir = path.join(__dirname, 'screenshots', 'preview-e2e');
@@ -162,7 +162,7 @@ describe('Preview Feature E2E Test', () => {
     }, proxyUrl, authToken);
     
     expect(proxyResponse.status).toBe(200);
-    expect(proxyResponse.text).toContain('ColabVibe Live Preview');
+    expect(proxyResponse.text).toContain('Covibes Live Preview');
     
     // 9. Test API endpoint through proxy
     console.log('9. Testing API endpoint through proxy...');
@@ -178,7 +178,7 @@ describe('Preview Feature E2E Test', () => {
     }, apiProxyUrl, authToken);
     
     expect(apiResponse.status).toBe('healthy');
-    expect(apiResponse.service).toBe('colabvibe-test-app');
+    expect(apiResponse.service).toBe('covibes-test-app');
     
     // 10. Navigate to preview directly and screenshot
     console.log('10. Navigating to preview directly...');
@@ -197,10 +197,10 @@ describe('Preview Feature E2E Test', () => {
       
       // Verify preview content
       const title = await previewPage.title();
-      expect(title).toContain('ColabVibe Live Preview');
+      expect(title).toContain('Covibes Live Preview');
       
       const heading = await previewPage.textContent('h1');
-      expect(heading).toContain('ColabVibe Live Preview');
+      expect(heading).toContain('Covibes Live Preview');
       
       // Test the refresh button
       await previewPage.click('button');

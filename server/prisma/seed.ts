@@ -23,7 +23,7 @@ async function main() {
       id: 'demo-team-001',
       name: 'Demo Team',
       teamCode: 'DEMO01',
-      repositoryUrl: 'https://github.com/EivMeyer/colabvibe-test-repo',
+      repositoryUrl: 'https://github.com/EivMeyer/covibes-test-repo',
       updatedAt: new Date(),
     },
   });

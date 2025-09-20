@@ -39,7 +39,7 @@ export default function SimpleApp() {
 
   // Check if already logged in on mount
   useEffect(() => {
-    const token = localStorage.getItem('colabvibe_auth_token');
+    const token = localStorage.getItem('covibes_auth_token');
     if (token) {
       apiService.getCurrentUser()
         .then(data => {
@@ -48,7 +48,7 @@ export default function SimpleApp() {
           setIsLoading(false);
         })
         .catch(() => {
-          localStorage.removeItem('colabvibe_auth_token');
+          localStorage.removeItem('covibes_auth_token');
           setIsLoading(false);
         });
     } else {
@@ -60,7 +60,7 @@ export default function SimpleApp() {
   useEffect(() => {
     if (!user || !team) return;
     
-    const token = localStorage.getItem('colabvibe_auth_token');
+    const token = localStorage.getItem('covibes_auth_token');
     if (!token) return;
 
     const socket = io({
@@ -112,7 +112,7 @@ export default function SimpleApp() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('colabvibe_auth_token');
+    localStorage.removeItem('covibes_auth_token');
     setUser(null);
     setTeam(null);
     // Don't clear messages - keep chat history

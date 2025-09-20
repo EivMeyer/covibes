@@ -75,7 +75,7 @@ export class LocalPtyManager extends EventEmitter implements TerminalManager {
 
       // Send welcome message
       setTimeout(() => {
-        ptyProcess.write(`echo "🚀 ColabVibe Agent Terminal"\r`);
+        ptyProcess.write(`echo "🚀 Covibes Agent Terminal"\r`);
         ptyProcess.write(`echo "📋 Agent ID: ${options.agentId}"\r`);
         ptyProcess.write(`echo "📁 Workspace: ${workspaceDir}"\r`);
         ptyProcess.write(`echo "🎯 Task: ${options.task}"\r`);

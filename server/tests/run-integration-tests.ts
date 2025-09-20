@@ -101,13 +101,13 @@ class IntegrationTestRunner {
 
     // Check if test database URL is configured
     const testDbUrl = process.env.TEST_DATABASE_URL || 
-      process.env.DATABASE_URL?.replace('colabvibe_dev', 'colabvibe_test');
+      process.env.DATABASE_URL?.replace('covibes_dev', 'covibes_test');
     
     if (!testDbUrl) {
       issues.push('TEST_DATABASE_URL or DATABASE_URL not configured');
     }
 
-    if (testDbUrl?.includes('colabvibe_dev')) {
+    if (testDbUrl?.includes('covibes_dev')) {
       issues.push('⚠️  Test database URL points to development database! This could be dangerous.');
     }
 
@@ -228,7 +228,7 @@ class IntegrationTestRunner {
           NODE_ENV: 'test',
           // Ensure we use test database
           DATABASE_URL: process.env.TEST_DATABASE_URL || 
-            process.env.DATABASE_URL?.replace('colabvibe_dev', 'colabvibe_test')
+            process.env.DATABASE_URL?.replace('covibes_dev', 'covibes_test')
         }
       };
 

@@ -63,7 +63,7 @@ export const GitHubSignupForm: React.FC<GitHubSignupFormProps> = ({
       });
 
       // Store token
-      localStorage.setItem('colabvibe_auth_token', response.token);
+      localStorage.setItem('covibes_auth_token', response.token);
       
       addNotification({
         message: `Successfully ${mode === 'create' ? 'created team' : 'joined team'} with GitHub!`,

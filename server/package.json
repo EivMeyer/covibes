@@ -1,5 +1,5 @@
 {
-  "name": "colabvibe-server",
+  "name": "covibes-server",
   "version": "1.0.0",
   "description": "CoVibe TypeScript Express Server",
   "main": "dist/server.js",

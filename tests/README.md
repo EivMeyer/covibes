@@ -20,7 +20,7 @@ tests/
 
 ### Install Dependencies
 ```bash
-cd colabvibe/tests
+cd covibes/tests
 npm install
 npx playwright install  # Install browsers for Playwright
 ```
@@ -187,12 +187,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
-      - run: cd colabvibe/server && npm install
-      - run: cd colabvibe/tests && npm install
-      - run: cd colabvibe/tests && npm run test:unit
-      - run: cd colabvibe/server && npm run dev &
+      - run: cd covibes/server && npm install
+      - run: cd covibes/tests && npm install
+      - run: cd covibes/tests && npm run test:unit
+      - run: cd covibes/server && npm run dev &
       - run: sleep 5
-      - run: cd colabvibe/tests && npm run test:e2e
+      - run: cd covibes/tests && npm run test:e2e
 ```
 
 ## Troubleshooting

@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Test repository as specified
-const TEST_REPO = 'https://github.com/EivMeyer/colabvibe-test-repo';
+const TEST_REPO = 'https://github.com/EivMeyer/covibes-test-repo';
 
 async function completePreviewTest() {
   console.log('🚀 Complete Preview E2E Test\n');
@@ -37,7 +37,7 @@ async function completePreviewTest() {
   
   try {
     // 1. Navigate to the frontend (Vite dev server on port 3000)
-    console.log('1. Loading ColabVibe frontend...');
+    console.log('1. Loading Covibes frontend...');
     await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
     

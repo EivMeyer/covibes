@@ -3,7 +3,7 @@ console.log('');
 
 // Test 1: Repository URL
 console.log('1. ✅ Repository URL fixed in seed:');
-console.log('   https://github.com/EivMeyer/colabvibe-test-repo');
+console.log('   https://github.com/EivMeyer/covibes-test-repo');
 console.log('');
 
 // Test 2: VM Configuration  
@@ -24,7 +24,7 @@ console.log('');
 
 // Test 4: Database
 console.log('4. ✅ Database Updated:');
-console.log('   - Team has repositoryUrl: https://github.com/EivMeyer/colabvibe-test-repo');
+console.log('   - Team has repositoryUrl: https://github.com/EivMeyer/covibes-test-repo');
 console.log('   - Alice has vmId: vm-001 (real EC2)');
 console.log('   - Bob has vmId: vm-001 (real EC2)');
 console.log('');
@@ -36,7 +36,7 @@ console.log('   📧 alice@demo.com / 🔑 demo123');
 console.log('   📧 bob@demo.com / 🔑 demo123');
 console.log('');
 console.log('📋 Test the configuration modals:');
-console.log('   1. Click "Configure Repository" - Should show EivMeyer/colabvibe-test-repo');
+console.log('   1. Click "Configure Repository" - Should show EivMeyer/covibes-test-repo');
 console.log('   2. Click "Configure VM" - Should show EC2 hostname and connected status');
 console.log('');
 console.log('✅ No more "No repository configured" or "VM instance not found" errors!');

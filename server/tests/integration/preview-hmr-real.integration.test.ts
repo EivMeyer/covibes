@@ -38,7 +38,7 @@ describe('Real HMR Integration Test', () => {
     await request('http://localhost:3001')
       .post('/api/team/repository')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ repositoryUrl: 'https://github.com/EivMeyer/colabvibe-test-repo' });
+      .send({ repositoryUrl: 'https://github.com/EivMeyer/covibes-test-repo' });
 
     // Create preview deployment
     const createRes = await request('http://localhost:3001')

@@ -2,7 +2,7 @@
 #
 # Container Management Script
 #
-# Orchestrates Docker containers for ColabVibe multi-agent environments
+# Orchestrates Docker containers for Covibes multi-agent environments
 # Handles dynamic container creation, project type detection, and lifecycle management
 
 set -euo pipefail
@@ -283,7 +283,7 @@ get_team_status() {
 
 # List all team environments
 list_team_environments() {
-    echo "=== ColabVibe Team Environments ==="
+    echo "=== Covibes Team Environments ==="
     echo
     
     if [[ -d "$GENERATED_DIR" ]]; then

@@ -39,10 +39,10 @@ RUN chmod +x /usr/local/bin/workspace-sync.sh
 
 # Environment variables
 ENV SYNC_INTERVAL=5
-ENV GIT_AUTHOR_NAME="ColabVibe Sync"
-ENV GIT_AUTHOR_EMAIL="sync@colabvibe.dev"
-ENV GIT_COMMITTER_NAME="ColabVibe Sync"
-ENV GIT_COMMITTER_EMAIL="sync@colabvibe.dev"
+ENV GIT_AUTHOR_NAME="Covibes Sync"
+ENV GIT_AUTHOR_EMAIL="sync@covibes.ai"
+ENV GIT_COMMITTER_NAME="Covibes Sync"
+ENV GIT_COMMITTER_EMAIL="sync@covibes.ai"
 
 # Default command
 CMD ["/usr/local/bin/workspace-sync.sh"]

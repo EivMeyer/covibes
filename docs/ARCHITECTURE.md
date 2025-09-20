@@ -144,12 +144,12 @@ agent:{agentId}:status → Current agent status
 ├── project/              # Team's git repository
 ├── .claude/              # Claude configuration
 ├── agent_logs/           # Output logs per agent
-└── colabvibe_agent.js    # Agent wrapper script
+└── covibes_agent.js    # Agent wrapper script
 ```
 
 **Agent Wrapper Script**:
 ```javascript
-// colabvibe_agent.js - Runs on each VM
+// covibes_agent.js - Runs on each VM
 const { spawn } = require('child_process');
 const WebSocket = require('ws');
 
@@ -199,7 +199,7 @@ GitHub Webhook → Server → Pull latest → Restart preview
                             ↓
                    Nginx reverse proxy
                             ↓
-                   https://preview.colabvibe.app
+                   https://preview.covibes.app
 ```
 
 **Deployment Flow**:
@@ -248,7 +248,7 @@ This design allows:
 3. Server validates Sarah owns the VM
 4. Server retrieves encrypted SSH credentials
 5. Server SSHs to Sarah's VM using credentials
-6. Executes: node colabvibe_agent.js <agentId> <task>
+6. Executes: node covibes_agent.js <agentId> <task>
 7. Agent starts, connects WebSocket back to server
 8. Server broadcasts "agent_started" to team
 9. All team members see "Sarah's agent: Add auth"
@@ -460,10 +460,10 @@ pm2 start ecosystem.config.js
 pm2 save
 
 # SSL setup
-certbot --nginx -d api.colabvibe.app -d preview.colabvibe.app
+certbot --nginx -d api.covibes.app -d preview.covibes.app
 
 # Database backups
-pg_dump colabvibe > backup.sql  # Daily cron
+pg_dump covibes > backup.sql  # Daily cron
 ```
 
 ## Monitoring & Observability

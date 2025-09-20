@@ -120,7 +120,7 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
     }
 
     // Get base system prompt
-    let systemPrompt = (claudeConfigManager as any)['AGENT_SYSTEM_PROMPT'] || 'ColabVibe Agent Online';
+    let systemPrompt = (claudeConfigManager as any)['AGENT_SYSTEM_PROMPT'] || 'Covibes Agent Online';
 
     // Add agent name if provided
     if (metadata['agentName']) {

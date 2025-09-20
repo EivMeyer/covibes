@@ -78,7 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // WebSocket enabled with fixed auth redirect issue - memoized to prevent re-renders
   const token = React.useMemo(() => 
-    auth.isAuthenticated ? localStorage.getItem('colabvibe_auth_token') : null,
+    auth.isAuthenticated ? localStorage.getItem('covibes_auth_token') : null,
     [auth.isAuthenticated]
   );
   const socket = useSocket(token);

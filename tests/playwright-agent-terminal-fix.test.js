@@ -176,7 +176,7 @@ test.describe('Agent Terminal Ownership Fix', () => {
       // Get console logs that might show the debug info
       const debugInfo = await page.evaluate(() => {
         return {
-          localStorage: localStorage.getItem('colabvibe_auth_token') ? 'HAS_TOKEN' : 'NO_TOKEN',
+          localStorage: localStorage.getItem('covibes_auth_token') ? 'HAS_TOKEN' : 'NO_TOKEN',
           userAgent: navigator.userAgent,
           currentUrl: window.location.href
         };

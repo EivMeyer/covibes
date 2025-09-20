@@ -1,8 +1,8 @@
-# CoVibe API Integration Implementation Summary
+# Covibes API Integration Implementation Summary
 
 ## Overview
 
-I have successfully implemented a comprehensive API layer and WebSocket integration for the CoVibe React TypeScript frontend. This implementation provides:
+I have successfully implemented a comprehensive API layer and WebSocket integration for the Covibes React TypeScript frontend. This implementation provides:
 
 - Type-safe API communication with the backend server
 - Real-time WebSocket integration with proper event handling
@@ -116,7 +116,7 @@ I have successfully implemented a comprehensive API layer and WebSocket integrat
 - ✅ SSH connectivity testing
 - ✅ Configuration persistence
 
-#### **`useCoVibe` Hook** (`src/hooks/useCoVibe.ts`)
+#### **`useCovibes` Hook** (`src/hooks/useCovibes.ts`)
 - ✅ Master hook combining all functionality
 - ✅ Automatic initialization and synchronization
 - ✅ Online user presence management
@@ -194,8 +194,8 @@ The existing `App.tsx`, `AppContext.tsx`, and UI components use the old API stru
 3. **Use new hooks:**
    ```typescript
    // Replace existing context with new hooks
-   const colabVibe = useCoVibe();
-   const { auth, socket, agents, chat, vmConfig } = colabVibe;
+   const covibes = useCovibes();
+   const { auth, socket, agents, chat, vmConfig } = covibes;
    ```
 
 ## 🎯 Production Ready Features

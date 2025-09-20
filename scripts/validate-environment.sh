@@ -1,8 +1,8 @@
 #!/bin/bash
-# ColabVibe Environment Validation Script
+# Covibes Environment Validation Script
 # Run this BEFORE any deployment to catch issues early
 
-echo "🔍 ColabVibe Environment Validation"
+echo "🔍 Covibes Environment Validation"
 echo "=================================="
 
 VALIDATION_FAILED=0
@@ -201,7 +201,7 @@ else
     echo "   export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com"
     echo "   export BASE_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com" 
     echo "   export EC2_USERNAME=ubuntu"
-    echo "   export DATABASE_URL=\"postgresql://postgres:password@localhost:5433/colabvibe_prod\""
+    echo "   export DATABASE_URL=\"postgresql://postgres:password@localhost:5433/covibes_prod\""
     echo "   export JWT_SECRET=\"your-32-char-jwt-secret-key-here\""
     echo "   export ENCRYPTION_KEY=\"your-exactly-32-character-key-here!\""
     exit 1

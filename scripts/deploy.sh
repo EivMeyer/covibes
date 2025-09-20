@@ -1,10 +1,10 @@
 #!/bin/bash
-# ColabVibe Centralized Deployment Script
+# Covibes Centralized Deployment Script
 # 
 # 🎯 SINGLE IP CONFIGURATION POINT
 # To change IP addresses: Edit server/config/deployment.js ONLY
 
-echo "🚀 ColabVibe Centralized Deployment"
+echo "🚀 Covibes Centralized Deployment"
 echo "=================================="
 
 # Get configuration from centralized source
@@ -36,8 +36,8 @@ echo "   SERVER_URL: $SERVER_URL"
 
 # Set other required environment variables
 export EC2_USERNAME=ubuntu
-export DATABASE_URL="postgresql://postgres:password@localhost:5433/colabvibe_prod"
-export JWT_SECRET="prod_jwt_2024_colabvibe_secure_random_key_123456789"
+export DATABASE_URL="postgresql://postgres:password@localhost:5433/covibes_prod"
+export JWT_SECRET="prod_jwt_2024_covibes_secure_random_key_123456789"
 export ENCRYPTION_KEY="abcdef1234567890abcdef1234567890"
 export NODE_ENV=production
 

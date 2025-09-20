@@ -11,7 +11,7 @@
  * 7. User collaborates via chat
  * 8. User views agent output in terminal
  * 
- * This tests EXACTLY how users will interact with ColabVibe in production.
+ * This tests EXACTLY how users will interact with Covibes in production.
  */
 
 const { test, expect } = require('@playwright/test');
@@ -27,24 +27,24 @@ const TEST_CONFIG = {
   BASE_URL: 'http://localhost:3000', // Frontend runs on port 3000, not 3001!
   BACKEND_URL: 'http://localhost:3001', // Backend for health checks
   TEST_USER: {
-    email: `test${Date.now()}@colabvibe.com`, // Unique email to avoid conflicts
+    email: `test${Date.now()}@covibes.com`, // Unique email to avoid conflicts
     password: 'testpass123',
     userName: 'TestUser',
     teamName: `TestTeam${Date.now()}` // Unique team name
   },
-  GITHUB_REPO: 'https://github.com/EivMeyer/colabvibe-test-repo',
+  GITHUB_REPO: 'https://github.com/EivMeyer/covibes-test-repo',
   TIMEOUT: 60000 // 60 seconds for each step
 };
 
 let demoProcess = null;
 
-test.describe('Complete ColabVibe User Flow', () => {
+test.describe('Complete Covibes User Flow', () => {
   
   test.beforeAll(async () => {
     console.log('🚀 Starting complete user flow test...');
     
-    // 1. FIRST STEP: Verify ColabVibe system is running
-    console.log('📋 Step 1: Verifying ColabVibe system is running');
+    // 1. FIRST STEP: Verify Covibes system is running
+    console.log('📋 Step 1: Verifying Covibes system is running');
     
     try {
       // Check if server is already running
@@ -76,10 +76,10 @@ test.describe('Complete ColabVibe User Flow', () => {
       }
       
       if (attempts >= maxAttempts) {
-        throw new Error('Frontend and/or backend servers not running. Please start both:\n- Backend: cd colabvibe/server && npm run dev\n- Frontend: cd colabvibe/client && npm run dev');
+        throw new Error('Frontend and/or backend servers not running. Please start both:\n- Backend: cd covibes/server && npm run dev\n- Frontend: cd covibes/client && npm run dev');
       }
       
-      console.log('✅ ColabVibe server is ready for testing');
+      console.log('✅ Covibes server is ready for testing');
       
     } catch (error) {
       console.error('❌ Failed to verify server:', error);
@@ -98,8 +98,8 @@ test.describe('Complete ColabVibe User Flow', () => {
     // Set longer timeout for this comprehensive test
     test.setTimeout(120000); // 2 minutes
     
-    // Step 2: User navigates to ColabVibe
-    console.log('📋 Step 2: User opens ColabVibe in browser');
+    // Step 2: User navigates to Covibes
+    console.log('📋 Step 2: User opens Covibes in browser');
     await page.goto(TEST_CONFIG.BASE_URL);
     
     // Verify the login page loads
@@ -290,7 +290,7 @@ test.describe('Complete ColabVibe User Flow', () => {
     console.log('📋 Step 9: Verify system stability');
     
     // Check that the page is still responsive
-    await expect(page.locator('text=ColabVibe')).toBeVisible();
+    await expect(page.locator('text=Covibes')).toBeVisible();
     
     // Verify no JavaScript errors in console
     const logs = [];
@@ -331,6 +331,6 @@ test.describe('Complete ColabVibe User Flow', () => {
     console.log('✅ Chat functionality');
     console.log('✅ Agent output access');
     console.log('✅ System stability');
-    console.log('\n🚀 ColabVibe is ready for production use!');
+    console.log('\n🚀 Covibes is ready for production use!');
   });
 });

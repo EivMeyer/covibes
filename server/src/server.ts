@@ -1,5 +1,5 @@
 /**
- * ColabVibe Express Server
+ * Covibes Express Server
  * 
  * Core requirements:
  * - Express server with JSON parsing and CORS
@@ -1011,7 +1011,7 @@ app.get('/pitch/md', (_req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColabVibe: AI Workforce Management Platform</title>
+    <title>Covibes: AI Workforce Management Platform</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -1108,7 +1108,7 @@ app.get('/pitch/md', (_req, res) => {
 <body>
     <div class="container">
         <div class="header">
-            <h1>ColabVibe</h1>
+            <h1>Covibes</h1>
             <p class="tagline">AI Workforce Management Platform</p>
         </div>
         <div class="content">
@@ -1151,7 +1151,7 @@ app.get('/pitch/viewer', (_req, res) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColabVibe Pitch Deck</title>
+    <title>Covibes Pitch Deck</title>
     <style>
         * {
             margin: 0;
@@ -1269,11 +1269,11 @@ app.get('/pitch/viewer', (_req, res) => {
 </head>
 <body>
     <div class="header">
-        <div class="logo">ColabVibe</div>
+        <div class="logo">Covibes</div>
         <nav class="nav">
             <a href="/">← Back to App</a>
             <a href="/pitch" target="_blank">Download PDF</a>
-            <a href="https://github.com/colabvibe/colabvibe" target="_blank">GitHub</a>
+            <a href="https://github.com/covibes/covibes" target="_blank">GitHub</a>
         </nav>
     </div>
     

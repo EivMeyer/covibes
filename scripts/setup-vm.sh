@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ColabVibe VM Setup Script
+# Covibes VM Setup Script
 # 
 # This script sets up individual VMs for users to run their agents
 # It installs necessary tools and configures the environment for secure agent execution
@@ -41,7 +41,7 @@ error() {
 SETUP_TYPE="${1:-full}"  # full, basic, or update
 TARGET_USER="${2:-$DEFAULT_USER}"
 
-log "Starting ColabVibe VM setup (type: $SETUP_TYPE)"
+log "Starting Covibes VM setup (type: $SETUP_TYPE)"
 
 # Check if running as root
 if [[ $EUID -eq 0 ]]; then
@@ -182,7 +182,7 @@ setup_agent_environment() {
     # Create useful aliases
     cat >> "$HOME/.bashrc" << 'EOF'
 
-# ColabVibe Agent Development Aliases
+# Covibes Agent Development Aliases
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
@@ -352,9 +352,9 @@ finalize_setup() {
     
     # Create welcome message
     cat > "$HOME/WELCOME.md" << EOF
-# ColabVibe VM Setup Complete! 🎉
+# Covibes VM Setup Complete! 🎉
 
-Your development VM is now ready for ColabVibe agent execution.
+Your development VM is now ready for Covibes agent execution.
 
 ## What's been installed:
 - Node.js $(node --version) and npm $(npm --version)
@@ -387,7 +387,7 @@ A special user '$CLAUDE_USER' has been created for agent execution.
 1. Log out and back in for group changes to take effect
 2. Configure your SSH keys
 3. Test the development environment
-4. Connect this VM to your ColabVibe team
+4. Connect this VM to your Covibes team
 
 Happy coding! 🚀
 EOF

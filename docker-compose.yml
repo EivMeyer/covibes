@@ -1,4 +1,4 @@
-# Docker Compose for ColabVibe Development
+# Docker Compose for Covibes Development
 # 
 # This configuration provides:
 # - PostgreSQL database for user data, teams, and chat history
@@ -19,11 +19,11 @@ services:
       context: ./server
       dockerfile: Dockerfile
       target: development
-    container_name: colabvibe_backend
+    container_name: covibes_backend
     restart: unless-stopped
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/colabvibe_dev
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/covibes_dev
       REDIS_URL: redis://:redispassword@redis:6379
       JWT_SECRET: your-secret-key-here-change-in-production
       ENCRYPTION_KEY: abcdef1234567890abcdef1234567890
@@ -38,7 +38,7 @@ services:
       - ./server:/app:cached
       - server_node_modules:/app/node_modules
     networks:
-      - colabvibe_network
+      - covibes_network
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,7 +57,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
       target: development
-    container_name: colabvibe_frontend
+    container_name: covibes_frontend
     restart: unless-stopped
     environment:
       NODE_ENV: development
@@ -69,7 +69,7 @@ services:
       - ./client:/app:cached
       - client_node_modules:/app/node_modules
     networks:
-      - colabvibe_network
+      - covibes_network
     depends_on:
       backend:
         condition: service_healthy
@@ -83,10 +83,10 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: colabvibe_postgres
+    container_name: covibes_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: colabvibe_dev
+      POSTGRES_DB: covibes_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       # Enable logging for development
@@ -99,9 +99,9 @@ services:
       # Custom initialization scripts
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
-      - colabvibe_network
+      - covibes_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d colabvibe_dev"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d covibes_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -109,7 +109,7 @@ services:
   # Redis for Sessions and Caching
   redis:
     image: redis:7-alpine
-    container_name: colabvibe_redis
+    container_name: covibes_redis
     restart: unless-stopped
     command: redis-server --appendonly yes --requirepass redispassword
     ports:
@@ -120,7 +120,7 @@ services:
       # Custom Redis configuration
       - ./config/redis.conf:/etc/redis/redis.conf:ro
     networks:
-      - colabvibe_network
+      - covibes_network
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -130,10 +130,10 @@ services:
   # Optional: pgAdmin for database management (development only)
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: colabvibe_pgadmin
+    container_name: covibes_pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@colabvibe.dev
+      PGADMIN_DEFAULT_EMAIL: admin@covibes.ai
       PGADMIN_DEFAULT_PASSWORD: admin123
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
@@ -142,7 +142,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
-      - colabvibe_network
+      - covibes_network
     depends_on:
       postgres:
         condition: service_healthy
@@ -153,7 +153,7 @@ services:
   # Optional: Redis Commander for Redis management
   redis-commander:
     image: rediscommander/redis-commander:latest
-    container_name: colabvibe_redis_commander
+    container_name: covibes_redis_commander
     restart: unless-stopped
     environment:
       REDIS_HOSTS: "local:redis:6379:0:redispassword"
@@ -162,7 +162,7 @@ services:
     ports:
       - "8081:8081"
     networks:
-      - colabvibe_network
+      - covibes_network
     depends_on:
       redis:
         condition: service_healthy
@@ -175,16 +175,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.test
-    container_name: colabvibe_tests
+    container_name: covibes_tests
     environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/colabvibe_dev
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/covibes_dev
       REDIS_URL: redis://:redispassword@redis:6379
       NODE_ENV: test
     volumes:
       - .:/app
       - /app/node_modules
     networks:
-      - colabvibe_network
+      - covibes_network
     depends_on:
       postgres:
         condition: service_healthy
@@ -214,7 +214,7 @@ volumes:
     driver: local
 
 networks:
-  colabvibe_network:
+  covibes_network:
     driver: bridge
     ipam:
       config:

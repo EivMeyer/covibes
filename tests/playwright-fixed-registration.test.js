@@ -8,7 +8,7 @@ const { test, expect } = require('@playwright/test');
 const TEST_CONFIG = {
   BASE_URL: 'http://localhost:3000',
   TEST_USER: {
-    email: `test${Date.now()}@colabvibe.com`,
+    email: `test${Date.now()}@covibes.com`,
     password: 'testpass123',
     userName: 'TestUser',
     teamName: `TestTeam${Date.now()}`

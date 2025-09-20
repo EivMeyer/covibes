@@ -1,16 +1,16 @@
-# CoVibe
+# Covibes
 
 *Embrace exponentials*
 
-[![CI](https://github.com/YOUR_USERNAME/colabvibe/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/colabvibe/actions/workflows/ci.yml)
+[![CI](https://github.com/YOUR_USERNAME/covibes/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/covibes/actions/workflows/ci.yml)
 
 > Embrace Exponentials - Collaborative AI Development Platform
 
-CoVibe is a revolutionary web-based platform where developers spawn AI agents to work on code collaboratively in real-time. Multiple team members can see and interact with agents as they write code, run tests, and build features together.
+Covibes is a revolutionary web-based platform where developers spawn AI agents to work on code collaboratively in real-time. Multiple team members can see and interact with agents as they write code, run tests, and build features together.
 
 ## ⚡ Quick Demo
 
-The fastest way to see CoVibe in action:
+The fastest way to see Covibes in action:
 
 ```bash
 ./demo.sh
@@ -44,7 +44,7 @@ This starts the entire system with one command! Open the displayed URL in 3 brow
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd colabvibe
+cd covibes
 
 # Start services
 docker-compose up -d
@@ -73,7 +73,7 @@ sudo systemctl start redis
 
 # Clone and setup
 git clone <your-repo-url>
-cd colabvibe/server
+cd covibes/server
 npm install
 
 # Configure environment
@@ -121,7 +121,7 @@ node server/test/ssh-test.js localhost
 ## 📁 Project Structure
 
 ```
-colabvibe/
+covibes/
 ├── server/                 # Backend Node.js application
 │   ├── server.js          # Main server entry point
 │   ├── routes/            # API endpoints
@@ -166,7 +166,7 @@ Create `.env` file in the `server/` directory:
 ```env
 NODE_ENV=development
 PORT=3001
-DATABASE_URL=postgresql://postgres:password@localhost:5432/colabvibe_dev
+DATABASE_URL=postgresql://postgres:password@localhost:5432/covibes_dev
 JWT_SECRET=your-secret-key-here
 ENCRYPTION_KEY=32-character-encryption-key
 REDIS_URL=redis://localhost:6379
@@ -217,7 +217,7 @@ docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d
 ### Application Monitoring
 ```bash
 # View application logs
-docker-compose logs -f colabvibe
+docker-compose logs -f covibes
 
 # Monitor system resources
 htop
@@ -239,10 +239,10 @@ docker-compose --profile admin up pgadmin
 **Application won't start**
 ```bash
 # Check logs
-tail -f colabvibe.log
+tail -f covibes.log
 
 # Verify database connection
-docker-compose exec postgres psql -U postgres -d colabvibe_dev
+docker-compose exec postgres psql -U postgres -d covibes_dev
 ```
 
 **WebSocket connection fails**
@@ -343,4 +343,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Ready to collaborate with AI?** Start your CoVibe journey today! 🚀
+**Ready to collaborate with AI?** Start your Covibes journey today! 🚀

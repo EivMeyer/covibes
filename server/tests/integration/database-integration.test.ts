@@ -11,7 +11,7 @@ import { testDb, testAssertions } from '../setup/test-database.js';
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.TEST_DATABASE_URL || 'postgresql://postgres:password@localhost:5433/colabvibe_test'
+      url: process.env.TEST_DATABASE_URL || 'postgresql://postgres:password@localhost:5433/covibes_test'
     }
   }
 });

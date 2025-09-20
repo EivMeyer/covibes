@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# ColabVibe Production Startup Script
+# Covibes Production Startup Script
 
-echo "🚀 Starting ColabVibe in Production Mode"
+echo "🚀 Starting Covibes in Production Mode"
 echo ""
 
 # Set production environment

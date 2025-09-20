@@ -1,13 +1,13 @@
-# ColabVibe Pitch Deck Screenshots
+# Covibes Pitch Deck Screenshots
 
-This directory contains 5 strategic, investor-ready screenshots for the ColabVibe pitch deck, showcasing the revolutionary collaborative AI development platform.
+This directory contains 5 strategic, investor-ready screenshots for the Covibes pitch deck, showcasing the revolutionary collaborative AI development platform.
 
 ## Screenshots Overview
 
 ### 1. Hero Dashboard (`hero-dashboard.png`)
 - **Resolution**: 1920x1080
 - **Purpose**: Primary slide image
-- **Content**: Professional login interface showing ColabVibe branding and "Build together" tagline
+- **Content**: Professional login interface showing Covibes branding and "Build together" tagline
 - **Features Showcased**: Clean UI design, GitHub OAuth integration, professional branding
 
 ### 2. AI Agent Coding in Action (`ai-agent-coding.png`) 
@@ -69,7 +69,7 @@ These screenshots are ready for use in:
 
 The screenshots were generated using `/tests/puppeteer-screenshots.js` which:
 1. Starts a headless Chrome browser
-2. Navigates to the ColabVibe application
+2. Navigates to the Covibes application
 3. Simulates realistic user interactions
 4. Captures high-quality screenshots
 5. Handles different viewport sizes (desktop/mobile)
@@ -85,4 +85,4 @@ August 31, 2025
 
 ---
 
-*Generated for ColabVibe - AI-Powered Collaborative Development Platform*
+*Generated for Covibes - AI-Powered Collaborative Development Platform*

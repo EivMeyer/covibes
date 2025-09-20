@@ -19,8 +19,8 @@ A functioning system where 2-3 developers can spawn Claude agents, watch each ot
 
 ### Task 1.1: Project Setup
 ```bash
-mkdir colabvibe-server
-cd colabvibe-server
+mkdir covibes-server
+cd covibes-server
 npm init -y
 ```
 - [ ] Install dependencies: `express socket.io cors dotenv bcrypt jsonwebtoken`
@@ -37,7 +37,7 @@ npm install prisma @prisma/client
 npx prisma init
 ```
 - [ ] Install PostgreSQL locally or use Docker
-- [ ] Create database: `createdb colabvibe_dev`
+- [ ] Create database: `createdb covibes_dev`
 - [ ] Define Prisma schema:
   ```prisma
   model Team {
@@ -233,7 +233,7 @@ npm install ssh2
 
 ### Task 4.1: Expo Setup
 ```bash
-npx create-expo-app colabvibe-mobile
+npx create-expo-app covibes-mobile
 ```
 - [ ] Install dependencies
 - [ ] Configure API URL
@@ -342,7 +342,7 @@ npx create-expo-app colabvibe-mobile
 ### Day 1-3: Server + Web UI Basic
 ```bash
 # Start server
-cd colabvibe-server
+cd covibes-server
 npm install
 npm run dev
 

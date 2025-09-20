@@ -707,7 +707,7 @@ function App() {
 
         <footer>
           <div className="team-badge">${teamId}</div>
-          <div className="version">ColabVibe Preview ✨</div>
+          <div className="version">Covibes Preview ✨</div>
         </footer>
       </div>
     </div>

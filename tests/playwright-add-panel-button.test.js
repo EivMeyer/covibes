@@ -3,9 +3,9 @@ const { test, expect } = require('@playwright/test');
 test('Add Panel button E2E test - visibility, clickability and Code Editor spawning', async ({ page }) => {
   console.log('🧪 Starting Add Panel button E2E test...');
 
-  // Navigate to ColabVibe
+  // Navigate to Covibes
   await page.goto('http://localhost:3001');
-  console.log('📍 Navigated to ColabVibe');
+  console.log('📍 Navigated to Covibes');
 
   // Login as Alice (demo user)
   await page.fill('input[type="email"]', 'alice@demo.com');
@@ -14,7 +14,7 @@ test('Add Panel button E2E test - visibility, clickability and Code Editor spawn
   console.log('🔐 Logged in as Alice');
 
   // Wait for dashboard to load - look for any dashboard indicator
-  await page.waitForSelector('[data-testid="dashboard"], .dashboard, text=ColabVibe, text=Spawn Agent', { timeout: 15000 });
+  await page.waitForSelector('[data-testid="dashboard"], .dashboard, text=Covibes, text=Spawn Agent', { timeout: 15000 });
   console.log('📊 Dashboard loaded');
 
   // Enable console logging to see debug messages from GridWorkspace
@@ -138,7 +138,7 @@ test('Add Panel button - floating button test (with tiles)', async ({ page }) =>
   await page.fill('input[type="email"]', 'alice@demo.com');
   await page.fill('input[type="password"]', 'demo123');
   await page.click('button[type="submit"]');
-  await page.waitForSelector('[data-testid="dashboard"], .dashboard, text=ColabVibe, text=Spawn Agent', { timeout: 15000 });
+  await page.waitForSelector('[data-testid="dashboard"], .dashboard, text=Covibes, text=Spawn Agent', { timeout: 15000 });
 
   console.log('🔐 Logged in, adding a tile first...');
 

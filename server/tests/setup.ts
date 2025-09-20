@@ -18,7 +18,7 @@ global.console = {
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-jwt-secret-key';
 process.env.ENCRYPTION_KEY = '32-character-test-encryption-key!';
-process.env.DATABASE_URL = 'postgresql://postgres:password@localhost:5432/colabvibe_test';
+process.env.DATABASE_URL = 'postgresql://postgres:password@localhost:5432/covibes_test';
 
 // Increase timeout for async operations
 jest.setTimeout(10000);

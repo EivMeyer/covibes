@@ -17,7 +17,7 @@
  */
 
 const INSPECTOR_SCRIPT = `
-<script id="colabvibe-inspector">
+<script id="covibes-inspector">
 (function() {
   // Same script as in PreviewInspector.tsx but injected server-side
   let hoveredElement = null;
@@ -121,7 +121,7 @@ const INSPECTOR_SCRIPT = `
   document.addEventListener('mouseout', handleMouseOut);
   document.addEventListener('click', handleClick);
 
-  console.log('ColabVibe Inspector ready (server-injected)');
+  console.log('Covibes Inspector ready (server-injected)');
 })();
 </script>
 `;

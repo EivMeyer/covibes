@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# ColabVibe Production Deployment Script
+# Covibes Production Deployment Script
 # This script prevents the manual configuration hell we experienced
 
-echo "🚀 Starting ColabVibe Production Deployment"
+echo "🚀 Starting Covibes Production Deployment"
 echo "=========================================="
 
 # STEP 1: Environment Validation
@@ -136,7 +136,7 @@ echo "Starting server with command:"
 echo "$PROD_CMD"
 
 # Start in background
-nohup bash -c "$PROD_CMD" > /tmp/colabvibe-production.log 2>&1 &
+nohup bash -c "$PROD_CMD" > /tmp/covibes-production.log 2>&1 &
 SERVER_PID=$!
 
 echo "✅ Server started with PID: $SERVER_PID"
@@ -155,7 +155,7 @@ if curl -f "http://$BASE_HOST:3001/health" > /dev/null 2>&1; then
 else
     echo "❌ Server health check failed!"
     echo "📋 Server logs:"
-    tail -20 /tmp/colabvibe-production.log
+    tail -20 /tmp/covibes-production.log
     exit 1
 fi
 
@@ -176,9 +176,9 @@ echo "📱 Mobile Preview: http://$BASE_HOST:3001/api/preview/proxy/demo-team-00
 echo "🏥 Health Check: http://$BASE_HOST:3001/health"
 echo ""
 echo "📋 Server PID: $SERVER_PID"
-echo "📄 Logs: /tmp/colabvibe-production.log"
+echo "📄 Logs: /tmp/covibes-production.log"
 echo ""
-echo "🔍 To monitor logs: tail -f /tmp/colabvibe-production.log"
+echo "🔍 To monitor logs: tail -f /tmp/covibes-production.log"
 echo "🛑 To stop server: kill $SERVER_PID"
 echo ""
-echo "✅ ColabVibe is now running in production mode!"
+echo "✅ Covibes is now running in production mode!"

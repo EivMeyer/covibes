@@ -1,7 +1,7 @@
 # Carriage Return Handling Fix for Observer Terminals
 
 ## Problem
-Observer mode terminals in ColabVibe were not properly handling carriage returns (`\r`), causing progress bars, spinners, and other ANSI-based animations to appear on multiple lines instead of updating in place.
+Observer mode terminals in Covibes were not properly handling carriage returns (`\r`), causing progress bars, spinners, and other ANSI-based animations to appear on multiple lines instead of updating in place.
 
 ## Root Cause
 The issue was caused by the terminal persistence layer (tmux) interfering with ANSI escape sequences. Tmux's terminal emulation layer was intercepting and modifying the sequences, preventing proper carriage return handling.

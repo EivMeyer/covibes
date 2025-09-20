@@ -37,7 +37,7 @@ class SimpleDockerPreview {
       const html = `<!DOCTYPE html>
 <html>
 <head>
-    <title>ColabVibe Preview</title>
+    <title>Covibes Preview</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -92,7 +92,7 @@ class SimpleDockerPreview {
 </head>
 <body>
     <div class="container">
-        <h1>🚀 ColabVibe Docker Preview</h1>
+        <h1>🚀 Covibes Docker Preview</h1>
         <div class="status">✅ RUNNING</div>
         
         <div class="info">
@@ -148,7 +148,7 @@ class SimpleDockerPreview {
 
         // Simple auto-refresh every 30 seconds to show it's live
         setInterval(() => {
-            document.title = 'ColabVibe Preview - ' + new Date().toLocaleTimeString();
+            document.title = 'Covibes Preview - ' + new Date().toLocaleTimeString();
         }, 1000);
     </script>
 </body>

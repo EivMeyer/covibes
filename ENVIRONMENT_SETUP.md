@@ -1,10 +1,10 @@
-# ColabVibe Environment Configuration
+# Covibes Environment Configuration
 
-This document describes the environment configuration setup for ColabVibe, including development and production configurations.
+This document describes the environment configuration setup for Covibes, including development and production configurations.
 
 ## 🎯 Overview
 
-ColabVibe now supports proper environment-specific configuration for both development and production deployments. The environment system includes:
+Covibes now supports proper environment-specific configuration for both development and production deployments. The environment system includes:
 
 - ✅ **Separate environment files** for development and production
 - ✅ **Environment-specific npm scripts**

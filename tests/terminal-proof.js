@@ -5,7 +5,7 @@ import io from 'socket.io-client';
 
 console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
-║      COLABVIBE TERMINAL - WORKING WITH REAL CLAUDE ON EC2       ║
+║        COVIBES TERMINAL - WORKING WITH REAL CLAUDE ON EC2       ║
 ╚══════════════════════════════════════════════════════════════════╝
 `);
 

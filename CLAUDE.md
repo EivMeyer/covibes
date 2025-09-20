@@ -1,4 +1,4 @@
-# ColabVibe: Project Context for LLM Agents
+# Covibes: Project Context for LLM Agents
 
 ## 🚀 Quick Start Guide
 
@@ -48,7 +48,7 @@ await this.prisma.previewDeployment.upsert({
 
 ## Project Overview
 
-ColabVibe is a fully functional web-based collaboration platform where developers spawn AI agents to work on code collaboratively. The system enables real-time team collaboration with persistent chat, AI agent management, terminal access, Monaco IDE integration, and remote VM execution. **Updated August 2025 with enhanced message persistence, database-backed state management, comprehensive testing infrastructure, and Docker containerization.**
+Covibes is a fully functional web-based collaboration platform where developers spawn AI agents to work on code collaboratively. The system enables real-time team collaboration with persistent chat, AI agent management, terminal access, Monaco IDE integration, and remote VM execution. **Updated August 2025 with enhanced message persistence, database-backed state management, comprehensive testing infrastructure, and Docker containerization.**
 
 ### Core Capabilities
 - **Multi-user team collaboration** with real-time chat and presence
@@ -62,7 +62,7 @@ ColabVibe is a fully functional web-based collaboration platform where developer
 
 ## Technology Stack
 
-### Backend (`colabvibe/server/`)
+### Backend (`covibes/server/`)
 - **Runtime**: Node.js >=18.0.0 with TypeScript and ESM modules
 - **Framework**: Express.js with Socket.io for real-time features
 - **Database**: PostgreSQL with Prisma ORM (comprehensive schema with 7 models)
@@ -71,7 +71,7 @@ ColabVibe is a fully functional web-based collaboration platform where developer
 - **Testing**: Jest with comprehensive integration and unit tests
 - **Terminal Management**: Multiple PTY managers (tmux, screen, local, remote)
 
-### Frontend (`colabvibe/client/`)
+### Frontend (`covibes/client/`)
 - **Framework**: React 19.1.1 with TypeScript and Vite 5.4.19
 - **Styling**: Tailwind CSS 3.4.17 with responsive design patterns
 - **State Management**: React hooks with context providers
@@ -369,7 +369,7 @@ model terminal_history {
 ## Common Development Patterns
 
 ### Adding New API Endpoints
-1. Define route in `colabvibe/server/src/routes/`
+1. Define route in `covibes/server/src/routes/`
 2. Add authentication middleware if needed
 3. Update database schema in `prisma/schema.prisma` if required
 4. Write integration tests in `server/tests/integration/`
@@ -564,7 +564,7 @@ These patterns come from real debugging sessions and production issues. The data
 
 ## Summary
 
-ColabVibe is a real-time collaborative development platform with AI agents, terminal access, IDE integration, and live preview system. The codebase follows database-backed state management patterns with comprehensive Docker containerization.
+Covibes is a real-time collaborative development platform with AI agents, terminal access, IDE integration, and live preview system. The codebase follows database-backed state management patterns with comprehensive Docker containerization.
 
 **Key Guidelines**:
 - Don't restart servers unless explicitly asked - they auto-reload on file changes

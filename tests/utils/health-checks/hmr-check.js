@@ -18,7 +18,7 @@ const execAsync = promisify(exec);
 
 // Configuration - will auto-detect from available workspaces
 const BACKEND_URL = 'http://localhost:3001';
-const WORKSPACE_DIR = '/home/eivind/.colabvibes';
+const WORKSPACE_DIR = '/home/eivind/.covibess';
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 class HMRHealthChecker {
