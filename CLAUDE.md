@@ -1,57 +1,39 @@
 # ColabVibe: Project Context for LLM Agents
 
-## IMPORTANT INSTRUCTIONS - ALWAYS FOLLOW
+## 🚀 Quick Start Guide
 
-### Git Workflow - MANDATORY FOR ALL AGENTS
-**ALWAYS push to staging branch when completing any task:**
-1. **Create or checkout staging branch**: 
-   - If staging doesn't exist: `git checkout -b staging`
-   - If staging exists: `git checkout staging`
-2. **Stage all changes**: `git add .`
-3. **Commit with descriptive message**: 
-   - Use conventional commits: `git commit -m "feat: added IDE integration"`
-   - Or: `git commit -m "fix: resolved API connection issue"`
-4. **Push to staging**: 
-   - First push: `git push -u origin staging`
-   - Subsequent pushes: `git push origin staging`
-5. **NEVER push directly to main/master** unless explicitly instructed
-6. **This ensures all changes are reviewed before merging to production**
-
-Example workflow:
+### Starting the Development Environment
 ```bash
-# After completing a task
-git checkout -b staging  # or git checkout staging
-git add .
-git commit -m "feat: implemented full IDE with Monaco Editor"
-git push -u origin staging  # or git push origin staging
+# 1. Start database services
+docker-compose up -d postgres redis
+
+# 2. Build client (required for server static file serving)
+cd client && npm run build && cd ..
+
+# 3. Start both servers
+cd server && npm run dev &    # Backend on port 3001
+cd client && npm run dev       # Frontend on port 3000
 ```
 
-**Git Hooks are configured** to enforce this workflow:
-- **pre-push hook**: Blocks direct pushes to main/master
-- **post-commit hook**: Reminds to push to staging after commits
-- Run `./setup-git-hooks.sh` to enable hooks if not already active
+### Access Points
+- **Frontend**: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
+- **Backend API**: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
+- **Health Check**: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001/health
 
-### Server Management
-**NEVER restart the development servers unless explicitly prompted by the user.** The servers have auto-restart capabilities (nodemon for backend, HMR for frontend) and will automatically reload when files are changed. Only start/restart servers when the user specifically asks you to do so.
+### Important Notes
+- **Servers auto-reload** on file changes (nodemon for backend, HMR for frontend)
+- **Never restart servers** unless explicitly asked - they handle changes automatically
+- **Client must be built** before starting server (serves from client/dist/)
+- **Use staging branch** for all Git commits (never push to main directly)
 
-### Port Configuration
-**ALWAYS use these ports for development:**
-- **Frontend (Vite)**: Port **3000** - The client application with hot module replacement
-- **Backend (Express/Socket.io)**: Port **3001** - The API server with WebSocket support
-- The frontend is configured with `strictPort: true` in `vite.config.ts` to ensure it always runs on port 3000
-- The frontend proxies `/api` and `/socket.io` requests to the backend on port 3001
+### Common Issues
+- **Port already in use**: Kill existing processes with `lsof -ti:3000 | xargs kill -9`
+- **ENOENT index.html**: Run `cd client && npm run build` first
+- **Database connection**: Ensure PostgreSQL is running with `docker-compose ps`
 
-**Key Health Check Commands**:
-```bash
-cd tests
-npm run check:hmr              # Quick HMR health check
-npm run test:hmr              # Full HMR regression test
-cd tests/utils && ./run-health-checks.sh  # All system health checks
-```
+## ⚠️ Critical Patterns to Follow
 
-### ⚠️ **Critical Patterns to Follow**
-
-#### **Database-Backed State Pattern**
+#### Database-Backed State Pattern
 ```typescript
 // ❌ WRONG: In-memory state (prone to desync)
 const containerState = new Map();
@@ -62,19 +44,6 @@ await this.prisma.previewDeployment.upsert({
   create: { teamId, containerId, port, status: 'running' },
   update: { status: 'running', updatedAt: new Date() }
 });
-```
-
-
-#### **Test Organization Pattern**
-```bash
-# ✅ CORRECT: Focused, essential tests
-tests/playwright/preview/e2e.spec.js          # One comprehensive preview test
-tests/utils/health-checks/hmr-check.js        # Quick system health verification
-
-# ❌ WRONG: Debugging artifacts and iterations  
-tests/preview-investigation.js                # Remove debugging scripts
-tests/preview-simple.js                       # Remove duplicate attempts
-tests/preview-cors-fix.js                     # Remove one-time fixes
 ```
 
 ## Project Overview
@@ -268,84 +237,11 @@ npm install
 npx playwright test
 ```
 
-## Environment Variables
+## Environment Configuration
 
-### Required Environment Variables - NO FALLBACKS ALLOWED
-**CRITICAL**: These environment variables must be set EXACTLY or the application will FAIL IMMEDIATELY. NO FALLBACKS.
-
-#### Server Environment Variables:
-```bash
-# EC2 Configuration (REQUIRED - NO FALLBACKS)
-export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
-export EC2_USERNAME=ubuntu
-
-# Database Configuration (REQUIRED - NO FALLBACKS)
-export DATABASE_URL="postgresql://postgres:password@localhost:5432/colabvibe_dev"
-export TEST_DATABASE_URL="postgresql://postgres:password@localhost:5433/colabvibe_test"
-
-# Authentication (REQUIRED - NO FALLBACKS)
-export JWT_SECRET="development-jwt-secret-key"
-export ENCRYPTION_KEY="32-character-development-encrypt-key!"
-
-# GitHub OAuth (Optional)
-export GITHUB_CLIENT_ID="your-github-client-id"
-export GITHUB_CLIENT_SECRET="your-github-client-secret"
-
-# Development Mode
-export NODE_ENV="development"
-```
-
-#### Client Environment Variables:
-```bash
-# Frontend/Backend URLs (REQUIRED - NO FALLBACKS)
-export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
-export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
-```
-
-### Simplified Development Startup ✨
-**NEW**: All environment variables are now configured in `.env` files - no manual exports needed!
-
-#### Quick Start (Recommended):
-```bash
-# Start everything with one command
-./start-dev.sh
-
-# Stop everything
-./stop-dev.sh
-```
-
-#### Manual Startup (if needed):
-```bash
-# 1. Start database services
-docker-compose up -d postgres redis
-
-# 2. Build client (required for server)
-cd client && npm run build && cd ..
-
-# 3. Start servers (environment automatically loaded from .env files)
-cd server && npm run dev &
-cd ../client && npm run dev
-```
-
-All required environment variables are now pre-configured in:
-- `server/.env` - Backend configuration including EC2_HOST and EC2_USERNAME
-- `client/.env` - Frontend configuration with correct URLs
-
-### Startup Issues Prevention
-Common startup failures and their fixes:
-
-1. **"EC2_HOST environment variable is required"**
-   - Fix: `export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com`
-
-2. **"EC2_USERNAME environment variable is required"**
-   - Fix: `export EC2_USERNAME=ubuntu`
-
-3. **"listen EADDRINUSE: address already in use :::3001"**
-   - Fix: `lsof -ti:3001 | xargs kill -9`
-
-4. **Database connection errors**
-   - Ensure PostgreSQL is running: `docker-compose up -d postgres`
-   - Check DATABASE_URL environment variable
+All environment variables are pre-configured in `.env` files:
+- `server/.env` - Backend configuration (EC2_HOST, DATABASE_URL, etc.)
+- `client/.env` - Frontend configuration (API URLs)
 
 ## Important Files & Their Purposes
 
@@ -666,246 +562,13 @@ These patterns come from real debugging sessions and production issues. The data
 - **Tests**: Organized by type in `tests/playwright/` with utility helpers
 - **Docker**: Infrastructure containers in `docker/` directory
 
-# Production Deployment Guide
+## Summary
 
-## 🚀 Production Deployment Process
+ColabVibe is a real-time collaborative development platform with AI agents, terminal access, IDE integration, and live preview system. The codebase follows database-backed state management patterns with comprehensive Docker containerization.
 
-### Prerequisites
-- EC2 instance with Node.js 20+, PM2, Nginx, PostgreSQL, Docker
-- Environment variables configured in `.env.production` files
-- SSH keys and GitHub OAuth tokens set up
-
-### Step-by-Step Deployment
-
-#### 1. Environment Setup
-```bash
-# CRITICAL: Set these EXACT environment variables (NO FALLBACKS)
-export EC2_HOST=ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
-export EC2_USERNAME=ubuntu
-export NODE_ENV=production
-
-# Client environment variables
-export VITE_BACKEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
-export VITE_FRONTEND_URL=http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
-```
-
-#### 2. Clean Existing Processes
-**CRITICAL**: Always clean up development processes before production deployment:
-```bash
-# Kill ALL existing development servers (common cause of port conflicts)
-pkill -f nodemon
-pkill -f "vite.*dev"
-pm2 delete all
-pm2 kill
-
-# Check for any remaining node processes
-ps aux | grep node
-# Kill any remaining processes: kill -9 <pid>
-```
-
-#### 3. Build Applications
-```bash
-# Server build
-cd server
-npm run build
-
-# Client build  
-cd ../client
-npm run build
-```
-
-#### 4. Static File Conflicts Resolution
-**CRITICAL ISSUE**: Static files can override API routes!
-
-- **Problem**: If you have both `/pitch` route AND `/pitch.html` file, Express static middleware serves the file first
-- **Solution**: Remove/rename conflicting static files:
-```bash
-# Example: Move conflicting files before deployment
-mv pitch.html pitch.html.backup
-mv any-conflicting-static-file.html backup/
-```
-
-#### 5. PM2 Production Start
-```bash
-# Start with ecosystem config (contains all environment variables)
-pm2 start ecosystem.config.js
-
-# Verify both services are running
-pm2 status
-
-# Check logs for any issues
-pm2 logs --lines 20
-```
-
-#### 6. Nginx Configuration
-Ensure nginx.conf is configured and active:
-```bash
-# Test nginx config
-sudo nginx -t
-
-# Reload nginx
-sudo systemctl reload nginx
-```
-
-## ⚠️ Common Deployment Issues & Solutions
-
-### 1. Route Not Working - Static File Conflict
-**Symptoms**: API route returns static HTML instead of expected JSON/content
-**Cause**: Express static middleware serving file with same name as route
-**Solution**: 
-```bash
-# Find conflicting files
-ls -la | grep "route-name"
-# Move or rename: mv conflicting-file.html backup/
-```
-
-### 2. Old Development Processes Still Running
-**Symptoms**: Changes not reflected, port conflicts, old behavior persists
-**Cause**: Multiple nodemon/vite processes running simultaneously
-**Solution**:
-```bash
-# Find all node processes
-ps aux | grep node
-# Kill development processes
-pkill -f nodemon
-pkill -f "vite.*dev"
-# Kill specific PIDs if needed
-kill -9 <pid1> <pid2> <pid3>
-```
-
-### 3. PM2 Process Using Cached Code
-**Symptoms**: Server shows old behavior despite new build
-**Cause**: PM2 not reloading new compiled code
-**Solution**:
-```bash
-# Force complete PM2 restart
-pm2 delete all
-pm2 kill
-pm2 start ecosystem.config.js
-```
-
-### 4. Environment Variables Not Applied
-**Symptoms**: Server using default values instead of production config
-**Cause**: Environment variables not set or PM2 not loading them
-**Solution**:
-```bash
-# Verify environment file exists
-ls -la server/.env.production client/.env.production
-# Check ecosystem.config.js has correct env_file path
-# Restart with --update-env flag
-pm2 restart all --update-env
-```
-
-### 5. Database Connection Issues
-**Symptoms**: Server crashes or database errors
-**Solution**:
-```bash
-# Verify PostgreSQL is running
-sudo systemctl status postgresql
-# Check DATABASE_URL in .env.production
-# Run migrations
-cd server && npm run prisma:migrate
-```
-
-### 6. Port Conflicts
-**Symptoms**: "EADDRINUSE" errors
-**Solution**:
-```bash
-# Find what's using the ports
-sudo lsof -i:3000
-sudo lsof -i:3001
-# Kill conflicting processes
-sudo kill -9 <pid>
-```
-
-## 🛠 Troubleshooting Commands
-
-### Process Management
-```bash
-# Check all running processes
-pm2 status
-ps aux | grep node
-
-# PM2 logs
-pm2 logs --lines 50
-pm2 logs colabvibe-server --lines 20
-
-# Kill specific processes
-pm2 delete <app-name>
-kill -9 <pid>
-```
-
-### Service Health Checks
-```bash
-# Test endpoints
-curl -I http://ec2-host:3001/health
-curl -s http://ec2-host:3001/api/test
-
-# Check port usage
-sudo lsof -i:3001
-sudo netstat -tlnp | grep 3001
-
-# Nginx status
-sudo systemctl status nginx
-sudo nginx -t
-```
-
-### File System Checks
-```bash
-# Check build outputs
-ls -la server/dist/src/
-ls -la client/dist/
-
-# Check for static file conflicts
-ls -la | grep -E "\.(html|pdf)$"
-
-# Verify environment files
-cat server/.env.production
-cat client/.env.production
-```
-
-## 📝 Deployment Checklist
-
-Before deploying to production, verify:
-
-- [ ] All development processes killed (`pkill -f nodemon`)
-- [ ] Environment variables set correctly
-- [ ] No static file conflicts with API routes
-- [ ] Both server and client built successfully
-- [ ] Database migrations applied
-- [ ] PM2 ecosystem.config.js updated with correct hostname
-- [ ] Nginx configuration updated and reloaded
-- [ ] All ports available (3000, 3001)
-
-## 🔄 Safe Deployment Process
-
-To avoid issues, always follow this order:
-
-1. **Clean environment** (kill old processes)
-2. **Set environment variables** (export all required vars)
-3. **Build applications** (npm run build for both)
-4. **Resolve file conflicts** (move/rename conflicting static files)
-5. **Start PM2** (pm2 start ecosystem.config.js)
-6. **Verify services** (pm2 status, curl tests)
-7. **Check logs** (pm2 logs for any errors)
-
-## 🎯 Production vs Development Differences
-
-### Development
-- Uses `nodemon` with TypeScript source files
-- Vite dev server on port 3000 with HMR
-- Environment variables loaded from `.env` files
-- Auto-restart on file changes
-
-### Production  
-- Uses compiled JavaScript from `dist/` directories
-- Static file serving via `serve` package
-- Environment variables from `.env.production` and ecosystem config
-- PM2 process management with restart policies
-
-This context provides comprehensive guidance for LLM agents working on ColabVibe. The codebase follows database-backed state management patterns with comprehensive Docker containerization and organized testing infrastructure.
-
-**Important**: Don't restart servers unless explicitly asked - they auto-reload on file changes (development mode only).
-- Avoid unnecessary fallbacks - usually it's better to assume correctness and throw if something unexpected happens
+**Key Guidelines**:
+- Don't restart servers unless explicitly asked - they auto-reload on file changes
+- Use database-backed state instead of in-memory Maps to prevent desync
+- Always use staging branch for commits (never push to main directly)
 - Avoid hardcoding something that clearly requires a general solution
 - Use direct DB queries to check stuff, NEVER use prisma studio.

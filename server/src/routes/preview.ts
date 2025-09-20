@@ -336,10 +336,9 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
 
       console.log(`🔍 [HTML-DEBUG] isHTML: ${isHTML}, proxyPath: "${proxyPath}", content-type: ${responseHeaders['content-type']}`);
 
-      // 🔍 INSPECTOR INJECTION - Inject inspector script if enabled for this team
-      const inspectorEnabled = inspectorStates.get(requestTeamId) || false;
-      if (isHTML && inspectorEnabled) {
-        console.log(`🔍 [INSPECTOR] Injecting inspector script for team ${requestTeamId}`);
+      // 🔍 INSPECTOR INJECTION - Always inject inspector script for HTML (inactive by default)
+      if (isHTML) {
+        console.log(`🔍 [INSPECTOR] Injecting inspector script for team ${requestTeamId} (inactive by default)`);
         responseBody = injectInspectorScript(responseBody);
         console.log(`✅ [INSPECTOR] Inspector script injected successfully`);
       }

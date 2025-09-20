@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal } from 'lucide-react';
+import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette } from 'lucide-react';
 
 interface SelectedElement {
   html: string;
@@ -42,6 +42,8 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
   const [isCrossOrigin, setIsCrossOrigin] = useState(false);
   const [isServerSideEnabled, setIsServerSideEnabled] = useState(false);
   const [lastSentAction, setLastSentAction] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState('#3B82F6');
+  const colorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!iframeRef.current || !isActive) return;
@@ -50,47 +52,23 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
     const iframeWindow = iframe.contentWindow;
     if (!iframeWindow) return;
 
-    // Server-side approach: Call API to enable inspector injection
-    const enableServerSideInspector = async () => {
-      try {
-        console.log(`🔍 [FRONTEND] Enabling server-side inspector for team ${teamId}`);
+    // Since we now always inject the script server-side, we just need to activate it
+    const activateInspector = () => {
+      console.log(`🔍 [FRONTEND] Activating inspector for team ${teamId}`);
 
-        // Call server API to enable inspector for this team
-        const response = await fetch(`/api/preview/inspector/${teamId}/toggle`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('colabvibe_auth_token')}`,
-          },
-          body: JSON.stringify({ enabled: true }),
-        });
+      // Send message to iframe to activate the already-injected inspector
+      iframeWindow.postMessage({
+        type: 'enable-inspector',
+        active: true
+      }, '*');
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        console.log(`✅ [FRONTEND] Server-side inspector enabled:`, result);
-
-        // Now tell the iframe to activate inspector (script should already be injected)
-        setTimeout(() => {
-          iframeWindow.postMessage({
-            type: 'enable-inspector',
-            active: true
-          }, '*');
-          console.log(`📤 [FRONTEND] Sent enable message to iframe`);
-        }, 100); // Small delay to ensure iframe has processed the injected script
-
-        setIsServerSideEnabled(true);
-        setIsCrossOrigin(false); // Server-side injection works for all origins
-
-      } catch (error) {
-        console.error('❌ [FRONTEND] Failed to enable server-side inspector:', error);
-        setIsCrossOrigin(true); // Fallback to limited mode
-      }
+      console.log(`📤 [FRONTEND] Sent activation message to iframe`);
+      setIsServerSideEnabled(true);
+      setIsCrossOrigin(false);
     };
 
-    enableServerSideInspector();
+    // Wait a bit for iframe to load and process the injected script
+    const timer = setTimeout(activateInspector, 500);
 
     // Listen for messages from iframe
     const handleMessage = (event: MessageEvent) => {
@@ -105,6 +83,7 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
     window.addEventListener('message', handleMessage);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('message', handleMessage);
 
       // Disable inspector when component unmounts or becomes inactive
@@ -113,19 +92,8 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
           type: 'enable-inspector',
           active: false
         }, '*');
+        console.log(`📤 [FRONTEND] Sent deactivation message to iframe`);
       }
-
-      // Disable server-side inspector
-      fetch(`/api/preview/inspector/${teamId}/toggle`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('colabvibe_auth_token')}`,
-        },
-        body: JSON.stringify({ enabled: false }),
-      }).catch(error => {
-        console.warn('Failed to disable server-side inspector:', error);
-      });
     };
   }, [isActive, iframeRef, teamId]);
 
@@ -318,7 +286,53 @@ HTML: ${element.html}
             )}
           </div>
 
-          {/* Actions */}
+          {/* Color Picker Action - Always First */}
+          <div className="border-b border-midnight-700">
+            <div className="px-3 py-2 hover:bg-midnight-700 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Palette className="w-4 h-4 text-blue-400" />
+                  <div>
+                    <div className="text-sm text-white font-medium">Change Color</div>
+                    <div className="text-xs text-gray-400">Pick a color and apply to element</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    ref={colorInputRef}
+                    type="color"
+                    value={selectedColor}
+                    onChange={(e) => {
+                      setSelectedColor(e.target.value);
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer border-2 border-midnight-600 hover:border-blue-400 transition-colors"
+                    title="Pick a color"
+                  />
+                  <div className="text-xs text-gray-500 font-mono">
+                    {selectedColor}
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!selectedElement || !sendToLastActive) return;
+                      const prompt = `${formatElementContext(selectedElement)}\n\nPlease change the color of this element to: ${selectedColor}\n\nApply this color to the most appropriate property (background-color, color, border-color, etc.) based on the element type. If it's text, change the text color. If it's a container or button, change the background color. Make sure the result has good contrast and remains readable.`;
+                      const success = sendToLastActive(prompt);
+                      if (success) {
+                        setLastSentAction(`Change Color to ${selectedColor}`);
+                        setTimeout(() => setLastSentAction(null), 3000);
+                        setShowContextMenu(false);
+                        setSelectedElement(null);
+                      }
+                    }}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Other Actions */}
           <div className="py-1 max-h-64 overflow-y-auto">
             {actionPrompts.map((action) => (
               <button
