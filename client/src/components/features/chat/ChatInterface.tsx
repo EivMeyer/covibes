@@ -24,7 +24,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [fontSize, setFontSize] = useState(14);
+  const [fontSize, setFontSize] = useState(12);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { addNotification } = useNotification();

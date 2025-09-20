@@ -54,7 +54,9 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   const [ignoreNextResponse, setIgnoreNextResponse] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [toolUseStatus, setToolUseStatus] = useState<string>('');
-  const [fontSize, setFontSize] = useState(13);
+  // Same small size for both mobile and desktop: 12px
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const [fontSize, setFontSize] = useState(12);
   const [spinnerIndex, setSpinnerIndex] = useState(0);
   const thinkingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const streamingContentRef = useRef<string>('');
@@ -99,6 +101,16 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   useEffect(() => {
     streamingContentRef.current = streamingContent;
   }, [streamingContent]);
+
+  // Handle window resize to update mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      // No need to enforce minimum font size with viewport zoom disabled
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -485,7 +497,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     <div className={`flex flex-col h-full bg-black text-gray-100 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
-        <div className="flex items-center gap-2 font-mono text-sm">
+        <div className="flex items-center gap-2 font-mono text-xs">
           <span className="text-gray-400">[agent]</span>
           {agent ? (
             <span className="text-green-400">
@@ -515,7 +527,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
               +
             </button>
             <button
-              onClick={() => setFontSize(13)}
+              onClick={() => setFontSize(12)}
               className="px-1 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-200 transition-colors ml-1"
               title="Reset font size"
             >
@@ -619,7 +631,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
           <div className="mb-3">
             <div className="flex items-start gap-2">
               <span className="text-gray-400"> </span>
-              <div className="text-gray-600 font-mono" style={{ fontSize: `${fontSize}px` }}>
+              <div className={`font-mono ${toolUseStatus ? 'text-blue-400' : 'text-green-400 animate-pulse'}`} style={{ fontSize: `${fontSize}px` }}>
                 {toolUseStatus || spinnerChars[spinnerIndex]}
               </div>
             </div>
@@ -634,7 +646,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
               <div className="flex-1">
                 <div className="whitespace-pre-wrap text-gray-100">
                   {streamingContent}
-                  <span className="inline-block w-2 bg-green-400 animate-pulse">_</span>
+                  <span className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1"></span>
                 </div>
               </div>
             </div>
@@ -662,6 +674,10 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             style={{ fontSize: `${fontSize}px` }}
             rows={1}
             disabled={!canInteract || isLoading}
+            autoCorrect={isMobile ? "on" : "off"}
+            autoCapitalize={isMobile ? "sentences" : "off"}
+            spellCheck={isMobile}
+            autoComplete="on"
           />
           <button
             onClick={handleSend}

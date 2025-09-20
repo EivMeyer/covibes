@@ -22,7 +22,7 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
     agentType: 'claude',
     terminalLocation: 'local',
     terminalIsolation: 'tmux',
-    mode: 'terminal', // Default to terminal mode
+    mode: 'chat', // Default to chat mode - more user friendly
     containerOptions: {
       resources: {
         memory: '2GB',
@@ -45,7 +45,7 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
       agentType: 'claude',
       terminalLocation: 'local',
       terminalIsolation: 'tmux',
-      mode: 'terminal',
+      mode: 'chat',
       containerOptions: {
         resources: {
           memory: '2GB',
@@ -156,121 +156,129 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       title="Choose AI Assistant"
-      size="lg"
+      size="md"
       closeOnBackdropClick={!isSubmitting}
       closeOnEscape={!isSubmitting}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Agent Selection */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300 mb-3">
-            Choose AI Agent
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-400 mb-2">
+            AI AGENT
           </label>
 
           {/* Claude - Available */}
           <div
-            className="bg-blue-500 bg-opacity-10 border-2 border-blue-500 rounded-lg p-4 cursor-pointer transition-all hover:bg-opacity-20"
+            className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-400 rounded-lg p-3 cursor-pointer transition-all hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20"
             onClick={() => setFormData({ ...formData, agentType: 'claude' })}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <span className="text-2xl">🤖</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">C</span>
+                </div>
                 <div>
-                  <p className="font-semibold text-white">Claude Code</p>
-                  <p className="text-xs text-blue-300">Advanced AI coding assistant</p>
+                  <p className="font-medium text-white text-sm">Claude Code</p>
+                  <p className="text-xs text-blue-300">Anthropic's AI assistant</p>
                 </div>
               </div>
-              <div className="w-5 h-5 border-2 border-blue-500 rounded-full bg-blue-500" />
+              <div className="w-4 h-4 border-2 border-blue-400 rounded-full bg-blue-400" />
             </div>
           </div>
 
           {/* Gemini - Coming Soon */}
-          <div className="bg-gray-800 bg-opacity-50 border border-gray-600 rounded-lg p-4 opacity-50 cursor-not-allowed">
+          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-3 opacity-40 cursor-not-allowed">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <span className="text-2xl">✨</span>
+                <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400 text-sm font-bold">G</span>
+                </div>
                 <div>
-                  <p className="font-semibold text-gray-400">Gemini CLI</p>
-                  <p className="text-xs text-gray-500">Google's AI assistant (Coming soon)</p>
+                  <p className="font-medium text-gray-400 text-sm">Gemini</p>
+                  <p className="text-xs text-gray-500">Google AI</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">Soon</span>
+              <span className="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded-full">Soon</span>
             </div>
           </div>
 
           {/* Codex - Coming Soon */}
-          <div className="bg-gray-800 bg-opacity-50 border border-gray-600 rounded-lg p-4 opacity-50 cursor-not-allowed">
+          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-3 opacity-40 cursor-not-allowed">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <span className="text-2xl">⚡</span>
+                <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400 text-sm font-bold">O</span>
+                </div>
                 <div>
-                  <p className="font-semibold text-gray-400">Codex</p>
-                  <p className="text-xs text-gray-500">OpenAI code model (Coming soon)</p>
+                  <p className="font-medium text-gray-400 text-sm">OpenAI</p>
+                  <p className="text-xs text-gray-500">GPT models</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">Soon</span>
+              <span className="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded-full">Soon</span>
             </div>
           </div>
         </div>
 
         {/* Mode Selection */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-300 mb-3">
-            Agent Mode
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-400 mb-2">
+            MODE
           </label>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Terminal Mode */}
+            {/* Chat Mode (Assistant) - Default, shown first */}
             <div
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                formData.mode === 'terminal'
-                  ? 'bg-green-500 bg-opacity-10 border-green-500 hover:bg-opacity-20'
-                  : 'bg-gray-800 bg-opacity-50 border-gray-600 hover:border-gray-500'
-              }`}
-              onClick={() => setFormData({ ...formData, mode: 'terminal' })}
-            >
-              <div className="flex flex-col items-center space-y-2">
-                <span className="text-2xl">💻</span>
-                <div className="text-center">
-                  <p className="font-semibold text-white">Terminal Mode</p>
-                  <p className="text-xs text-gray-400">Full VM access with sudo & Docker</p>
-                </div>
-                <div className={`w-4 h-4 border-2 rounded-full ${
-                  formData.mode === 'terminal'
-                    ? 'border-green-500 bg-green-500'
-                    : 'border-gray-500'
-                }`} />
-              </div>
-            </div>
-
-            {/* Chat Mode */}
-            <div
-              className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              className={`border rounded-lg p-3 cursor-pointer transition-all ${
                 formData.mode === 'chat'
-                  ? 'bg-purple-500 bg-opacity-10 border-purple-500 hover:bg-opacity-20'
-                  : 'bg-gray-800 bg-opacity-50 border-gray-600 hover:border-gray-500'
+                  ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-400 hover:shadow-lg hover:shadow-purple-500/20'
+                  : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
               }`}
               onClick={() => setFormData({ ...formData, mode: 'chat' })}
             >
               <div className="flex flex-col items-center space-y-2">
-                <span className="text-2xl">💬</span>
-                <div className="text-center">
-                  <p className="font-semibold text-white">Chat Mode</p>
-                  <p className="text-xs text-gray-400">Clean discussion & planning</p>
-                </div>
-                <div className={`w-4 h-4 border-2 rounded-full ${
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                   formData.mode === 'chat'
-                    ? 'border-purple-500 bg-purple-500'
-                    : 'border-gray-500'
-                }`} />
+                    ? 'bg-gradient-to-br from-purple-400 to-pink-400'
+                    : 'bg-gray-700'
+                }`}>
+                  <span className="text-white text-sm">💬</span>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-white text-sm">Assistant</p>
+                  <p className="text-xs text-gray-400">Chat mode</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Terminal Mode */}
+            <div
+              className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                formData.mode === 'terminal'
+                  ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-400 hover:shadow-lg hover:shadow-green-500/20'
+                  : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+              }`}
+              onClick={() => setFormData({ ...formData, mode: 'terminal' })}
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  formData.mode === 'terminal'
+                    ? 'bg-gradient-to-br from-green-400 to-emerald-400'
+                    : 'bg-gray-700'
+                }`}>
+                  <span className="text-white text-lg">›_</span>
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-white text-sm">Terminal</p>
+                  <p className="text-xs text-gray-400">Raw output</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 italic">
+          <p className="text-xs text-gray-500">
             {formData.mode === 'terminal'
-              ? 'Terminal mode runs with your full VM permissions including sudo, Docker, and system package installation.'
-              : 'Chat mode provides clean conversation for planning and discussion while still able to coordinate with other agents.'}
+              ? 'See raw terminal output as commands execute. Best for debugging and system tasks.'
+              : 'Clean conversation interface with full coding capabilities. Recommended for most users.'}
           </p>
         </div>
 
