@@ -303,7 +303,9 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         }
 
         setStreamingContent(prev => {
-          const newContent = prev + data.content;
+          // Add double line break after sentences (ending with period) for better readability
+          const separator = prev && prev.endsWith('.') ? '\n\n' : '';
+          const newContent = prev + separator + data.content;
           console.log('📝 [FRONTEND] Total streaming content now:', newContent.substring(0, 100));
           return newContent;
         });
@@ -313,25 +315,20 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     const handleStreamComplete = (data: any) => {
       console.log('🏁 [FRONTEND] Stream complete event received:', data);
       if (data.agentId === currentAgentId) {
-        const currentContent = streamingContentRef.current;
-        console.log('📄 [FRONTEND] Current streaming content from ref:', currentContent);
+        // Get the final streaming content
+        const finalContent = streamingContent || streamingContentRef.current;
+        console.log('📄 [FRONTEND] Final streaming content:', finalContent?.substring(0, 100));
 
-        // Convert the accumulated streaming content into a permanent message
-        if (currentContent) {
+        // Convert the streaming content to a permanent message
+        if (finalContent) {
           console.log('💾 [FRONTEND] Converting streaming content to permanent message');
           setMessages(prev => [...prev, {
             id: Date.now().toString(),
             role: 'assistant',
-            content: currentContent,
+            content: finalContent,
             timestamp: new Date().toISOString(),
             agentId: currentAgentId
           }]);
-
-          // Mark that we should ignore the next agent_chat_response to avoid duplicates
-          setIgnoreNextResponse(true);
-          console.log('✅ [FRONTEND] Converted streaming content to message:', currentContent.substring(0, 50));
-        } else {
-          console.warn('⚠️ [FRONTEND] No streaming content to convert!');
         }
 
         // Clear streaming state
@@ -341,6 +338,9 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         streamingContentRef.current = '';
         setIsThinking(false);  // Ensure thinking is cleared
         setToolUseStatus('');  // Ensure tool status is cleared
+
+        // Mark that we should ignore the next agent_chat_response to avoid duplicates
+        setIgnoreNextResponse(true);
 
         // Clear timeout if it somehow still exists
         if (thinkingTimeoutRef.current) {
