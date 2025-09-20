@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette, Copy, Minimize2, Maximize2, AlignCenter, Type, Droplets, Smartphone, Space, Zap } from 'lucide-react';
+import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette, Copy, Minimize2, Maximize2, AlignCenter, Type, Droplets, Smartphone, Space, Zap, Trash2, Sparkles, Layout, Heart, TestTube } from 'lucide-react';
 
 interface SelectedElement {
   html: string;
@@ -43,6 +43,9 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
   const [isServerSideEnabled, setIsServerSideEnabled] = useState(false);
   const [lastSentAction, setLastSentAction] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState('#3B82F6');
+  const [newText, setNewText] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showTextEditor, setShowTextEditor] = useState(false);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -123,81 +126,143 @@ HTML: ${element.html}
 
   const actionPrompts: ActionPrompt[] = [
     {
-      id: 'fix-ai-slop',
-      title: 'Fix AI Slop Appearance',
-      icon: <Bot className="w-4 h-4" />,
-      description: 'Make this look more professional and human-designed',
+      id: 'copy-context',
+      title: 'Copy Context',
+      icon: <Copy className="w-4 h-4" />,
+      description: 'Copy element context to clipboard',
+      generatePrompt: (element) => formatElementContext(element)
+    },
+    {
+      id: 'delete-element',
+      title: 'Delete Element',
+      icon: <Trash2 className="w-4 h-4" />,
+      description: 'Remove this element from the page',
       generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element looks like AI-generated content. Please make it look more professional, human-designed, and polished. Focus on:\n- Natural spacing and typography\n- Better visual hierarchy\n- Professional color choices\n- Remove any generic/template-like appearance\n- Make it feel more intentional and crafted`
+        `${formatElementContext(element)}\n\nDelete this element completely from the page. Remove it from the DOM.`
+    },
+    {
+      id: 'change-color',
+      title: 'Change Color',
+      icon: <Palette className="w-4 h-4" />,
+      description: 'Apply selected color to element',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nChange the color to: ${selectedColor}\n\nApply this color to the most appropriate property (background-color, color, border-color, etc.) based on the element type.`
+    },
+    {
+      id: 'change-text',
+      title: 'Change Text',
+      icon: <Type className="w-4 h-4" />,
+      description: 'Change the text content of element',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nChange the text content to: "${newText}"\n\nReplace the existing text with the new text while maintaining the element's styling and structure.`
+    },
+    {
+      id: 'fix-ai-slop',
+      title: 'Fix AI Slop',
+      icon: <Bot className="w-4 h-4" />,
+      description: 'Make this look professional and human-designed',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nThis element looks like AI-generated content. Make it look professional, human-designed, and polished.`
     },
     {
       id: 'make-smaller',
       title: 'Make Smaller',
-      icon: <X className="w-3 h-3" />,
-      description: 'Reduce the size and visual footprint',
+      icon: <Minimize2 className="w-4 h-4" />,
+      description: 'Reduce size and visual footprint',
       generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element is too large and takes up too much space. Please make it smaller by:\n- Reducing padding and margins\n- Using smaller font sizes where appropriate\n- Decreasing width/height\n- Making it more compact and condensed\n- Optimizing space usage\n- Maintaining readability while shrinking size`
+        `${formatElementContext(element)}\n\nMake this element smaller and more compact while maintaining usability.`
     },
     {
       id: 'make-larger',
       title: 'Make Larger',
-      icon: <Send className="w-5 h-5" />,
-      description: 'Increase the size and visual prominence',
+      icon: <Maximize2 className="w-4 h-4" />,
+      description: 'Increase size and prominence',
       generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element is too small and hard to see/interact with. Please make it larger by:\n- Increasing padding and margins\n- Using bigger font sizes\n- Expanding width/height\n- Making it more prominent and visible\n- Ensuring proper touch targets (44px+ for mobile)\n- Making it stand out more in the layout`
+        `${formatElementContext(element)}\n\nMake this element larger and more prominent in the layout.`
     },
     {
       id: 'center-align',
       title: 'Center & Align',
-      icon: <Terminal className="w-4 h-4" />,
-      description: 'Fix alignment and centering issues',
+      icon: <AlignCenter className="w-4 h-4" />,
+      description: 'Fix alignment and centering',
       generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element has alignment issues. Please fix the positioning by:\n- Centering the element properly\n- Aligning text and content correctly\n- Using flexbox or grid for proper layout\n- Ensuring visual balance\n- Making alignment consistent with the design\n- Fixing any off-center or misaligned elements`
-    },
-    {
-      id: 'make-readable',
-      title: 'Make Actually Readable',
-      icon: <MessageSquare className="w-4 h-4" />,
-      description: 'Improve typography and readability',
-      generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element has poor readability. Please improve it by:\n- Fixing font sizes and line heights\n- Improving contrast ratios\n- Better text spacing and margins\n- Choosing more readable fonts\n- Ensuring accessibility standards\n- Making text scannable and clear`
-    },
-    {
-      id: 'fix-colors',
-      title: 'Fix Colors & Contrast',
-      icon: <MousePointer className="w-4 h-4" />,
-      description: 'Improve color scheme and visual contrast',
-      generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element has color and contrast issues. Please fix by:\n- Improving color contrast ratios (WCAG standards)\n- Using a better color palette\n- Making text readable against backgrounds\n- Ensuring colors work together harmoniously\n- Adding visual hierarchy through color\n- Making sure colors are accessible`
-    },
-    {
-      id: 'fix-mobile',
-      title: 'Fix Mobile Issues',
-      icon: <Terminal className="w-4 h-4" />,
-      description: 'Make this work properly on mobile devices',
-      generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element has mobile/responsive issues. Please fix:\n- Make it responsive across all screen sizes\n- Ensure touch targets are appropriate size (44px+)\n- Fix any overflow or layout breaking\n- Optimize for mobile interaction patterns\n- Test on common mobile breakpoints\n- Ensure proper scaling and spacing`
+        `${formatElementContext(element)}\n\nFix the alignment and centering of this element. Make it properly centered and aligned.`
     },
     {
       id: 'add-spacing',
       title: 'Add Better Spacing',
-      icon: <Send className="w-4 h-4" />,
-      description: 'Improve whitespace and visual breathing room',
+      icon: <Space className="w-4 h-4" />,
+      description: 'Improve whitespace and breathing room',
       generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element needs better spacing. Please improve by:\n- Adding appropriate margins and padding\n- Creating visual breathing room\n- Using consistent spacing patterns\n- Balancing whitespace effectively\n- Separating content logically\n- Making the layout feel less cramped`
+        `${formatElementContext(element)}\n\nImprove the spacing around and within this element. Add appropriate padding and margins.`
     },
     {
-      id: 'simplify',
-      title: 'Simplify & Declutter',
-      icon: <X className="w-4 h-4" />,
-      description: 'Remove unnecessary complexity and clutter',
+      id: 'make-minimalist',
+      title: 'Make Minimalist',
+      icon: <Zap className="w-4 h-4" />,
+      description: 'Create minimalist inspired design',
       generatePrompt: (element) =>
-        `${formatElementContext(element)}\n\nThis element is too complex or cluttered. Please simplify it:\n- Remove unnecessary visual elements\n- Reduce cognitive load\n- Focus on the core functionality\n- Use more whitespace effectively\n- Streamline the design\n- Make it more intuitive and direct`
+        `${formatElementContext(element)}\n\nRedesign this element with minimalist inspiration. Focus on simplicity, clean lines, essential elements only, and plenty of whitespace.`
+    },
+    {
+      id: 'make-fancy',
+      title: 'Make More Fancy',
+      icon: <Sparkles className="w-4 h-4" />,
+      description: 'Add sophisticated design elements',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nMake this element more fancy and sophisticated. Add elegant touches, smooth animations, gradients, shadows, and premium feeling design elements.`
+    },
+    {
+      id: 'align-with-page',
+      title: 'Align with Page Design',
+      icon: <Layout className="w-4 h-4" />,
+      description: 'Match the design of the rest of the page',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nAlign this element's design with the rest of the page. Match the color scheme, typography, spacing, and overall aesthetic of the surrounding interface.`
+    },
+    {
+      id: 'make-alive',
+      title: 'Make Alive',
+      icon: <Heart className="w-4 h-4" />,
+      description: 'Add life with animations and interactions',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nMake this element feel alive and dynamic. Add subtle animations, hover effects, transitions, and micro-interactions that make it feel responsive and engaging.`
+    },
+    {
+      id: 'test-functionality',
+      title: 'Test if it Works',
+      icon: <TestTube className="w-4 h-4" />,
+      description: 'Test functionality and interactions',
+      generatePrompt: (element) =>
+        `${formatElementContext(element)}\n\nTest if this element works correctly. Check all interactive features, validate functionality, ensure proper behavior, and report any issues found.`
     }
   ];
 
   const handleActionClick = async (action: ActionPrompt) => {
-    if (!selectedElement || !sendToLastActive) return;
+    if (!selectedElement) return;
+
+    // Special handling for copy context
+    if (action.id === 'copy-context') {
+      await copyToClipboard();
+      return;
+    }
+
+    // Special handling for color change - show color picker popup
+    if (action.id === 'change-color') {
+      setShowColorPicker(true);
+      setShowTextEditor(false);
+      return;
+    }
+
+    // Special handling for text change - show text editor popup
+    if (action.id === 'change-text') {
+      setNewText(selectedElement.text || '');
+      setShowTextEditor(true);
+      setShowColorPicker(false);
+      return;
+    }
+
+    if (!sendToLastActive) return;
 
     const prompt = action.generatePrompt(selectedElement);
     const success = sendToLastActive(prompt);
@@ -253,32 +318,10 @@ HTML: ${element.html}
 
   return (
     <>
-      {/* CSS for shimmer animation */}
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-      `}</style>
       {/* Inspector indicator */}
-      <div className={`absolute top-2 left-2 z-50 px-3 py-1 rounded-lg shadow-lg flex items-center space-x-2 ${
-        isCrossOrigin
-          ? 'bg-orange-600 text-white'
-          : isServerSideEnabled
-          ? 'bg-green-600 text-white'
-          : 'bg-blue-600 text-white'
-      }`}>
-        <Target className="w-5 h-5 text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text" style={{
-          filter: 'drop-shadow(0 0 4px rgba(6, 182, 212, 0.4))'
-        }} />
-        <span className="text-sm font-medium">
-          {isCrossOrigin
-            ? 'Inspector (Limited)'
-            : isServerSideEnabled
-            ? 'Inspector (Server-Side)'
-            : 'Inspector Active'
-          }
-        </span>
+      <div className="absolute top-2 left-2 z-50 px-2 py-1 rounded-md bg-blue-600/90 backdrop-blur-sm shadow-lg flex items-center space-x-1.5">
+        <Target className="w-4 h-4 text-white" />
+        <span className="text-xs font-medium text-white">Inspector</span>
         <button
           onClick={() => {
             onDeactivate();
@@ -287,11 +330,9 @@ HTML: ${element.html}
             setIsCrossOrigin(false);
             setIsServerSideEnabled(false);
           }}
-          className={`ml-2 p-1 rounded ${
-            isCrossOrigin ? 'hover:bg-orange-700' : isServerSideEnabled ? 'hover:bg-green-700' : 'hover:bg-blue-700'
-          }`}
+          className="ml-1 p-0.5 rounded hover:bg-black/20"
         >
-          <X className="w-3 h-3" />
+          <X className="w-3 h-3 text-white/80" />
         </button>
       </div>
 
@@ -306,16 +347,16 @@ HTML: ${element.html}
         </div>
       )}
 
-      {/* Action menu */}
+      {/* Compact Action Menu */}
       {showContextMenu && selectedElement && (
         <div
-          className="absolute z-50 min-w-64 max-w-80 rounded-xl overflow-hidden"
+          className="absolute z-50 rounded-md overflow-hidden"
           style={{
-            top: Math.min(menuPosition.y, window.innerHeight - 400),
-            left: Math.min(menuPosition.x, window.innerWidth - 320),
+            top: Math.min(menuPosition.y, window.innerHeight - 280),
+            left: Math.min(menuPosition.x, window.innerWidth - 280),
             background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%)',
-            backdropFilter: 'blur(16px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
             border: '1px solid rgba(59, 130, 246, 0.15)',
             boxShadow: `
               0 20px 25px -5px rgba(0, 0, 0, 0.3),
@@ -323,171 +364,320 @@ HTML: ${element.html}
               0 0 0 1px rgba(59, 130, 246, 0.05),
               inset 0 1px 0 0 rgba(148, 163, 184, 0.1)
             `,
+            width: '260px',
           }}
         >
           {/* Glass shine effect overlay */}
           <div
-            className="absolute inset-0 pointer-events-none animate-pulse"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%, rgba(255, 255, 255, 0.01) 100%)',
-              animationDuration: '3s',
+              background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%, rgba(255, 255, 255, 0.01) 100%)',
             }}
           />
-          {/* Additional shimmer effect */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-30"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.1) 50%, transparent 100%)',
-              transform: 'translateX(-100%)',
-              animation: 'shimmer 8s infinite',
-            }}
-          />
-          {/* Header */}
-          <div className="relative px-3 py-2 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
-            <div className="text-xs text-gray-400 drop-shadow-sm">Selected Element</div>
-            <div className="text-sm text-white font-mono">
-              {selectedElement.tagName}
-              {selectedElement.id && `#${selectedElement.id}`}
-              {selectedElement.className && `.${selectedElement.className.split(' ')[0]}`}
-            </div>
-            {lastActiveTarget && (
-              <div className="text-xs text-blue-400 mt-1">
-                → Sending to {lastActiveTarget.name}
-              </div>
-            )}
-          </div>
 
-          {/* Copy Context Action - Always First */}
-          <div className="border-b border-white/5">
+          {/* Minimal header */}
+          <div className="relative px-3 py-1.5 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-transparent via-white/[0.02] to-transparent">
+            <code className="text-xs text-blue-400/80 font-mono truncate flex-1">
+              {selectedElement.tagName.toLowerCase()}
+              {selectedElement.id && `#${selectedElement.id.split(' ')[0]}`}
+              {selectedElement.className && `.${selectedElement.className.split(' ')[0]}`}
+            </code>
             <button
-              onClick={copyToClipboard}
-              className="w-full px-3 py-2 text-left hover:bg-white/5 backdrop-blur-sm transition-all duration-200 group relative overflow-hidden"
+              onClick={() => setShowContextMenu(false)}
+              className="ml-2 p-0.5 hover:bg-white/10 rounded transition-colors"
             >
-              <div className="flex items-center space-x-3">
-                <Copy className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white font-medium group-hover:text-blue-100">
-                    📋 Copy Context
-                  </div>
-                  <div className="text-xs text-gray-400 leading-relaxed">
-                    Copy element context to clipboard for agents
-                  </div>
-                </div>
-              </div>
+              <X className="w-3 h-3 text-gray-400 hover:text-white" />
             </button>
           </div>
 
-          {/* Color Picker Action */}
-          <div className="border-b border-white/5">
-            <div className="px-3 py-2 hover:bg-white/5 backdrop-blur-sm transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Palette className="w-4 h-4 text-blue-400" />
-                  <div>
-                    <div className="text-sm text-white font-medium">Change Color</div>
-                    <div className="text-xs text-gray-400">Pick a color and apply to element</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    ref={colorInputRef}
-                    type="color"
-                    value={selectedColor}
-                    onChange={(e) => {
-                      setSelectedColor(e.target.value);
-                    }}
-                    className="w-10 h-10 rounded-lg cursor-pointer border border-white/10 hover:border-blue-400/50 transition-all duration-200 bg-white/5 backdrop-blur-sm shadow-inner"
-                    title="Pick a color"
-                  />
-                  <div className="text-xs text-gray-500 font-mono">
-                    {selectedColor}
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (!selectedElement || !sendToLastActive) return;
-                      const prompt = `${formatElementContext(selectedElement)}\n\nPlease change the color of this element to: ${selectedColor}\n\nApply this color to the most appropriate property (background-color, color, border-color, etc.) based on the element type. If it's text, change the text color. If it's a container or button, change the background color. Make sure the result has good contrast and remains readable.`;
-                      const success = sendToLastActive(prompt);
-                      if (success) {
-                        setLastSentAction(`Change Color to ${selectedColor}`);
-                        setTimeout(() => setLastSentAction(null), 3000);
-                        setShowContextMenu(false);
-                        setSelectedElement(null);
-                      }
-                    }}
-                    className="px-3 py-1 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-500/90 hover:to-blue-400/90 text-white text-xs rounded-lg backdrop-blur-sm transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-400/30"
-                  >
-                    Apply
-                  </button>
-                </div>
+          {/* Status bar */}
+          {lastActiveTarget ? (
+            <div className="relative px-3 py-1 border-b border-white/10 bg-gradient-to-r from-transparent via-green-500/[0.02] to-transparent">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_4px_rgba(74,222,128,0.5)]" />
+                <span className="text-xs text-gray-400">Sending to: {lastActiveTarget.name}</span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative px-3 py-1 border-b border-white/10 bg-gradient-to-r from-transparent via-orange-500/[0.02] to-transparent">
+              <span className="text-xs text-orange-400/80">No active agent/terminal</span>
+            </div>
+          )}
 
-          {/* Other Actions */}
-          <div className="py-1 max-h-64 overflow-y-auto">
+
+          {/* Compact action list */}
+          <div className="relative max-h-72 overflow-y-auto">
             {actionPrompts.map((action) => (
               <button
                 key={action.id}
                 onClick={() => handleActionClick(action)}
-                className="w-full px-3 py-2 text-left hover:bg-white/5 backdrop-blur-sm transition-all duration-200 group relative overflow-hidden"
+                className="relative w-full px-3 py-1.5 text-left hover:bg-white/[0.03] transition-all group border-b border-white/5 last:border-0"
+                title={action.description}
               >
-                <div className="flex items-start space-x-3">
-                  <div className="text-blue-400 mt-0.5 group-hover:text-blue-300">
+                <div className="flex items-center">
+                  <div className="w-5 flex-shrink-0 text-blue-400/60 group-hover:text-blue-400 transition-colors">
                     {action.icon}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white font-medium group-hover:text-blue-100">
-                      {action.title}
-                    </div>
-                    <div className="text-xs text-gray-400 leading-relaxed">
-                      {action.description}
-                    </div>
+                  <div className="ml-2.5 text-xs text-white/80 font-medium group-hover:text-white/95 transition-colors">
+                    {action.title}
                   </div>
                 </div>
+                {/* Hover shine effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                     style={{
+                       background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent)',
+                     }}
+                />
               </button>
             ))}
           </div>
 
-          {/* Footer */}
-          <div className="px-3 py-2 border-t border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent flex items-center justify-between relative">
-            <button
-              onClick={() => setShowContextMenu(false)}
-              className="text-xs text-gray-400 hover:text-white"
-            >
-              Close (ESC)
-            </button>
-            {!lastActiveTarget && (
-              <div className="text-xs text-orange-400">
-                No active agent/terminal
+        </div>
+      )}
+
+      {/* Minimal success feedback */}
+      {lastSentAction && (
+        <div className="absolute top-14 right-2 z-50 px-2 py-1 rounded bg-green-600/90 backdrop-blur-sm">
+          <div className="text-xs text-white">✓ {lastSentAction}</div>
+        </div>
+      )}
+
+      {/* Color Picker Popup */}
+      {showColorPicker && selectedElement && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowColorPicker(false)}
+          />
+
+          {/* Popup */}
+          <div
+            className="relative w-80 rounded-xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.90) 100%)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              boxShadow: `
+                0 24px 48px -12px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(59, 130, 246, 0.1),
+                inset 0 1px 0 0 rgba(148, 163, 184, 0.1)
+              `,
+            }}
+          >
+            {/* Glass shine */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%)',
+              }}
+            />
+
+            {/* Header */}
+            <div className="relative px-4 py-3 border-b border-white/10 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-blue-400" />
+                  <h3 className="text-sm font-medium text-white">Choose Color</h3>
+                </div>
+                <button
+                  onClick={() => setShowColorPicker(false)}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <X className="w-3 h-3 text-gray-400" />
+                </button>
               </div>
-            )}
+            </div>
+
+            {/* Content */}
+            <div className="relative p-4 space-y-4">
+              {/* Color input */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="w-20 h-20 rounded-lg cursor-pointer border-2 border-white/20 hover:border-blue-400/50 transition-all shadow-inner"
+                  style={{
+                    background: selectedColor,
+                    padding: '2px'
+                  }}
+                />
+                <div className="flex-1 space-y-2">
+                  <input
+                    type="text"
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-400/50 font-mono"
+                    placeholder="#000000"
+                  />
+                  <div className="text-xs text-gray-400">
+                    Click the square or enter hex code
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick color presets */}
+              <div className="space-y-2">
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Quick Colors</div>
+                <div className="grid grid-cols-8 gap-2">
+                  {[
+                    '#000000', '#FFFFFF', '#EF4444', '#F59E0B',
+                    '#10B981', '#3B82F6', '#8B5CF6', '#EC4899',
+                    '#6B7280', '#F3F4F6', '#DC2626', '#F97316',
+                    '#059669', '#2563EB', '#7C3AED', '#DB2777'
+                  ].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className="w-8 h-8 rounded-md border border-white/20 hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="relative px-4 py-3 border-t border-white/10 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent flex justify-end gap-2">
+              <button
+                onClick={() => setShowColorPicker(false)}
+                className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedElement && sendToLastActive) {
+                    const colorAction = actionPrompts.find(a => a.id === 'change-color');
+                    if (colorAction) {
+                      const prompt = colorAction.generatePrompt(selectedElement);
+                      const success = sendToLastActive(prompt);
+                      if (success) {
+                        setLastSentAction(`Color: ${selectedColor}`);
+                        setTimeout(() => setLastSentAction(null), 2000);
+                        setShowColorPicker(false);
+                        setShowContextMenu(false);
+                        setSelectedElement(null);
+                      }
+                    }
+                  }
+                }}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-500/90 hover:to-blue-400/90 rounded-lg transition-all shadow-lg shadow-blue-500/20"
+              >
+                Apply Color
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Success feedback */}
-      {lastSentAction && (
-        <div
-          className="absolute top-16 right-4 z-50 px-3 py-2 rounded-lg overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.85) 0%, rgba(16, 185, 129, 0.75) 100%)',
-            backdropFilter: 'blur(12px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-            border: '1px solid rgba(134, 239, 172, 0.3)',
-            boxShadow: `
-              0 10px 25px -5px rgba(34, 197, 94, 0.3),
-              0 4px 6px -2px rgba(0, 0, 0, 0.2),
-              inset 0 1px 0 0 rgba(255, 255, 255, 0.1)
-            `,
-          }}
-        >
-          <div className="relative">
-            <div className="text-sm font-medium text-white drop-shadow-sm">✓ {lastSentAction}</div>
-            {lastActiveTarget && (
-              <div className="text-xs text-green-100 mt-0.5">
-                → {lastActiveTarget.name}
+      {/* Text Editor Popup */}
+      {showTextEditor && selectedElement && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowTextEditor(false)}
+          />
+
+          {/* Popup */}
+          <div
+            className="relative w-96 rounded-xl overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.90) 100%)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              boxShadow: `
+                0 24px 48px -12px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(59, 130, 246, 0.1),
+                inset 0 1px 0 0 rgba(148, 163, 184, 0.1)
+              `,
+            }}
+          >
+            {/* Glass shine */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%)',
+              }}
+            />
+
+            {/* Header */}
+            <div className="relative px-4 py-3 border-b border-white/10 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Type className="w-4 h-4 text-blue-400" />
+                  <h3 className="text-sm font-medium text-white">Change Text</h3>
+                </div>
+                <button
+                  onClick={() => setShowTextEditor(false)}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <X className="w-3 h-3 text-gray-400" />
+                </button>
               </div>
-            )}
+            </div>
+
+            {/* Content */}
+            <div className="relative p-4 space-y-3">
+              <div>
+                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
+                  Current Text
+                </label>
+                <div className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300">
+                  {selectedElement.text || '(empty)'}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 uppercase tracking-wider block mb-2">
+                  New Text
+                </label>
+                <textarea
+                  value={newText}
+                  onChange={(e) => setNewText(e.target.value)}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-400/50 resize-none"
+                  placeholder="Enter new text..."
+                  rows={3}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="relative px-4 py-3 border-t border-white/10 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent flex justify-end gap-2">
+              <button
+                onClick={() => setShowTextEditor(false)}
+                className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedElement && sendToLastActive && newText) {
+                    const textAction = actionPrompts.find(a => a.id === 'change-text');
+                    if (textAction) {
+                      const prompt = textAction.generatePrompt(selectedElement);
+                      const success = sendToLastActive(prompt);
+                      if (success) {
+                        setLastSentAction(`Text Changed`);
+                        setTimeout(() => setLastSentAction(null), 2000);
+                        setShowTextEditor(false);
+                        setShowContextMenu(false);
+                        setSelectedElement(null);
+                      }
+                    }
+                  }
+                }}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-500/90 hover:to-blue-400/90 rounded-lg transition-all shadow-lg shadow-blue-500/20"
+              >
+                Apply Text
+              </button>
+            </div>
           </div>
         </div>
       )}
