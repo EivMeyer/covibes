@@ -722,7 +722,8 @@ router.get('/', async (req: express.Request, res) => {
         userName: agent.users.userName,
         agentName: agent.agentName || generateAgentName(),
         outputLines: agent.output ? agent.output.split('\n').length : 0,
-        isOwner: agent.userId === req.user?.userId
+        isOwner: agent.userId === req.user?.userId,
+        mode: agent.mode // No fallback - let it be undefined if not set
       }))
     });
 

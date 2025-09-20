@@ -908,3 +908,4 @@ This context provides comprehensive guidance for LLM agents working on ColabVibe
 **Important**: Don't restart servers unless explicitly asked - they auto-reload on file changes (development mode only).
 - Avoid unnecessary fallbacks - usually it's better to assume correctness and throw if something unexpected happens
 - Avoid hardcoding something that clearly requires a general solution
+- Use direct DB queries to check stuff, NEVER use prisma studio.
