@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette } from 'lucide-react';
+import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette, Copy, Minimize2, Maximize2, AlignCenter, Type, Droplets, Smartphone, Space, Zap } from 'lucide-react';
 
 interface SelectedElement {
   html: string;
@@ -212,10 +212,54 @@ HTML: ${element.html}
     }
   };
 
+  const copyToClipboard = async () => {
+    if (!selectedElement) return;
+
+    const contextText = formatElementContext(selectedElement);
+
+    try {
+      await navigator.clipboard.writeText(contextText);
+      setLastSentAction('Context Copied to Clipboard');
+      setTimeout(() => setLastSentAction(null), 3000);
+      setShowContextMenu(false);
+      setSelectedElement(null);
+    } catch (error) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = contextText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        setLastSentAction('Context Copied to Clipboard');
+        setTimeout(() => setLastSentAction(null), 3000);
+        setShowContextMenu(false);
+        setSelectedElement(null);
+      } catch (fallbackError) {
+        console.error('Could not copy element context to clipboard', fallbackError);
+        setLastSentAction('Copy Failed');
+        setTimeout(() => setLastSentAction(null), 3000);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  };
+
   if (!isActive) return null;
 
   return (
     <>
+      {/* CSS for shimmer animation */}
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      `}</style>
       {/* Inspector indicator */}
       <div className={`absolute top-2 left-2 z-50 px-3 py-1 rounded-lg shadow-lg flex items-center space-x-2 ${
         isCrossOrigin
@@ -265,15 +309,42 @@ HTML: ${element.html}
       {/* Action menu */}
       {showContextMenu && selectedElement && (
         <div
-          className="absolute z-50 bg-midnight-800 border border-midnight-600 rounded-lg shadow-xl min-w-64 max-w-80"
+          className="absolute z-50 min-w-64 max-w-80 rounded-xl overflow-hidden"
           style={{
             top: Math.min(menuPosition.y, window.innerHeight - 400),
             left: Math.min(menuPosition.x, window.innerWidth - 320),
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%)',
+            backdropFilter: 'blur(16px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+            border: '1px solid rgba(59, 130, 246, 0.15)',
+            boxShadow: `
+              0 20px 25px -5px rgba(0, 0, 0, 0.3),
+              0 10px 10px -5px rgba(0, 0, 0, 0.2),
+              0 0 0 1px rgba(59, 130, 246, 0.05),
+              inset 0 1px 0 0 rgba(148, 163, 184, 0.1)
+            `,
           }}
         >
+          {/* Glass shine effect overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none animate-pulse"
+            style={{
+              background: 'linear-gradient(105deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%, rgba(255, 255, 255, 0.01) 100%)',
+              animationDuration: '3s',
+            }}
+          />
+          {/* Additional shimmer effect */}
+          <div
+            className="absolute inset-0 pointer-events-none opacity-30"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.1) 50%, transparent 100%)',
+              transform: 'translateX(-100%)',
+              animation: 'shimmer 8s infinite',
+            }}
+          />
           {/* Header */}
-          <div className="px-3 py-2 border-b border-midnight-700">
-            <div className="text-xs text-gray-400">Selected Element</div>
+          <div className="relative px-3 py-2 border-b border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent">
+            <div className="text-xs text-gray-400 drop-shadow-sm">Selected Element</div>
             <div className="text-sm text-white font-mono">
               {selectedElement.tagName}
               {selectedElement.id && `#${selectedElement.id}`}
@@ -286,9 +357,29 @@ HTML: ${element.html}
             )}
           </div>
 
-          {/* Color Picker Action - Always First */}
-          <div className="border-b border-midnight-700">
-            <div className="px-3 py-2 hover:bg-midnight-700 transition-colors">
+          {/* Copy Context Action - Always First */}
+          <div className="border-b border-white/5">
+            <button
+              onClick={copyToClipboard}
+              className="w-full px-3 py-2 text-left hover:bg-white/5 backdrop-blur-sm transition-all duration-200 group relative overflow-hidden"
+            >
+              <div className="flex items-center space-x-3">
+                <Copy className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-white font-medium group-hover:text-blue-100">
+                    📋 Copy Context
+                  </div>
+                  <div className="text-xs text-gray-400 leading-relaxed">
+                    Copy element context to clipboard for agents
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Color Picker Action */}
+          <div className="border-b border-white/5">
+            <div className="px-3 py-2 hover:bg-white/5 backdrop-blur-sm transition-all duration-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Palette className="w-4 h-4 text-blue-400" />
@@ -305,7 +396,7 @@ HTML: ${element.html}
                     onChange={(e) => {
                       setSelectedColor(e.target.value);
                     }}
-                    className="w-10 h-10 rounded cursor-pointer border-2 border-midnight-600 hover:border-blue-400 transition-colors"
+                    className="w-10 h-10 rounded-lg cursor-pointer border border-white/10 hover:border-blue-400/50 transition-all duration-200 bg-white/5 backdrop-blur-sm shadow-inner"
                     title="Pick a color"
                   />
                   <div className="text-xs text-gray-500 font-mono">
@@ -323,7 +414,7 @@ HTML: ${element.html}
                         setSelectedElement(null);
                       }
                     }}
-                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                    className="px-3 py-1 bg-gradient-to-r from-blue-600/80 to-blue-500/80 hover:from-blue-500/90 hover:to-blue-400/90 text-white text-xs rounded-lg backdrop-blur-sm transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-400/30"
                   >
                     Apply
                   </button>
@@ -338,7 +429,7 @@ HTML: ${element.html}
               <button
                 key={action.id}
                 onClick={() => handleActionClick(action)}
-                className="w-full px-3 py-2 text-left hover:bg-midnight-700 transition-colors group"
+                className="w-full px-3 py-2 text-left hover:bg-white/5 backdrop-blur-sm transition-all duration-200 group relative overflow-hidden"
               >
                 <div className="flex items-start space-x-3">
                   <div className="text-blue-400 mt-0.5 group-hover:text-blue-300">
@@ -358,7 +449,7 @@ HTML: ${element.html}
           </div>
 
           {/* Footer */}
-          <div className="px-3 py-2 border-t border-midnight-700 flex items-center justify-between">
+          <div className="px-3 py-2 border-t border-white/10 bg-gradient-to-r from-transparent via-white/5 to-transparent flex items-center justify-between relative">
             <button
               onClick={() => setShowContextMenu(false)}
               className="text-xs text-gray-400 hover:text-white"
@@ -376,10 +467,27 @@ HTML: ${element.html}
 
       {/* Success feedback */}
       {lastSentAction && (
-        <div className="absolute top-16 right-4 z-50 bg-green-600 text-white px-3 py-2 rounded-lg shadow-lg">
-          <div className="text-sm font-medium">✓ Sent: {lastSentAction}</div>
-          <div className="text-xs opacity-90">
-            to {lastActiveTarget?.name}
+        <div
+          className="absolute top-16 right-4 z-50 px-3 py-2 rounded-lg overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.85) 0%, rgba(16, 185, 129, 0.75) 100%)',
+            backdropFilter: 'blur(12px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+            border: '1px solid rgba(134, 239, 172, 0.3)',
+            boxShadow: `
+              0 10px 25px -5px rgba(34, 197, 94, 0.3),
+              0 4px 6px -2px rgba(0, 0, 0, 0.2),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.1)
+            `,
+          }}
+        >
+          <div className="relative">
+            <div className="text-sm font-medium text-white drop-shadow-sm">✓ {lastSentAction}</div>
+            {lastActiveTarget && (
+              <div className="text-xs text-green-100 mt-0.5">
+                → {lastActiveTarget.name}
+              </div>
+            )}
           </div>
         </div>
       )}
