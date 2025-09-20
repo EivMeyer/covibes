@@ -9,7 +9,7 @@ import type { SpawnAgentRequest, ContainerSpawnOptions } from '@/types';
 interface SpawnAgentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (agentId: string) => void;
+  onSuccess?: (agent: any) => void;  // Pass full agent object, not just ID
 }
 
 export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
@@ -100,7 +100,7 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
 
       resetForm();
       onClose();
-      onSuccess?.(agent.id);
+      onSuccess?.(agent);  // Pass full agent object with mode
     } catch (error) {
       console.error('Failed to spawn agent:', error);
       addNotification({

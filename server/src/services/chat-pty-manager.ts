@@ -1,57 +1,50 @@
 /**
  * Chat PTY Manager
  *
- * Terminal manager optimized for chat mode agents using Claude --print flag.
- * Uses node-pty for consistent infrastructure with terminal mode but optimized
- * for single-command execution pattern with completion events.
- *
- * Maintains session persistence via tmux for chat agent reconnection capabilities.
+ * Terminal manager optimized for chat mode agents using Claude JSON output.
+ * Uses direct command execution without PTY/tmux for clean responses.
+ * Maintains conversation continuity via Claude session IDs.
  */
 
 import { EventEmitter } from 'events';
-import * as pty from 'node-pty';
+import { ChildProcess } from 'child_process';
 import path from 'path';
 import os from 'os';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { PrismaClient } from '@prisma/client';
 import { TerminalManager, TerminalSession, TerminalOptions } from './terminal-manager-interface.js';
 import { claudeConfigManager } from './claude-config-manager.js';
+import { StreamingChatManager } from './streaming-chat-manager.js';
 
-const execAsync = promisify(exec);
 const prisma = new PrismaClient();
 
 interface ChatSession extends TerminalSession {
-  ptyProcess?: pty.IPty;
-  responseBuffer: string;
+  claudeSessionId?: string;  // Claude conversation session ID
+  conversationStarted: boolean;
   isWaitingForResponse: boolean;
   lastCommandTimestamp?: Date;
+  activeProcess?: ChildProcess;  // Current Claude process if running
 }
 
 export class ChatPtyManager extends EventEmitter implements TerminalManager {
   private sessions: Map<string, ChatSession> = new Map();
   private readonly WORKSPACE_BASE = path.join(os.homedir(), '.covibes/workspaces');
-  private readonly SESSION_PREFIX = 'colabvibe-chat-';
-  private readonly COMMAND_TIMEOUT = 30000; // 30 seconds for Claude responses
+  private streamingManager = new StreamingChatManager();
 
   constructor() {
     super();
     this.ensureWorkspaceDir();
-    this.cleanupOrphanedSessions();
-    console.log('💬 ChatPtyManager initialized (PTY-based chat sessions with Claude)');
+    console.log('💬 ChatPtyManager initialized (JSON-based chat sessions with Claude)');
   }
 
   async spawnTerminal(options: TerminalOptions): Promise<TerminalSession> {
-    console.log(`🚀 Spawning chat PTY for agent: ${options.agentId}`);
-
-    const sessionName = this.getSessionName(options.agentId);
+    console.log(`🚀 Spawning chat session for agent: ${options.agentId}`);
 
     try {
       // Check if session already exists
-      const existingSession = await this.checkTmuxSession(sessionName);
-      if (existingSession) {
-        console.log(`♻️ Reconnecting to existing chat session: ${sessionName}`);
-        return await this.attachToExistingSession(sessionName, options);
+      const existingSession = this.sessions.get(options.agentId);
+      if (existingSession && existingSession.status === 'running') {
+        console.log(`♻️ Reusing existing chat session for agent: ${options.agentId}`);
+        return existingSession;
       }
 
       // Ensure workspace exists
@@ -60,21 +53,53 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
       // Initialize user's Claude configuration
       await claudeConfigManager.initializeUserConfig(options.userId);
 
-      // Create new tmux session optimized for chat
-      return await this.createChatSession(sessionName, options, workspaceDir);
+      // Create lightweight chat session (no PTY/tmux)
+      const session: ChatSession = {
+        agentId: options.agentId,
+        location: 'local',
+        isolation: 'none',  // No isolation needed for chat
+        status: 'running',
+        createdAt: new Date(),
+        metadata: {
+          userId: options.userId,
+          teamId: options.teamId,
+          agentName: options.agentName,
+          workspaceDir,
+          sessionId: options.sessionId  // Existing Claude session ID if provided
+        },
+        conversationStarted: false,
+        isWaitingForResponse: false
+      };
+
+      // If sessionId provided, store it but DON'T mark as started
+      // The conversation only starts after the first successful Claude response
+      if (options.sessionId) {
+        session.claudeSessionId = options.sessionId;
+        session.conversationStarted = false;  // Don't resume non-existent conversation!
+      }
+
+      this.sessions.set(options.agentId, session);
+
+      // Update database with session info
+      await this.updateAgentSession(options.agentId, 'chat-mode');
+
+      console.log(`✅ Chat session created for agent: ${options.agentId}`);
+      this.emit('terminal-ready', session);
+
+      return session;
 
     } catch (error) {
-      const errorMsg = `Failed to spawn chat PTY: ${error instanceof Error ? error.message : String(error)}`;
+      const errorMsg = `Failed to spawn chat session: ${error instanceof Error ? error.message : String(error)}`;
       console.error(`❌ ${errorMsg}`);
 
       const failedSession: ChatSession = {
         agentId: options.agentId,
         location: 'local',
-        isolation: 'tmux',
+        isolation: 'none',
         status: 'error',
         createdAt: new Date(),
-        metadata: { error: errorMsg, sessionName },
-        responseBuffer: '',
+        metadata: { error: errorMsg },
+        conversationStarted: false,
         isWaitingForResponse: false
       };
 
@@ -85,235 +110,192 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
     }
   }
 
-  private async createChatSession(
-    sessionName: string,
-    options: TerminalOptions,
-    workspaceDir: string
-  ): Promise<ChatSession> {
-    console.log(`🎯 ChatPtyManager received agentName: ${options.agentName}`);
 
-    // Build Claude command for chat mode
-    const { command: claudeCommand, args: claudeArgs, env: claudeEnv } =
-      claudeConfigManager.buildClaudeCommand(options.userId, {
-        task: '', // Chat mode doesn't use task parameter
-        teamId: options.teamId,
-        skipPermissions: true,
-        interactive: false,
-        appendSystemPrompt: true,
-        ...(options.agentName ? { agentName: options.agentName } : {}),
-        mode: 'chat',
-        ...(options.sessionId ? { sessionId: options.sessionId } : {})
-      });
+  private buildSystemPrompt(session: ChatSession): string | undefined {
+    const metadata = session.metadata || {};
 
-    // Build tmux command with proper shell setup for chat
-    const tmuxCmd = [
-      'tmux', 'new-session', '-d', '-s', sessionName,
-      '-c', workspaceDir,
-      'bash'
-    ];
-
-    console.log(`📦 Creating tmux chat session: ${sessionName} in ${workspaceDir}`);
-
-    try {
-      // Create tmux session
-      await execAsync(tmuxCmd.join(' '), { env: claudeEnv });
-
-      // Wait for session to be ready
-      await this.waitForTmuxSession(sessionName);
-
-      // Create PTY attached to tmux session
-      const ptyProcess = pty.spawn('tmux', ['attach-session', '-t', sessionName], {
-        name: 'xterm-color',
-        cols: 120,
-        rows: 30,
-        cwd: workspaceDir,
-        env: claudeEnv
-      });
-
-      const session: ChatSession = {
-        agentId: options.agentId,
-        location: 'local',
-        isolation: 'tmux',
-        process: ptyProcess,
-        ptyProcess,
-        status: 'running',
-        createdAt: new Date(),
-        metadata: {
-          sessionName,
-          workspaceDir,
-          claudeCommand: `${claudeCommand} ${claudeArgs.join(' ')}`,
-          userId: options.userId,
-          teamId: options.teamId,
-          agentName: options.agentName
-        },
-        responseBuffer: '',
-        isWaitingForResponse: false
-      };
-
-      // Set up PTY event handlers for chat
-      this.setupChatPtyHandlers(session, claudeCommand, claudeArgs);
-
-      this.sessions.set(options.agentId, session);
-
-      // Update database with session info
-      await this.updateAgentSession(options.agentId, sessionName);
-
-      console.log(`✅ Chat PTY session created: ${sessionName}`);
-      this.emit('terminal-ready', session);
-
-      return session;
-
-    } catch (error) {
-      console.error(`Failed to create chat session ${sessionName}:`, error);
-      throw error;
-    }
-  }
-
-  private setupChatPtyHandlers(session: ChatSession, _claudeCommand: string, _claudeArgs: string[]) {
-    if (!session.ptyProcess) return;
-
-    session.ptyProcess.onData((data: string) => {
-      // Filter out ANSI codes and control characters for cleaner output
-      const cleanData = data.replace(/\x1b\[[0-9;]*m/g, '').replace(/\r/g, '');
-
-      if (session.isWaitingForResponse) {
-        // Accumulate response data
-        session.responseBuffer += cleanData;
-
-        // Check if Claude command completed (look for prompt return)
-        if (this.isCommandComplete(cleanData)) {
-          this.handleChatResponse(session);
-        }
-      }
-
-      // Always emit raw data for debugging/monitoring
-      this.emit('terminal-data', session.agentId, cleanData);
-    });
-
-    session.ptyProcess.onExit((event: { exitCode: number; signal?: number }) => {
-      console.log(`💬 Chat PTY session ${session.metadata?.['sessionName']} exited: ${event.exitCode}, signal: ${event.signal}`);
-      session.status = 'stopped';
-      this.emit('terminal-exit', session.agentId, event.exitCode, event.signal);
-    });
-
-    // Send initial setup commands to prepare for Claude
-    setTimeout(() => {
-      if (session.ptyProcess) {
-        // Clear screen and set up environment
-        session.ptyProcess.write('clear\n');
-        session.ptyProcess.write(`export CLAUDE_CONFIG_DIR="${claudeConfigManager.getUserConfigDir(session.metadata?.['userId'] || '')}"\n`);
-        session.ptyProcess.write('echo "Chat session ready"\n');
-      }
-    }, 500);
-  }
-
-  private isCommandComplete(data: string): boolean {
-    // Look for bash prompt patterns that indicate command completion
-    const promptPatterns = [
-      /\$ $/,          // Standard bash prompt
-      /# $/,           // Root prompt
-      /> $/,           // Continuation prompt
-      /ubuntu@.*\$ $/, // Ubuntu prompt pattern
-    ];
-
-    return promptPatterns.some(pattern => pattern.test(data));
-  }
-
-  private async handleChatResponse(session: ChatSession) {
-    if (!session.isWaitingForResponse) return;
-
-    session.isWaitingForResponse = false;
-
-    // Extract Claude's response from the buffer
-    const response = this.extractClaudeResponse(session.responseBuffer);
-    session.responseBuffer = '';
-
-    if (response) {
-      console.log(`💬 Chat response received for ${session.agentId}: ${response.substring(0, 100)}...`);
-
-      // Store response in terminal history
-      await this.storeTerminalHistory(session.agentId, response, 'output');
-
-      // Emit chat response event for agent chat service
-      this.emit('chat-response', session.agentId, response);
-    }
-  }
-
-  private extractClaudeResponse(buffer: string): string {
-    // Remove command echo and extract actual Claude output
-    const lines = buffer.split('\n').filter(line => line.trim());
-
-    // Find start of Claude output (after the command echo)
-    let startIndex = 0;
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i]?.includes('claude')) {
-        startIndex = i + 1;
-        break;
-      }
+    // Only add system prompt for first message
+    if (session.conversationStarted) {
+      return undefined;
     }
 
-    // Find end of Claude output (before the prompt)
-    let endIndex = lines.length;
-    for (let i = lines.length - 1; i >= 0; i--) {
-      if (lines[i]?.match(/\$ $|# $|> $|ubuntu@.*\$ $/)) {
-        endIndex = i;
-        break;
-      }
+    // Get base system prompt
+    let systemPrompt = (claudeConfigManager as any)['AGENT_SYSTEM_PROMPT'] || 'ColabVibe Agent Online';
+
+    // Add agent name if provided
+    if (metadata['agentName']) {
+      systemPrompt = `WORKER CALLSIGN: ${metadata['agentName']}\n\n${systemPrompt}`;
     }
 
-    return lines.slice(startIndex, endIndex).join('\n').trim();
+    // Add workspace context if teamId provided
+    if (metadata['teamId']) {
+      const templateContext = `
+WORKSPACE TEMPLATE STRUCTURE:
+- Frontend: React + Vite on port 5173 (dev server with HMR)
+- Backend: Express on port 3002
+- Database: PostgreSQL (team-isolated: preview_${(metadata['teamId'] as string).replace(/-/g, '_')})
+- Main files: /src/App.jsx, /server.js, /package.json, /vite.config.js
+- Build system: Vite bundler
+- Workspace path: ${metadata['workspaceDir']}/
+- Package manager: npm
+
+DEVELOPMENT COMMANDS:
+- Frontend dev: npm run dev (runs on port 5173)
+- Backend: npm run server (runs on port 3002)
+- Full stack: npm run dev:fullstack (runs both)
+`;
+      systemPrompt = templateContext + '\n' + systemPrompt;
+    }
+
+    return systemPrompt;
   }
 
   sendInput(agentId: string, data: string): boolean {
     const session = this.sessions.get(agentId);
-    if (!session?.ptyProcess || session.status !== 'running') {
+    if (!session || session.status !== 'running') {
       return false;
     }
 
-    // For chat mode, we expect structured command execution
-    if (data.trim()) {
-      console.log(`💬 Executing chat command for ${agentId}: ${data.substring(0, 100)}...`);
-
-      // Prepare for response collection
-      session.isWaitingForResponse = true;
-      session.responseBuffer = '';
-      session.lastCommandTimestamp = new Date();
-
-      // Build and execute Claude command with the input message
-      const { command, args } = claudeConfigManager.buildClaudeCommand(
-        session.metadata?.['userId'] || '',
-        {
-          teamId: session.metadata?.['teamId'],
-          skipPermissions: true,
-          mode: 'chat',
-          ...(session.metadata?.['sessionId'] ? { sessionId: session.metadata['sessionId'] } : {})
-        }
-      );
-
-      // Execute Claude with input piped via echo
-      const claudeCmd = `echo "${data.replace(/"/g, '\\"')}" | ${command} ${args.join(' ')}\n`;
-      session.ptyProcess.write(claudeCmd);
-
-      // Set timeout for response
-      setTimeout(() => {
-        if (session.isWaitingForResponse) {
-          console.warn(`⏰ Chat command timeout for ${agentId}`);
-          session.isWaitingForResponse = false;
-          this.emit('chat-error', agentId, 'Command timeout');
-        }
-      }, this.COMMAND_TIMEOUT);
+    // Don't send if already waiting for response
+    if (session.isWaitingForResponse) {
+      console.warn(`⚠️ Chat session ${agentId} is already waiting for response`);
+      return false;
     }
+
+    if (!data.trim()) {
+      return false;
+    }
+
+    console.log(`💬 Sending chat message for ${agentId}: ${data.substring(0, 100)}...`);
+
+    // Execute asynchronously without blocking
+    this.executeChatCommand(session, data)
+      .then(() => {
+        console.log(`✅ executeChatCommand completed successfully for ${agentId}`);
+      })
+      .catch(error => {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error(`❌ Chat execution error for ${agentId}:`, errorMsg);
+        console.error(`Full error:`, error);
+        this.emit('chat-error', agentId, errorMsg);
+      });
 
     return true;
   }
 
-  resizeTerminal(agentId: string, cols: number, rows: number): boolean {
-    const session = this.sessions.get(agentId);
-    if (session?.ptyProcess) {
-      session.ptyProcess.resize(cols, rows);
-      return true;
+  private async executeChatCommand(session: ChatSession, data: string): Promise<void> {
+    try {
+      session.isWaitingForResponse = true;
+      session.lastCommandTimestamp = new Date();
+
+      // Set up streaming event handlers
+      const handleStreamStart = (streamAgentId: string) => {
+        if (streamAgentId === session.agentId) {
+          console.log(`🚀 Stream started for ${streamAgentId}`);
+          this.emit('chat-stream-start', streamAgentId);
+        }
+      };
+
+      const handleStreamChunk = (streamAgentId: string, chunk: any) => {
+        if (streamAgentId === session.agentId) {
+          console.log(`📤 Emitting stream chunk for ${streamAgentId}:`, chunk.content?.substring(0, 50));
+          // Emit streaming chunk to frontend
+          this.emit('chat-stream-chunk', streamAgentId, chunk);
+        }
+      };
+
+      this.streamingManager.once('stream-start', handleStreamStart);
+      this.streamingManager.on('stream-chunk', handleStreamChunk);
+
+      // Handle tool use events
+      const handleToolUse = (streamAgentId: string, data: any) => {
+        if (streamAgentId === session.agentId) {
+          console.log(`🔧 Forwarding tool use event for ${streamAgentId}:`, data.tool);
+          this.emit('chat-tool-use', streamAgentId, data);
+        }
+      };
+      this.streamingManager.on('tool-use', handleToolUse);
+
+      const handleStreamComplete = async (agentId: string, data: any) => {
+        if (agentId === session.agentId) {
+          // Store session ID for continuity - ensure we use the UUID session ID
+          if (data.sessionId && data.sessionId.includes('-')) {
+            session.claudeSessionId = data.sessionId;
+            session.conversationStarted = true;
+            console.log(`🆔 UUID Session ID stored: ${data.sessionId}`);
+          }
+
+          // Emit complete response
+          this.emit('chat-response', agentId, data.fullContent);
+
+          // Store in terminal history
+          await this.storeTerminalHistory(agentId, data.fullContent, 'output');
+
+          // Emit metadata if available
+          if (data.metadata) {
+            this.emit('chat-metadata', agentId, {
+              cost: data.metadata.inputTokens,
+              duration: 0,
+              turns: 1,
+              sessionId: data.sessionId
+            });
+          }
+
+          console.log(`✅ Stream completed for ${agentId}`);
+
+          // Emit stream complete event to frontend
+          this.emit('chat-stream-complete', agentId);
+        }
+        session.isWaitingForResponse = false;
+
+        // Clean up event handlers
+        this.streamingManager.off('stream-chunk', handleStreamChunk);
+        this.streamingManager.off('stream-complete', handleStreamComplete);
+        this.streamingManager.off('stream-error', handleStreamError);
+        this.streamingManager.off('tool-use', handleToolUse);
+      };
+
+      this.streamingManager.once('stream-complete', handleStreamComplete);
+
+      const handleStreamError = (agentId: string, error: string) => {
+        if (agentId === session.agentId) {
+          console.error(`❌ Stream error for ${agentId}:`, error);
+          this.emit('chat-error', agentId, error);
+        }
+        session.isWaitingForResponse = false;
+
+        // Clean up event handlers
+        this.streamingManager.off('stream-chunk', handleStreamChunk);
+        this.streamingManager.off('stream-complete', handleStreamComplete);
+        this.streamingManager.off('stream-error', handleStreamError);
+        this.streamingManager.off('tool-use', handleToolUse);
+      };
+
+      this.streamingManager.once('stream-error', handleStreamError);
+
+      // Build system prompt for first message
+      const systemPrompt = this.buildSystemPrompt(session);
+
+      // Start the stream with system prompt if needed
+      await this.streamingManager.startStream(
+        session.agentId,
+        data,
+        session.claudeSessionId,
+        session.metadata?.['workspaceDir'] || this.WORKSPACE_BASE,
+        systemPrompt && !session.conversationStarted ? systemPrompt : undefined
+      );
+
+    } catch (error) {
+      session.isWaitingForResponse = false;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`❌ Chat error for ${session.agentId}:`, errorMsg);
+      this.emit('chat-error', session.agentId, errorMsg);
     }
-    return false;
+  }
+
+  resizeTerminal(_agentId: string, _cols: number, _rows: number): boolean {
+    // No-op for chat mode - no terminal to resize
+    return true;
   }
 
   killTerminal(agentId: string): boolean {
@@ -321,20 +303,15 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
     if (!session) return false;
 
     try {
-      // Kill PTY process
-      if (session.ptyProcess) {
-        session.ptyProcess.kill();
-      }
-
-      // Kill tmux session
-      if (session.metadata?.['sessionName']) {
-        execAsync(`tmux kill-session -t ${session.metadata['sessionName']}`).catch(console.error);
+      // Kill active Claude process if running
+      if (session.activeProcess && !session.activeProcess.killed) {
+        session.activeProcess.kill('SIGTERM');
       }
 
       session.status = 'stopped';
       this.sessions.delete(agentId);
 
-      console.log(`💀 Killed chat session for agent ${agentId}`);
+      console.log(`💀 Cleaned up chat session for agent ${agentId}`);
       return true;
     } catch (error) {
       console.error(`Error killing chat session ${agentId}:`, error);
@@ -352,7 +329,7 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
 
   isReady(agentId: string): boolean {
     const session = this.sessions.get(agentId);
-    return session?.status === 'running' && !!session.ptyProcess;
+    return session?.status === 'running';
   }
 
   cleanup(): void {
@@ -367,10 +344,6 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
   }
 
   // Private helper methods
-
-  private getSessionName(agentId: string): string {
-    return `${this.SESSION_PREFIX}${agentId}`;
-  }
 
   private async ensureWorkspaceDir(): Promise<void> {
     try {
@@ -401,79 +374,14 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
     }
   }
 
-  private async checkTmuxSession(sessionName: string): Promise<boolean> {
-    try {
-      await execAsync(`tmux has-session -t ${sessionName}`);
-      return true;
-    } catch {
-      return false;
-    }
-  }
 
-  private async waitForTmuxSession(sessionName: string, maxWait = 5000): Promise<void> {
-    const startTime = Date.now();
-
-    while (Date.now() - startTime < maxWait) {
-      if (await this.checkTmuxSession(sessionName)) {
-        return;
-      }
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    throw new Error(`Tmux session ${sessionName} failed to start within ${maxWait}ms`);
-  }
-
-  private async attachToExistingSession(sessionName: string, options: TerminalOptions): Promise<ChatSession> {
-    const workspaceDir = path.join(this.WORKSPACE_BASE, options.teamId);
-
-    // Create PTY attached to existing tmux session
-    const ptyProcess = pty.spawn('tmux', ['attach-session', '-t', sessionName], {
-      name: 'xterm-color',
-      cols: 120,
-      rows: 30,
-      cwd: workspaceDir,
-      env: {
-        ...process.env,
-        CLAUDE_CONFIG_DIR: claudeConfigManager.getUserConfigDir(options.userId)
-      }
-    });
-
-    const session: ChatSession = {
-      agentId: options.agentId,
-      location: 'local',
-      isolation: 'tmux',
-      process: ptyProcess,
-      ptyProcess,
-      status: 'running',
-      createdAt: new Date(),
-      metadata: {
-        sessionName,
-        workspaceDir,
-        userId: options.userId,
-        teamId: options.teamId,
-        agentName: options.agentName,
-        reconnected: true
-      },
-      responseBuffer: '',
-      isWaitingForResponse: false
-    };
-
-    // Set up handlers for reconnected session
-    this.setupChatPtyHandlers(session, 'claude', []);
-
-    this.sessions.set(options.agentId, session);
-    this.emit('terminal-ready', session);
-
-    return session;
-  }
-
-  private async updateAgentSession(agentId: string, sessionName: string): Promise<void> {
+  private async updateAgentSession(agentId: string, sessionType: string): Promise<void> {
     try {
       await prisma.agents.update({
         where: { id: agentId },
         data: {
-          tmuxSessionName: sessionName,
-          isSessionPersistent: true,
+          tmuxSessionName: sessionType,  // Store 'chat-mode' instead of tmux session name
+          isSessionPersistent: false,     // No persistent tmux session
           status: 'running'
         }
       });
@@ -497,8 +405,4 @@ export class ChatPtyManager extends EventEmitter implements TerminalManager {
     }
   }
 
-  private cleanupOrphanedSessions(): void {
-    // TODO: Check for orphaned tmux sessions and clean them up
-    console.log('🧹 Chat session cleanup completed');
-  }
 }

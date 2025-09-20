@@ -47,6 +47,13 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingContent, setStreamingContent] = useState<string>('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [ignoreNextResponse, setIgnoreNextResponse] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [toolUseStatus, setToolUseStatus] = useState<string>('');
+  const thinkingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const streamingContentRef = useRef<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -59,6 +66,11 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     a.userId === currentUser?.id // Only show user's own agents
   );
 
+  // Keep ref in sync with state for streaming content
+  useEffect(() => {
+    streamingContentRef.current = streamingContent;
+  }, [streamingContent]);
+
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -70,7 +82,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingContent]);
 
   // Initialize with welcome message when agent connects
   useEffect(() => {
@@ -85,40 +97,101 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     }
   }, [agent, currentAgentId]);
 
-  // Establish terminal connection when agent changes
+  // Establish connection when agent changes (chat mode doesn't need terminal)
   useEffect(() => {
     if (!socket || !currentAgentId || !canInteract) return;
 
-    // Connect to the terminal for this agent
-    console.log('AgentChat: Connecting to terminal for agent:', currentAgentId);
-    socket.emit('terminal_connect', { agentId: currentAgentId });
+    const agentInfo = agents?.find(a => a.id === currentAgentId);
 
-    // Listen for connection confirmation
-    const handleTerminalConnected = (data: any) => {
-      if (data.agentId === currentAgentId) {
-        console.log('AgentChat: Terminal connected for agent:', currentAgentId);
-        setIsLoading(false); // Ready to send messages
-      }
-    };
+    if (agentInfo?.mode === 'chat') {
+      // For chat mode, request connection but expect chat_agent_ready response
+      console.log('💬 AgentChat: Connecting to chat agent:', currentAgentId);
+      socket.emit('terminal_connect', { agentId: currentAgentId });
 
-    socket.on('terminal_connected', handleTerminalConnected);
+      const handleChatReady = (data: any) => {
+        if (data.agentId === currentAgentId) {
+          console.log('💬 Chat agent ready:', currentAgentId);
+          setIsLoading(false); // Ready to send messages
+        }
+      };
 
-    return () => {
-      socket.off('terminal_connected', handleTerminalConnected);
-      // Disconnect when unmounting or changing agents
-      if (currentAgentId) {
-        socket.emit('terminal_disconnect', { agentId: currentAgentId });
-      }
-    };
-  }, [socket, currentAgentId, canInteract]);
+      socket.on('chat_agent_ready', handleChatReady);
+
+      return () => {
+        socket.off('chat_agent_ready', handleChatReady);
+        // Chat agents don't need disconnect
+      };
+    } else {
+      // Terminal mode agents still use terminal connection
+      console.log('AgentChat: Connecting to terminal for agent:', currentAgentId);
+      socket.emit('terminal_connect', { agentId: currentAgentId });
+
+      const handleTerminalConnected = (data: any) => {
+        if (data.agentId === currentAgentId) {
+          console.log('AgentChat: Terminal connected for agent:', currentAgentId);
+          setIsLoading(false);
+        }
+      };
+
+      socket.on('terminal_connected', handleTerminalConnected);
+
+      return () => {
+        socket.off('terminal_connected', handleTerminalConnected);
+        if (currentAgentId) {
+          socket.emit('terminal_disconnect', { agentId: currentAgentId });
+        }
+      };
+    }
+  }, [socket, currentAgentId, canInteract, agents]);
 
   // Listen for agent output via socket
   useEffect(() => {
     if (!socket || !currentAgentId) return;
 
+    const agentInfo = agents?.find(a => a.id === currentAgentId);
+
+    const handleChatResponse = (data: any) => {
+      // For chat mode agents, we get clean JSON responses
+      if (data.agentId === currentAgentId && data.response) {
+        // If we should ignore this response (already added from streaming), skip it
+        if (ignoreNextResponse) {
+          console.log('📝 Ignoring duplicate response after streaming');
+          setIgnoreNextResponse(false);
+          setIsLoading(false);
+          return;
+        }
+
+        const responseText = data.response.trim();
+
+        // Skip empty responses
+        if (!responseText || responseText.length < 2) {
+          return;
+        }
+
+        // Add the response as a message
+        setMessages(prev => {
+          // Check if this is a duplicate
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg?.role === 'assistant' && lastMsg.content === responseText) {
+            return prev;
+          }
+
+          return [...prev, {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: responseText,
+            timestamp: new Date().toISOString(),
+            agentId: currentAgentId
+          }];
+        });
+
+        setIsLoading(false);
+      }
+    };
+
     const handleTerminalData = (data: any) => {
-      // For chat mode agents, we get clean responses
-      if (data.agentId === currentAgentId && data.data) {
+      // Fallback for terminal mode or legacy behavior
+      if (data.agentId === currentAgentId && data.data && agentInfo?.mode !== 'chat') {
         const responseText = data.data.trim();
 
         // Skip empty responses
@@ -151,18 +224,146 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
       if (data.agentId === currentAgentId) {
         console.error('Chat error:', data.error);
         setIsLoading(false);
+        setIsStreaming(false);
+        setStreamingContent('');
+        setIsThinking(false);  // Clear thinking on error
+        setToolUseStatus('');  // Clear tool status on error
+
+        // Clear timeout if exists
+        if (thinkingTimeoutRef.current) {
+          clearTimeout(thinkingTimeoutRef.current);
+          thinkingTimeoutRef.current = null;
+        }
       }
     };
 
-    // Listen for terminal output (chat agents in print mode send clean output)
-    socket.on('terminal_data', handleTerminalData);
+    // Streaming event handlers
+    const handleStreamStart = (data: any) => {
+      console.log('🎬 [FRONTEND] Stream start event received:', data);
+      if (data.agentId === currentAgentId) {
+        console.log('🚀 [FRONTEND] Stream started for agent:', currentAgentId);
+        setIsStreaming(true);
+        setStreamingContent('');
+        streamingContentRef.current = '';
+        setIsLoading(false);
+        // DON'T clear thinking here - wait for first actual content chunk
+        // setIsThinking(false);  // Keep thinking until we get actual content
+        setToolUseStatus('');  // Clear tool status
+      }
+    };
+
+    const handleStreamChunk = (data: any) => {
+      console.log('📦 [FRONTEND] Stream chunk received:', data);
+      if (data.agentId === currentAgentId && data.content) {
+        console.log('✍️ [FRONTEND] Adding chunk to streaming content:', data.content);
+
+        // Clear thinking indicator only if minimum time has passed
+        if (!thinkingTimeoutRef.current) {
+          console.log('🎯 [THINKING] Minimum time passed, clearing thinking indicator');
+          setIsThinking(false);
+        } else {
+          console.log('🎯 [THINKING] Minimum time not passed yet, keeping thinking indicator');
+          // Set up to clear thinking when minimum time passes
+          const currentTimeout = thinkingTimeoutRef.current;
+          clearTimeout(currentTimeout);
+          thinkingTimeoutRef.current = setTimeout(() => {
+            console.log('🎯 [THINKING] Minimum time now passed, clearing thinking indicator');
+            setIsThinking(false);
+            thinkingTimeoutRef.current = null;
+          }, 100); // Short delay to clear after minimum time
+        }
+
+        setStreamingContent(prev => {
+          const newContent = prev + data.content;
+          console.log('📝 [FRONTEND] Total streaming content now:', newContent.substring(0, 100));
+          return newContent;
+        });
+      }
+    };
+
+    const handleStreamComplete = (data: any) => {
+      console.log('🏁 [FRONTEND] Stream complete event received:', data);
+      if (data.agentId === currentAgentId) {
+        const currentContent = streamingContentRef.current;
+        console.log('📄 [FRONTEND] Current streaming content from ref:', currentContent);
+
+        // Convert the accumulated streaming content into a permanent message
+        if (currentContent) {
+          console.log('💾 [FRONTEND] Converting streaming content to permanent message');
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: currentContent,
+            timestamp: new Date().toISOString(),
+            agentId: currentAgentId
+          }]);
+
+          // Mark that we should ignore the next agent_chat_response to avoid duplicates
+          setIgnoreNextResponse(true);
+          console.log('✅ [FRONTEND] Converted streaming content to message:', currentContent.substring(0, 50));
+        } else {
+          console.warn('⚠️ [FRONTEND] No streaming content to convert!');
+        }
+
+        // Clear streaming state
+        console.log('🧹 [FRONTEND] Clearing streaming state');
+        setIsStreaming(false);
+        setStreamingContent('');
+        streamingContentRef.current = '';
+        setIsThinking(false);  // Ensure thinking is cleared
+        setToolUseStatus('');  // Ensure tool status is cleared
+
+        // Clear timeout if it somehow still exists
+        if (thinkingTimeoutRef.current) {
+          clearTimeout(thinkingTimeoutRef.current);
+          thinkingTimeoutRef.current = null;
+        }
+      }
+    };
+
+    // Tool use handler
+    const handleToolUse = (data: any) => {
+      if (data.agentId === currentAgentId) {
+        console.log('🔧 [FRONTEND] Tool use:', data.tool);
+        const toolMessages = {
+          'Read': 'Reading file...',
+          'Bash': 'Running command...',
+          'Grep': 'Searching codebase...',
+          'Glob': 'Finding files...',
+          'Write': 'Writing file...',
+          'Edit': 'Editing file...',
+          'MultiEdit': 'Making multiple edits...'
+        };
+        setToolUseStatus(toolMessages[data.tool] || `Using ${data.tool}...`);
+      }
+    };
+
+    // Listen for appropriate events based on agent mode
+    if (agentInfo?.mode === 'chat') {
+      socket.on('agent_chat_response', handleChatResponse);
+      socket.on('agent_chat_stream_start', handleStreamStart);
+      socket.on('agent_chat_stream_chunk', handleStreamChunk);
+      socket.on('agent_chat_stream_complete', handleStreamComplete);
+      socket.on('agent_tool_use', handleToolUse);
+    } else {
+      socket.on('terminal_data', handleTerminalData);
+    }
     socket.on('agent_chat_error', handleChatError);
 
     return () => {
+      // Clean up timeout if it exists
+      if (thinkingTimeoutRef.current) {
+        clearTimeout(thinkingTimeoutRef.current);
+      }
+      socket.off('agent_chat_response', handleChatResponse);
       socket.off('terminal_data', handleTerminalData);
       socket.off('agent_chat_error', handleChatError);
+      socket.off('agent_chat_stream_start', handleStreamStart);
+      socket.off('agent_chat_stream_chunk', handleStreamChunk);
+      socket.off('agent_chat_stream_complete', handleStreamComplete);
+      socket.off('agent_tool_use', handleToolUse);
     };
-  }, [socket, currentAgentId]);
+  }, [socket, currentAgentId, agents]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || isLoading || !canInteract || !socket || !currentAgentId) return;
@@ -178,6 +379,24 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setIsThinking(true);  // Start thinking indicator
+    setToolUseStatus('');  // Clear any previous tool status
+
+    // Clear any existing timeout
+    if (thinkingTimeoutRef.current) {
+      clearTimeout(thinkingTimeoutRef.current);
+    }
+
+    // Set minimum display time for thinking indicator (at least 800ms)
+    const thinkingStartTime = Date.now();
+    thinkingTimeoutRef.current = setTimeout(() => {
+      thinkingTimeoutRef.current = null;
+    }, 800);
+
+    console.log('🎯 [THINKING] Setting isThinking to true for agent:', currentAgentId);
+    console.log('🎯 [THINKING] Will show for minimum 800ms');
+    console.log('🎯 [THINKING] Agent mode:', agent?.mode);
+    console.log('🎯 [THINKING] isStreaming:', isStreaming);
 
     // Check if agent is in chat mode
     const agentInfo = agents?.find(a => a.id === currentAgentId);
@@ -359,6 +578,50 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             </div>
           ))
         )}
+
+        {/* Thinking/Tool Use Indicator */}
+        {(() => {
+          console.log('🎨 [THINKING-RENDER] isThinking:', isThinking, 'toolUseStatus:', toolUseStatus, 'isStreaming:', isStreaming, 'streamingContent:', streamingContent);
+          const shouldShow = (isThinking || toolUseStatus) && !streamingContent; // Show until we have content
+          console.log('🎨 [THINKING-RENDER] Should show thinking:', shouldShow);
+          return shouldShow;
+        })() && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg px-4 py-2 bg-gray-900 text-gray-100 border border-gray-800">
+              <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
+                <Bot className="w-3 h-3" />
+                {agent?.agentName || 'Agent'}
+              </div>
+              <div className="text-sm leading-relaxed flex items-center gap-2">
+                {/* Spinner */}
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                <span className="text-gray-400">
+                  {toolUseStatus || 'Thinking...'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Streaming message */}
+        {(() => {
+          console.log('🎨 [FRONTEND-RENDER] Checking streaming bubble - isStreaming:', isStreaming, 'streamingContent:', streamingContent?.substring(0, 50));
+          return isStreaming && streamingContent && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-lg px-4 py-2 bg-gray-900 text-gray-100 border border-gray-800">
+                <div className="flex items-center gap-2 mb-1 text-xs text-gray-400">
+                  <Bot className="w-3 h-3" />
+                  {agent?.agentName || 'Agent'}
+                </div>
+                <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {streamingContent}
+                  <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         <div ref={messagesEndRef} />
       </div>
 

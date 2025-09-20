@@ -1983,23 +1983,37 @@ io.on('connection', (socket: Socket) => {
   // Terminal event handlers - NEW PTY-based direct connection
   socket.on('terminal_connect', async (data: { agentId: string }) => {
     console.log('🔌 PTY TERMINAL CONNECT EVENT RECEIVED!');
-    console.log('🔌 PTY Terminal connect requested:', { 
-      agentId: data.agentId, 
-      userId: socket.userId, 
+    console.log('🔌 PTY Terminal connect requested:', {
+      agentId: data.agentId,
+      userId: socket.userId,
       teamId: socket.teamId,
       authenticated: !!(socket.userId && socket.teamId)
     });
-    
+
     if (!socket.userId || !socket.teamId) {
       console.log('❌ PTY Terminal connect denied: Not authenticated');
-      socket.emit('terminal_error', { 
-        agentId: data.agentId, 
-        error: 'Not authenticated' 
+      socket.emit('terminal_error', {
+        agentId: data.agentId,
+        error: 'Not authenticated'
       });
       return;
     }
 
     try {
+      // Check if agent is in chat mode - chat agents don't use terminal connections
+      const agent = await prisma.agents.findUnique({
+        where: { id: data.agentId }
+      });
+
+      if (agent?.mode === 'chat') {
+        console.log('💬 Agent is in chat mode, skipping terminal connection');
+        socket.emit('chat_agent_ready', {
+          agentId: data.agentId,
+          mode: 'chat',
+          message: 'Chat agent ready for messages'
+        });
+        return;
+      }
       // Track this socket for the agent - prevent duplicates
       if (!agentSockets.has(data.agentId)) {
         agentSockets.set(data.agentId, new Set());
@@ -2128,12 +2142,12 @@ io.on('connection', (socket: Socket) => {
       console.log(`✅ PTY terminal connected for agent: ${data.agentId}`);
       
       // Check if user is the owner of this agent
-      const agent = await prisma.agents.findUnique({
+      const agentOwnership = await prisma.agents.findUnique({
         where: { id: data.agentId },
         select: { userId: true }
       });
       
-      const isOwner = agent && agent.userId === socket.userId;
+      const isOwner = agentOwnership && agentOwnership.userId === socket.userId;
       
       // CRITICAL FIX: Don't send buffered output to ANYONE
       // Buffered output contains carriage returns that don't work when sent all at once
@@ -2415,9 +2429,10 @@ io.on('connection', (socket: Socket) => {
       });
 
       try {
-        // Use unified PTY approach for chat message
-        console.log(`💬 [CHAT-MESSAGE-START] Starting PTY chat execution for agent ${data.agentId} with message: "${data.message}"`);
-        const manager = terminalManagerFactory.getManager('local', 'tmux', agent.mode);
+        // Use chat manager for chat messages (NOT tmux!)
+        console.log(`💬 [CHAT-MESSAGE-START] Starting chat execution for agent ${data.agentId} with message: "${data.message}"`);
+        const manager = terminalManagerFactory.getManager('local', 'none', 'chat');
+        console.log(`📌 [MANAGER-TYPE] Got manager: ${manager.constructor.name}`);
         const success = manager.sendInput(data.agentId, data.message);
 
         if (success) {
@@ -3248,6 +3263,73 @@ async function startServer(): Promise<void> {
       }
     });
 
+    // Set up streaming event handlers for ChatPtyManager
+    terminalManagerFactory.on('chat-stream-start', async (agentId: string) => {
+      console.log(`📡 [STREAM-START] Stream started for agent ${agentId}`);
+
+      try {
+        // Get agent info and emit to team
+        const agent = await prisma.agents.findUnique({
+          where: { id: agentId }
+        });
+
+        if (agent) {
+          console.log(`📡 [STREAM-START-EMIT] Emitting to team ${agent.teamId}`);
+          io.to(agent.teamId).emit('agent_chat_stream_start', {
+            agentId,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          console.error(`❌ [STREAM-START] No agent found for ${agentId}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error handling stream start for ${agentId}:`, error);
+      }
+    });
+
+    terminalManagerFactory.on('chat-stream-chunk', async (agentId: string, chunk: any) => {
+      console.log(`📡 [STREAM-CHUNK-HANDLER] Received chunk for agent ${agentId}:`, chunk);
+
+      try {
+        // Get agent info and emit chunk to team
+        const agent = await prisma.agents.findUnique({
+          where: { id: agentId }
+        });
+
+        if (agent) {
+          console.log(`📡 [STREAM-CHUNK-EMIT] Emitting chunk to team ${agent.teamId}:`, chunk.content?.substring(0, 50));
+          io.to(agent.teamId).emit('agent_chat_stream_chunk', {
+            agentId,
+            ...chunk
+          });
+        } else {
+          console.error(`❌ [STREAM-CHUNK] No agent found for ${agentId}`);
+        }
+      } catch (error) {
+        console.error(`❌ Error handling stream chunk for ${agentId}:`, error);
+      }
+    });
+
+    terminalManagerFactory.on('chat-stream-complete', async (agentId: string) => {
+      console.log(`📡 [STREAM-COMPLETE] Stream completed for agent ${agentId}`);
+
+      try {
+        // Get agent info and emit to team
+        const agent = await prisma.agents.findUnique({
+          where: { id: agentId }
+        });
+
+        if (agent) {
+          io.to(agent.teamId).emit('agent_chat_stream_complete', {
+            agentId,
+            timestamp: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error(`❌ Error handling stream complete for ${agentId}:`, error);
+      }
+    });
+
     terminalManagerFactory.on('chat-error', async (agentId: string, error: string) => {
       console.log(`❌ [GLOBAL-CHAT-ERROR] Received chat error for agent ${agentId}: ${error}`);
 
@@ -3270,6 +3352,27 @@ async function startServer(): Promise<void> {
         }
       } catch (handlingError) {
         console.error(`❌ [GLOBAL-CHAT-ERROR-HANDLING] Failed to handle chat error for agent ${agentId}:`, handlingError);
+      }
+    });
+
+    terminalManagerFactory.on('chat-tool-use', async (agentId: string, data: any) => {
+      console.log(`🔧 [TOOL-USE] Tool use event for agent ${agentId}:`, data.tool);
+
+      try {
+        // Get agent info and emit to team
+        const agent = await prisma.agents.findUnique({
+          where: { id: agentId }
+        });
+
+        if (agent) {
+          console.log(`🔧 [TOOL-USE] Emitting tool use to team ${agent.teamId}`);
+          io.to(agent.teamId).emit('agent_tool_use', {
+            agentId,
+            ...data
+          });
+        }
+      } catch (error) {
+        console.error(`❌ [TOOL-USE] Failed to emit tool use for agent ${agentId}:`, error);
       }
     });
 

@@ -130,9 +130,14 @@ async function executeAgentAsync(
         }
       } else {
         // Use unified terminal manager factory for both terminal and chat modes
-        const manager = terminalManagerFactory.getManager(terminalLocation, terminalIsolation, mode);
+        // CRITICAL: For chat mode, always use 'none' isolation
+        console.log(`🔍 [SPAWN-DEBUG] mode=${mode}, terminalIsolation=${terminalIsolation}, terminalLocation=${terminalLocation}`);
+        const actualIsolation = mode === 'chat' ? 'none' : terminalIsolation;
+        console.log(`🔍 [SPAWN-DEBUG] actualIsolation=${actualIsolation} (forced to 'none' for chat)`);
+        const manager = terminalManagerFactory.getManager(terminalLocation, actualIsolation, mode);
 
         console.log(`🔧 Creating terminalOptions with agentName: ${agentName} for ${mode} mode`);
+        console.log(`📌 [SPAWN-MANAGER] Got manager: ${manager.constructor.name} for mode=${mode}, isolation=${actualIsolation}`);
         const terminalOptions: any = {
           agentId,
           agentName,
@@ -140,7 +145,7 @@ async function executeAgentAsync(
           teamId: teamId!,
           task,
           location: terminalLocation,
-          isolation: terminalIsolation,
+          isolation: actualIsolation,  // USE actualIsolation, NOT terminalIsolation!
           mode: mode || 'terminal',
           sessionId: sessionId || undefined
         };
@@ -289,6 +294,15 @@ async function executeAgentAsync(
 router.post('/spawn', async (req: express.Request, res) => {
   try {
     const { task, agentType, terminalLocation, terminalIsolation, mode } = spawnAgentSchema.parse(req.body);
+
+    console.log(`🚀 [SPAWN-REQUEST] Received:`, {
+      task: task.substring(0, 50),
+      agentType,
+      terminalLocation,
+      terminalIsolation,
+      mode,
+      rawMode: req.body.mode
+    });
 
     if (!req.user?.userId) {
       return res.status(401).json({ error: 'User ID not found' });

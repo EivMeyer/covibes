@@ -276,18 +276,17 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     setShowSpawnAgent(true);
   };
 
-  const handleAgentSpawned = async (agentId: string) => {
-    // Find the agent to check its mode
-    const agent = agents.find(a => a.id === agentId);
+  const handleAgentSpawned = async (agent: any) => {
+    // Now we have the full agent object with mode directly
 
     // Only create a terminal tile if the agent is in terminal mode
     // Chat mode agents don't need a terminal tile
     if (agent?.mode === 'terminal' || !agent?.mode) {
       // Default to terminal mode for backwards compatibility
-      handleAddTile('terminal', agentId);
+      handleAddTile('terminal', agent.id);
     } else if (agent?.mode === 'chat') {
       // Create agent chat tile for chat mode agents
-      handleAddTile('agentchat', agentId);
+      handleAddTile('agentchat', agent.id);
     }
   };
 

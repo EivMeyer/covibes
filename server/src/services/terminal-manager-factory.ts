@@ -37,12 +37,20 @@ export class TerminalManagerFactory extends EventEmitter {
    * Get or create appropriate terminal manager for given configuration
    */
   getManager(location: 'local' | 'remote', isolation: 'none' | 'docker' | 'tmux', mode?: 'terminal' | 'chat'): TerminalManager {
+    console.log(`🏭 [FACTORY] getManager called with location=${location}, isolation=${isolation}, mode=${mode}`);
+
     // Use chat manager for chat mode regardless of other settings
     if (mode === 'chat') {
       const key = 'chat-pty';
 
       if (this.managers.has(key)) {
-        return this.managers.get(key)!;
+        console.log(`🏭 [FACTORY] Reusing existing ChatPtyManager`);
+        const existingManager = this.managers.get(key)!;
+
+        // Ensure streaming events are forwarded (in case they weren't before)
+        this.ensureStreamingEventsForwarded(existingManager);
+
+        return existingManager;
       }
 
       console.log(`🏭 Creating chat PTY manager: ${key}`);
@@ -205,6 +213,65 @@ export class TerminalManagerFactory extends EventEmitter {
 
       emitter.on('chat-error', (agentId: string, error: string) => {
         this.emit('chat-error', agentId, error);
+      });
+
+      emitter.on('chat-tool-use', (agentId: string, data: any) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-tool-use for ${agentId}:`, data.tool);
+        this.emit('chat-tool-use', agentId, data);
+      });
+
+      // Streaming events for chat
+      emitter.on('chat-stream-start', (agentId: string) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-stream-start for ${agentId}`);
+        this.emit('chat-stream-start', agentId);
+      });
+
+      emitter.on('chat-stream-chunk', (agentId: string, chunk: any) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-stream-chunk for ${agentId}:`, chunk.content?.substring(0, 50));
+        this.emit('chat-stream-chunk', agentId, chunk);
+      });
+
+      emitter.on('chat-stream-complete', (agentId: string) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-stream-complete for ${agentId}`);
+        this.emit('chat-stream-complete', agentId);
+      });
+    }
+  }
+
+  /**
+   * Ensure streaming events are forwarded for existing managers
+   */
+  private ensureStreamingEventsForwarded(manager: TerminalManager) {
+    const emitter = manager as any;
+
+    // Check if streaming events are already being forwarded
+    if (emitter._events && emitter._events['chat-stream-start']) {
+      console.log(`🔄 [FACTORY] Streaming events already forwarded`);
+      return;
+    }
+
+    console.log(`🔄 [FACTORY] Adding streaming event forwarding to existing manager`);
+
+    if (emitter.on && typeof emitter.on === 'function') {
+      // Add streaming event forwarding
+      emitter.on('chat-stream-start', (agentId: string) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-stream-start for ${agentId}`);
+        this.emit('chat-stream-start', agentId);
+      });
+
+      emitter.on('chat-stream-chunk', (agentId: string, chunk: any) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-stream-chunk for ${agentId}:`, chunk.content?.substring(0, 50));
+        this.emit('chat-stream-chunk', agentId, chunk);
+      });
+
+      emitter.on('chat-stream-complete', (agentId: string) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-stream-complete for ${agentId}`);
+        this.emit('chat-stream-complete', agentId);
+      });
+
+      emitter.on('chat-tool-use', (agentId: string, data: any) => {
+        console.log(`🔄 [FACTORY] Forwarding chat-tool-use for ${agentId}:`, data.tool);
+        this.emit('chat-tool-use', agentId, data);
       });
     }
   }

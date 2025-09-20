@@ -109,12 +109,6 @@ router.put('/config', authenticateToken, async (req, res) => {
     }
 
     const { tiles, layouts, sidebarWidth } = validation.data;
-    console.log('💾💾💾 SERVER RECEIVED WORKSPACE DATA:', JSON.stringify(validation.data, null, 2));
-    console.log(`💾 Updating workspace for user ${userId}:`, {
-      tilesCount: tiles ? Array.isArray(tiles) ? tiles.length : 0 : 'unchanged',
-      hasLayouts: layouts ? Object.keys(layouts).length > 0 : 'unchanged',
-      sidebarWidth: sidebarWidth || 'unchanged'
-    });
 
     // Get user's team ID first
     const user = await prisma.users.findUnique({
@@ -139,9 +133,8 @@ router.put('/config', authenticateToken, async (req, res) => {
       updateData.sidebarWidth = sidebarWidth;
       console.log('🔍 Setting sidebarWidth to:', sidebarWidth);
     }
-    
-    console.log('📦 Full updateData being sent to Prisma:', JSON.stringify(updateData, null, 2));
-    console.log('🔑 Updating team with ID:', user.teamId);
+
+    console.log('🔑 Updating workspace view for team with ID:', user.teamId);
 
     const updatedTeam = await prisma.teams.update({
       where: { id: user.teamId },
@@ -153,13 +146,6 @@ router.put('/config', authenticateToken, async (req, res) => {
         sidebarWidth: true
       }
     });
-
-    console.log('🔍 Response from Prisma after update:', {
-      id: updatedTeam.id,
-      workspaceTiles: JSON.stringify(updatedTeam.workspaceTiles),
-      workspaceLayouts: JSON.stringify(updatedTeam.workspaceLayouts),
-      sidebarWidth: updatedTeam.sidebarWidth
-    });
     
     // Verify the data was actually saved
     const verifyTeam = await prisma.teams.findUnique({
@@ -169,12 +155,6 @@ router.put('/config', authenticateToken, async (req, res) => {
         workspaceLayouts: true,
         sidebarWidth: true
       }
-    });
-    
-    console.log('✅ Verification query - data in database:', {
-      workspaceTiles: JSON.stringify(verifyTeam?.workspaceTiles),
-      workspaceLayouts: JSON.stringify(verifyTeam?.workspaceLayouts),
-      sidebarWidth: verifyTeam?.sidebarWidth
     });
 
     console.log(`✅ Workspace updated successfully for team ${updatedTeam.id}`);
