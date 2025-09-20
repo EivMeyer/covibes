@@ -29,6 +29,7 @@ interface AgentChatTileProps {
   onAgentSelect?: ((agentId: string) => void) | undefined;
   onDisconnect?: (() => void) | undefined;
   className?: string | undefined;
+  setLastActiveAgent?: ((agentId: string, agentName: string) => void) | undefined;
 }
 
 export const AgentChatTile: React.FC<AgentChatTileProps> = ({
@@ -39,7 +40,8 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   socket,
   onAgentSelect,
   onDisconnect,
-  className = ''
+  className = '',
+  setLastActiveAgent
 }) => {
   const currentUser = user;
   const currentAgentId = agentId || agent?.id;
@@ -441,6 +443,11 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         type: 'input',
         data: input.trim() + '\r'
       });
+    }
+
+    // Track this agent as the last active target for inspector auto-injection
+    if (setLastActiveAgent && agent) {
+      setLastActiveAgent(agent.id, agent.agentName || agent.userName || 'Agent');
     }
 
     setTimeout(() => {

@@ -15,18 +15,22 @@ interface TerminalTileProps {
   onDisconnect?: (() => void) | undefined; // When user disconnects agent
   onAgentDrop?: ((agentId: string) => void) | undefined; // When agent is dropped on tile
   className?: string | undefined;
+  setLastActiveAgent?: ((agentId: string, agentName: string) => void) | undefined;
+  setLastActiveTerminal?: ((terminalId: string, terminalName: string) => void) | undefined;
 }
 
-const TerminalTileComponent: React.FC<TerminalTileProps> = ({ 
-  agent, 
+const TerminalTileComponent: React.FC<TerminalTileProps> = ({
+  agent,
   agentId,
   agents = [],
-  user, 
+  user,
   socket,
   onAgentSelect,
   onDisconnect,
   onAgentDrop,
-  className = ''
+  className = '',
+  setLastActiveAgent,
+  setLastActiveTerminal
 }) => {
   const { user: authUser } = useAuth();
   const currentUser = user || authUser;
@@ -357,6 +361,12 @@ const TerminalTileComponent: React.FC<TerminalTileProps> = ({
             } : {
               containerId: '',
               status: agent?.status || 'running'
+            }}
+            onInput={() => {
+              // Track this agent as the last active target for inspector auto-injection
+              if (setLastActiveAgent && agent) {
+                setLastActiveAgent(agent.id, agent.agentName || agent.userName || 'Agent');
+              }
             }}
           />
         ) : (

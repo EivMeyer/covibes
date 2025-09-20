@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview Inspector Demo</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0f1c;
+            color: white;
+        }
+
+        .preview-container {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .button {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .button:hover {
+            background: #2563EB;
+            transform: translateY(-2px);
+        }
+
+        .card {
+            background: #1F2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111827;
+            padding: 16px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3B82F6;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: #9CA3AF;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: white;
+            background: #374151;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .demo-info {
+            background: #1E3A8A;
+            border: 1px solid #3B82F6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-info">
+        <h2>🔍 Preview Inspector Demo</h2>
+        <p>This page demonstrates the element inspector functionality. When integrated into ColabVibe's preview tile:</p>
+        <ul>
+            <li>Click the 🔍 inspector button in the preview toolbar</li>
+            <li>Hover over elements to see them highlighted</li>
+            <li>Click an element to select it and see context options</li>
+            <li>Choose from multiple copy formats for LLM consumption</li>
+        </ul>
+    </div>
+
+    <nav class="navigation">
+        <div class="logo">ColabVibe</div>
+        <div class="nav-links">
+            <a href="#" class="nav-link">Dashboard</a>
+            <a href="#" class="nav-link">Projects</a>
+            <a href="#" class="nav-link">Teams</a>
+            <a href="#" class="nav-link">Settings</a>
+        </div>
+    </nav>
+
+    <div class="header">
+        <h1>Welcome to Your Collaborative Workspace</h1>
+        <p>Build amazing things together with AI agents</p>
+        <button class="button">Get Started</button>
+        <button class="button">Learn More</button>
+    </div>
+
+    <div class="content-grid">
+        <div class="card">
+            <h3>AI Agent Management</h3>
+            <p>Spawn intelligent agents that can help with coding, debugging, and project management.</p>
+            <button class="button">Spawn Agent</button>
+        </div>
+
+        <div class="card">
+            <h3>Real-time Collaboration</h3>
+            <p>Work together with your team in real-time with live chat and presence indicators.</p>
+            <button class="button">Join Team</button>
+        </div>
+
+        <div class="card">
+            <h3>Live Preview</h3>
+            <p>See your changes instantly with hot reload and live preview functionality.</p>
+            <button class="button">View Preview</button>
+        </div>
+    </div>
+
+    <div class="preview-container">
+        <h3>Preview Container Example</h3>
+        <p>This is an example of content that would be inside a preview iframe. The inspector can:</p>
+        <ul>
+            <li><strong>Extract HTML structure</strong> - Get the complete element markup</li>
+            <li><strong>Capture computed styles</strong> - All CSS properties as applied by the browser</li>
+            <li><strong>Generate CSS selectors</strong> - Precise paths to target elements</li>
+            <li><strong>Create natural descriptions</strong> - Human-readable element descriptions</li>
+            <li><strong>Format for LLMs</strong> - Optimized context for AI agent consumption</li>
+        </ul>
+
+        <div style="display: flex; gap: 10px; margin: 20px 0;">
+            <button class="button" style="background: #059669;">Success Action</button>
+            <button class="button" style="background: #DC2626;">Delete Item</button>
+            <button class="button" style="background: #7C2D12;">Warning</button>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 40px; color: #6B7280; border-top: 1px solid #374151; margin-top: 40px;">
+        <p>ColabVibe - Collaborative Development Platform</p>
+        <p>Built with React, TypeScript, and AI-powered agents</p>
+    </footer>
+
+    <script>
+        // Demo script to show what the inspector would capture
+        document.addEventListener('click', function(e) {
+            if (e.ctrlKey || e.metaKey) { // Ctrl+Click or Cmd+Click to demo
+                e.preventDefault();
+
+                const element = e.target;
+                const computedStyles = window.getComputedStyle(element);
+
+                // Get CSS selector path
+                function getSelector(el) {
+                    if (el.id) return '#' + el.id;
+
+                    const path = [];
+                    while (el && el.nodeType === Node.ELEMENT_NODE) {
+                        let selector = el.nodeName.toLowerCase();
+                        if (el.className) {
+                            selector += '.' + Array.from(el.classList).join('.');
+                        }
+                        path.unshift(selector);
+                        el = el.parentNode;
+                    }
+                    return path.join(' > ');
+                }
+
+                // Get important styles
+                function getImportantStyles(styles) {
+                    const important = {};
+                    const keys = [
+                        'display', 'position', 'width', 'height',
+                        'padding', 'margin', 'color', 'backgroundColor',
+                        'fontSize', 'fontWeight', 'border', 'borderRadius'
+                    ];
+
+                    keys.forEach(key => {
+                        const value = styles[key];
+                        if (value && value !== 'none' && value !== 'auto' && value !== '0px') {
+                            important[key] = value;
+                        }
+                    });
+
+                    return important;
+                }
+
+                // Format for LLM
+                const rect = element.getBoundingClientRect();
+                const styles = getImportantStyles(computedStyles);
+                const styleText = Object.entries(styles)
+                    .map(([key, value]) => `  - ${key}: ${value}`)
+                    .join('\n');
+
+                const context = `[ELEMENT CONTEXT]
+Type: ${element.tagName.toLowerCase()}${element.className ? ` (class="${element.className}")` : ''}${element.id ? ` (id="${element.id}")` : ''}
+Selector: ${getSelector(element)}
+Position: ${Math.round(rect.left)}px from left, ${Math.round(rect.top)}px from top
+Size: ${Math.round(rect.width)}px × ${Math.round(rect.height)}px
+${element.textContent ? `Text: "${element.textContent.substring(0, 100)}"` : ''}
+${styleText ? `Key Styles:\n${styleText}` : ''}
+HTML: ${element.outerHTML.substring(0, 200)}
+[END CONTEXT]`;
+
+                // Copy to clipboard
+                navigator.clipboard.writeText(context).then(() => {
+                    // Visual feedback
+                    element.style.outline = '3px solid #10B981';
+                    element.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+
+                    setTimeout(() => {
+                        element.style.outline = '';
+                        element.style.backgroundColor = '';
+                    }, 1000);
+
+                    alert('Element context copied to clipboard!\n\nTry pasting it into an agent chat.');
+                });
+            }
+        });
+
+        // Instructions
+        const instructions = document.createElement('div');
+        instructions.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1F2937;
+            border: 2px solid #3B82F6;
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 300px;
+            z-index: 1000;
+            font-size: 14px;
+        `;
+        instructions.innerHTML = `
+            <strong>🔍 Demo Instructions:</strong><br>
+            <em>Ctrl+Click</em> (or <em>Cmd+Click</em> on Mac) any element to see what the inspector would capture and copy to clipboard!
+        `;
+        document.body.appendChild(instructions);
+
+        // Hide instructions after 5 seconds
+        setTimeout(() => {
+            instructions.style.opacity = '0.7';
+        }, 5000);
+    </script>
+</body>
+</html>

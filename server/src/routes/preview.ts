@@ -36,6 +36,231 @@ const createPreviewSchema = z.object({
   branch: z.enum(['main', 'staging', 'workspace']).default('main')
 });
 
+const inspectorToggleSchema = z.object({
+  enabled: z.boolean()
+});
+
+// Inspector state storage (TODO: Move to Redis for persistence)
+const inspectorStates = new Map<string, boolean>(); // teamId -> enabled
+
+/**
+ * HTML injection function for element inspector
+ */
+function injectInspectorScript(html: string): string {
+  const inspectorScript = `
+<script id="colabvibe-inspector">
+(function() {
+  let hoveredElement = null;
+  const originalStyles = new WeakMap();
+
+  // Helper to get CSS selector path
+  function getSelector(el) {
+    if (el.id) return '#' + el.id;
+
+    const path = [];
+    while (el && el.nodeType === Node.ELEMENT_NODE) {
+      let selector = el.nodeName.toLowerCase();
+      if (el.className) {
+        selector += '.' + Array.from(el.classList).join('.');
+      }
+      path.unshift(selector);
+      el = el.parentNode;
+    }
+    return path.join(' > ');
+  }
+
+  // Helper to get important computed styles
+  function getImportantStyles(element) {
+    const styles = window.getComputedStyle(element);
+    const important = {};
+
+    // Key styles to capture
+    const keys = [
+      'display', 'position', 'width', 'height',
+      'padding', 'margin', 'color', 'backgroundColor',
+      'fontSize', 'fontWeight', 'border', 'borderRadius',
+      'boxShadow', 'opacity', 'zIndex', 'overflow'
+    ];
+
+    keys.forEach(key => {
+      const value = styles[key];
+      if (value && value !== 'none' && value !== 'auto' && value !== '0px') {
+        important[key] = value;
+      }
+    });
+
+    return important;
+  }
+
+  // Listen for enable/disable messages from parent
+  window.addEventListener('message', function(event) {
+    if (event.data.type === 'enable-inspector') {
+      window.__inspectorActive = event.data.active;
+      console.log('ColabVibe Inspector:', window.__inspectorActive ? 'ENABLED' : 'DISABLED');
+    }
+  });
+
+  // Mouse over handler
+  function handleMouseOver(e) {
+    if (!window.__inspectorActive) return;
+
+    // Don't highlight if we're over the same element
+    if (e.target === hoveredElement) return;
+
+    // Restore previous element
+    if (hoveredElement && originalStyles.has(hoveredElement)) {
+      hoveredElement.style.outline = originalStyles.get(hoveredElement).outline || '';
+      hoveredElement.style.cursor = originalStyles.get(hoveredElement).cursor || '';
+    }
+
+    // Store original styles
+    originalStyles.set(e.target, {
+      outline: e.target.style.outline,
+      cursor: e.target.style.cursor
+    });
+
+    // Apply highlight
+    e.target.style.outline = '2px solid #3B82F6';
+    e.target.style.cursor = 'crosshair';
+    hoveredElement = e.target;
+  }
+
+  // Mouse out handler
+  function handleMouseOut(e) {
+    if (!window.__inspectorActive) return;
+    if (e.target === hoveredElement && originalStyles.has(e.target)) {
+      e.target.style.outline = originalStyles.get(e.target).outline || '';
+      e.target.style.cursor = originalStyles.get(e.target).cursor || '';
+      hoveredElement = null;
+    }
+  }
+
+  // Click handler
+  function handleClick(e) {
+    if (!window.__inspectorActive) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Send element data to parent
+    window.parent.postMessage({
+      type: 'inspector-element-selected',
+      data: {
+        html: e.target.outerHTML.substring(0, 500), // Limit size
+        selector: getSelector(e.target),
+        computedStyles: getImportantStyles(e.target),
+        rect: e.target.getBoundingClientRect(),
+        text: e.target.textContent?.substring(0, 200) || '',
+        tagName: e.target.tagName.toLowerCase(),
+        className: e.target.className || '',
+        id: e.target.id || ''
+      },
+      position: { x: e.pageX, y: e.pageY }
+    }, '*');
+  }
+
+  // Set up event listeners
+  document.addEventListener('mouseover', handleMouseOver);
+  document.addEventListener('mouseout', handleMouseOut);
+  document.addEventListener('click', handleClick);
+
+  // Mark as ready
+  window.__inspectorReady = true;
+  console.log('ColabVibe Inspector injected server-side and ready');
+})();
+</script>`;
+
+  // Inject before </head> or at end of <head>
+  if (html.includes('</head>')) {
+    return html.replace('</head>', inspectorScript + '\n</head>');
+  } else if (html.includes('<head>')) {
+    return html.replace('<head>', '<head>\n' + inspectorScript);
+  } else if (html.includes('<body>')) {
+    // Fallback: inject at start of body
+    return html.replace('<body>', '<body>\n' + inspectorScript);
+  } else {
+    // Last resort: prepend to entire document
+    return inspectorScript + '\n' + html;
+  }
+}
+
+/**
+ * POST /api/preview/inspector/:teamId/toggle
+ * Toggle element inspector for a team's preview
+ */
+router.post('/inspector/:teamId/toggle', authenticateToken, createAuthHandler(async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      return res.status(400).json({ error: 'Team ID is required' });
+    }
+
+    const validation = inspectorToggleSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        error: 'Invalid request body',
+        details: validation.error.errors
+      });
+    }
+
+    const { enabled } = validation.data;
+
+    // Verify user has access to this team
+    const userTeamId = req.user?.teamId;
+    if (userTeamId !== teamId) {
+      return res.status(403).json({ error: 'Access denied to this team' });
+    }
+
+    // Store inspector state
+    inspectorStates.set(teamId, enabled);
+
+    console.log(`🔍 [INSPECTOR] ${enabled ? 'Enabled' : 'Disabled'} inspector for team ${teamId}`);
+
+    res.json({
+      success: true,
+      enabled,
+      teamId
+    });
+
+  } catch (error) {
+    console.error('Inspector toggle error:', error);
+    res.status(500).json({ error: 'Failed to toggle inspector' });
+  }
+}));
+
+/**
+ * GET /api/preview/inspector/:teamId/status
+ * Get current inspector status for a team
+ */
+router.get('/inspector/:teamId/status', authenticateToken, createAuthHandler(async (req, res) => {
+  try {
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      return res.status(400).json({ error: 'Team ID is required' });
+    }
+
+    // Verify user has access to this team
+    const userTeamId = req.user?.teamId;
+    if (userTeamId !== teamId) {
+      return res.status(403).json({ error: 'Access denied to this team' });
+    }
+
+    const enabled = inspectorStates.get(teamId) || false;
+
+    res.json({
+      enabled,
+      teamId
+    });
+
+  } catch (error) {
+    console.error('Inspector status error:', error);
+    res.status(500).json({ error: 'Failed to get inspector status' });
+  }
+}));
+
 /**
  * ALL /api/preview/proxy/:teamId/:branch/*
  * Proxy requests to the preview container with WebSocket support for HMR
@@ -108,13 +333,21 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
       // 🚀 HTML PATH REWRITING FIX - Fix absolute paths in Vite HTML responses
       const isHTML = responseHeaders['content-type']?.includes('text/html');
       let responseBody = await response.text();
-      
+
       console.log(`🔍 [HTML-DEBUG] isHTML: ${isHTML}, proxyPath: "${proxyPath}", content-type: ${responseHeaders['content-type']}`);
-      
+
+      // 🔍 INSPECTOR INJECTION - Inject inspector script if enabled for this team
+      const inspectorEnabled = inspectorStates.get(requestTeamId) || false;
+      if (isHTML && inspectorEnabled) {
+        console.log(`🔍 [INSPECTOR] Injecting inspector script for team ${requestTeamId}`);
+        responseBody = injectInspectorScript(responseBody);
+        console.log(`✅ [INSPECTOR] Inspector script injected successfully`);
+      }
+
       if (isHTML && proxyPath === '/') {
         console.log(`🔧 [HTML-REWRITE] Fixing absolute paths in HTML response`);
         const baseProxyPath = `/api/preview/proxy/${requestTeamId}/main`;
-        
+
         // Fix common Vite development absolute paths
         responseBody = responseBody
           .replace(/src="\/(@vite\/[^"]+)"/g, `src="${baseProxyPath}/$1"`)
@@ -123,7 +356,7 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
           .replace(/src="\/node_modules\/([^"]+)"/g, `src="${baseProxyPath}/node_modules/$1"`)
           .replace(/href="\/(@vite\/[^"]+)"/g, `href="${baseProxyPath}/$1"`)
           .replace(/href="\/src\/([^"]+)"/g, `href="${baseProxyPath}/src/$1"`);
-        
+
         console.log(`✅ [HTML-REWRITE] Fixed absolute paths for proxy: ${baseProxyPath}`);
       } else if (isHTML) {
         console.log(`⏭️ [HTML-SKIP] Not root path, skipping HTML rewrite for: "${proxyPath}"`);

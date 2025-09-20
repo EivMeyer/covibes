@@ -11,6 +11,7 @@ interface SimpleTerminalProps {
   onAgentChange?: (newAgentId: string) => void // Callback when agent is switched
   isReadOnly?: boolean // When true, disable input and show read-only mode
   userName?: string // Name of agent owner (for read-only mode)
+  onInput?: () => void // Callback when user sends input (for last active tracking)
   containerInfo?: {
     containerId: string;
     status: 'starting' | 'running' | 'stopped' | 'error';
@@ -27,6 +28,7 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
   onAgentChange,
   isReadOnly = false,
   userName,
+  onInput,
   containerInfo,
 }) => {
   const terminalRef = useRef<HTMLDivElement>(null)
@@ -209,6 +211,10 @@ export const SimpleTerminal: React.FC<SimpleTerminalProps> = ({
               agentId,
               data
             })
+            // Track this as the last active agent for inspector auto-injection
+            if (onInput) {
+              onInput()
+            }
           }
         })
 

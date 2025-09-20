@@ -49,6 +49,17 @@ interface DashboardProps {
   previewDeploymentMeta?: any;
   refreshPreview: () => void;
   restartPreview?: (() => Promise<void>) | undefined;
+  // Last active target tracking
+  lastActiveTarget?: {
+    type: 'agent' | 'terminal' | 'chat';
+    id: string;
+    name: string;
+    timestamp: number;
+  } | null;
+  setLastActiveAgent?: (agentId: string, agentName: string) => void;
+  setLastActiveTerminal?: (terminalId: string, terminalName: string) => void;
+  setLastActiveChat?: () => void;
+  sendToLastActive?: (message: string) => boolean;
 }
 
 // Polyfill for requestIdleCallback
@@ -648,6 +659,8 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
               return updated;
             });
           }}
+          setLastActiveAgent={props.setLastActiveAgent}
+          setLastActiveTerminal={props.setLastActiveTerminal}
         />
       </div>
     );
@@ -659,8 +672,9 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       chatMessages={chatMessages}
       sendChatMessage={sendChatMessage}
       isSocketConnected={isSocketConnected}
+      setLastActiveChat={props.setLastActiveChat}
     />
-  ), [user, chatMessages, sendChatMessage, isSocketConnected]);
+  ), [user, chatMessages, sendChatMessage, isSocketConnected, props.setLastActiveChat]);
 
   const [isRestarting, setIsRestarting] = useState(false);
 
@@ -682,8 +696,11 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       isLoading={previewStatus === 'loading'}
       isRestarting={isRestarting}
       onLoad={() => setPreviewStatus?.('ready')}
+      teamId={props.team?.id}
+      lastActiveTarget={props.lastActiveTarget}
+      sendToLastActive={props.sendToLastActive}
     />
-  ), [previewUrl, refreshPreview, props.restartPreview, previewStatus, setPreviewStatus, isRestarting]);
+  ), [previewUrl, refreshPreview, props.restartPreview, previewStatus, setPreviewStatus, isRestarting, props.team?.id, props.lastActiveTarget, props.sendToLastActive]);
 
   const renderIDETile = useCallback(() => (
     <IDETile
@@ -745,6 +762,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
             setGridTiles(updatedTiles);
             saveWorkspace();
           }}
+          setLastActiveAgent={props.setLastActiveAgent}
         />
       </div>
     );

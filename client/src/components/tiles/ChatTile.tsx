@@ -22,6 +22,7 @@ interface ChatTileProps {
   chatMessages: Message[];
   sendChatMessage: (content: string) => void;
   isSocketConnected: () => boolean;
+  setLastActiveChat?: (() => void) | undefined;
 }
 
 export const ChatTile: React.FC<ChatTileProps> = ({
@@ -29,6 +30,7 @@ export const ChatTile: React.FC<ChatTileProps> = ({
   chatMessages = [],
   sendChatMessage,
   isSocketConnected,
+  setLastActiveChat,
 }) => {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -63,6 +65,10 @@ export const ChatTile: React.FC<ChatTileProps> = ({
     }
 
     sendChatMessage(newMessage.trim());
+    // Track chat as the last active target for inspector auto-injection
+    if (setLastActiveChat) {
+      setLastActiveChat();
+    }
     setNewMessage('');
     setHasUserInteracted(true); // User has now interacted
     inputRef.current?.focus();

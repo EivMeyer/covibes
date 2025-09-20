@@ -39,6 +39,14 @@ function AppContent() {
   const [previewUrl, setPreviewUrl] = useState<string>();
   const [previewDeploymentMeta, setPreviewDeploymentMeta] = useState<any>(null);
 
+  // Last active target tracking for inspector auto-injection
+  const [lastActiveTarget, setLastActiveTarget] = useState<{
+    type: 'agent' | 'terminal' | 'chat';
+    id: string;
+    name: string;
+    timestamp: number;
+  } | null>(null);
+
   // Check if already logged in on mount
   useEffect(() => {
     
@@ -584,6 +592,136 @@ function AppContent() {
     }
   };
 
+  // Last active target tracking functions
+  const setLastActiveAgent = (agentId: string, agentName: string) => {
+    setLastActiveTarget({
+      type: 'agent',
+      id: agentId,
+      name: agentName,
+      timestamp: Date.now()
+    });
+  };
+
+  const setLastActiveTerminal = (terminalId: string, terminalName: string) => {
+    setLastActiveTarget({
+      type: 'terminal',
+      id: terminalId,
+      name: terminalName,
+      timestamp: Date.now()
+    });
+  };
+
+  const setLastActiveChat = () => {
+    setLastActiveTarget({
+      type: 'chat',
+      id: 'team-chat',
+      name: 'Team Chat',
+      timestamp: Date.now()
+    });
+  };
+
+  const sendToLastActive = (message: string): boolean => {
+    if (!lastActiveTarget) return false;
+
+    try {
+      switch (lastActiveTarget.type) {
+        case 'agent':
+          if (socketRef.current) {
+            // STEP 1: Send the message text first
+            socketRef.current.emit('terminal_input', {
+              type: 'input',
+              agentId: lastActiveTarget.id,
+              data: message  // Send message text WITHOUT enter
+            });
+
+            // STEP 2: Wait for message to be pasted, then send ENTER
+            setTimeout(() => {
+              // Get the actual terminal and simulate ENTER key press
+              import('./services/TerminalManager').then(({ default: TerminalManager }) => {
+                const terminal = TerminalManager.getTerminal(lastActiveTarget.id);
+                if (terminal && terminal.element) {
+                  // Focus the terminal
+                  terminal.focus();
+
+                  // Find the textarea
+                  const terminalElement = terminal.element;
+                  const textarea = terminalElement.querySelector('textarea');
+
+                  if (textarea) {
+                    // Focus the textarea
+                    textarea.focus();
+
+                    // Simulate ENTER key press
+                    const enterKeydown = new KeyboardEvent('keydown', {
+                      key: 'Enter',
+                      code: 'Enter',
+                      keyCode: 13,
+                      which: 13,
+                      bubbles: true,
+                      cancelable: true
+                    });
+
+                    const enterKeypress = new KeyboardEvent('keypress', {
+                      key: 'Enter',
+                      code: 'Enter',
+                      keyCode: 13,
+                      which: 13,
+                      bubbles: true,
+                      cancelable: true
+                    });
+
+                    const enterKeyup = new KeyboardEvent('keyup', {
+                      key: 'Enter',
+                      code: 'Enter',
+                      keyCode: 13,
+                      which: 13,
+                      bubbles: true,
+                      cancelable: true
+                    });
+
+                    // Dispatch all three enter events
+                    textarea.dispatchEvent(enterKeydown);
+                    textarea.dispatchEvent(enterKeypress);
+                    textarea.dispatchEvent(enterKeyup);
+
+                  } else {
+                    // Fallback: send ENTER via socket
+                    socketRef.current.emit('terminal_input', {
+                      type: 'input',
+                      agentId: lastActiveTarget.id,
+                      data: '\r'
+                    });
+                  }
+                } else {
+                  // Fallback: send ENTER via socket
+                  socketRef.current.emit('terminal_input', {
+                    type: 'input',
+                    agentId: lastActiveTarget.id,
+                    data: '\r'
+                  });
+                }
+              });
+            }, 500); // Wait 500ms for message to be pasted first
+
+            return true;
+          }
+          return false;
+        case 'chat':
+          sendChatMessage(message);
+          return true;
+        case 'terminal':
+          // TODO: Implement terminal message sending
+          console.warn('Terminal message sending not yet implemented');
+          return false;
+        default:
+          return false;
+      }
+    } catch (error) {
+      console.error('Failed to send to last active target:', error);
+      return false;
+    }
+  };
+
   // Create context-like object for Dashboard
   const appState = {
     // Auth state
@@ -636,6 +774,13 @@ function AppContent() {
     setChatMessages: setMessages,
     setAgentOutputs: () => {},
     setOnlineUsers: () => {},
+
+    // Last active target tracking
+    lastActiveTarget,
+    setLastActiveAgent,
+    setLastActiveTerminal,
+    setLastActiveChat,
+    sendToLastActive,
   };
 
   // Check for demo routes FIRST - before any auth/loading logic

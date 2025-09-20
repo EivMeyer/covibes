@@ -1,4 +1,12 @@
 import React, { useRef, useState } from 'react';
+import { PreviewInspector } from '../features/preview/PreviewInspector';
+
+interface LastActiveTarget {
+  type: 'agent' | 'terminal' | 'chat';
+  id: string;
+  name: string;
+  timestamp: number;
+}
 
 interface PreviewTileProps {
   url?: string | undefined; // Explicit undefined for exactOptionalPropertyTypes
@@ -8,6 +16,9 @@ interface PreviewTileProps {
   isLoading?: boolean | undefined;
   isRestarting?: boolean | undefined;
   onLoad?: (() => void) | undefined;
+  teamId?: string | undefined; // Team ID for inspector API calls
+  lastActiveTarget?: LastActiveTarget | null;
+  sendToLastActive?: (message: string) => boolean;
 }
 
 export const PreviewTile: React.FC<PreviewTileProps> = ({
@@ -18,8 +29,12 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
   isLoading = false,
   isRestarting = false,
   onLoad,
+  teamId,
+  lastActiveTarget,
+  sendToLastActive,
 }) => {
   const [previewError, setPreviewError] = useState(false);
+  const [inspectorActive, setInspectorActive] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleRefresh = () => {
@@ -84,7 +99,25 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
               </svg>
             </button>
           )}
-          
+
+          {/* Inspector Button */}
+          {url && (
+            <button
+              onClick={() => setInspectorActive(!inspectorActive)}
+              className={`p-1 transition-colors ${
+                inspectorActive
+                  ? 'text-blue-400 hover:text-blue-300'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title={inspectorActive ? "Deactivate Element Inspector" : "Activate Element Inspector"}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          )}
+
           {/* Open IDE Button */}
           {onOpenIDE && (
             <button
@@ -209,6 +242,18 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
             title="Live Preview"
             // Remove sandbox for local development to allow full functionality
             // sandbox="allow-scripts allow-forms allow-modals allow-same-origin"
+          />
+        )}
+
+        {/* Element Inspector Overlay */}
+        {teamId && (
+          <PreviewInspector
+            iframeRef={iframeRef}
+            isActive={inspectorActive}
+            onDeactivate={() => setInspectorActive(false)}
+            teamId={teamId}
+            lastActiveTarget={lastActiveTarget}
+            sendToLastActive={sendToLastActive}
           />
         )}
 

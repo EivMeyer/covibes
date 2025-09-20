@@ -5,6 +5,13 @@ import { useAgents } from '@/hooks/useAgents';
 import type { User, Team, Agent, ChatMessage, AgentOutput, AgentDetails, SpawnAgentRequest } from '@/types';
 import type { SocketUser, SocketChatMessage, SocketAgentOutput, SocketAgentEvent } from '@/services/socket';
 
+interface LastActiveTarget {
+  type: 'agent' | 'terminal' | 'chat';
+  id: string;
+  name: string;
+  timestamp: number;
+}
+
 interface AppContextType {
   // Auth state
   user: User | null;
@@ -29,12 +36,19 @@ interface AppContextType {
   sendChatMessage: (content: string) => void;
   sendAgentInput: (agentId: string, input: string) => void;  // Fixed method name
   isSocketConnected: () => boolean;
-  
+
   // Real-time state (managed by socket listeners)
   chatMessages: ChatMessage[];
   agentOutputs: AgentOutput[];
   onlineUsers: User[];
-  
+
+  // Last active tracking for inspector auto-injection
+  lastActiveTarget: LastActiveTarget | null;
+  setLastActiveAgent: (agentId: string, agentName: string) => void;
+  setLastActiveTerminal: (terminalId: string, terminalName: string) => void;
+  setLastActiveChat: () => void;
+  sendToLastActive: (message: string) => boolean; // Returns true if successful
+
   // State setters for socket events
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   setAgentOutputs: React.Dispatch<React.SetStateAction<AgentOutput[]>>;
@@ -50,6 +64,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [chatMessages, setChatMessages] = React.useState<ChatMessage[]>([]);
   const [agentOutputs, setAgentOutputs] = React.useState<AgentOutput[]>([]);
   const [onlineUsers, setOnlineUsers] = React.useState<User[]>([]);
+  const [lastActiveTarget, setLastActiveTarget] = React.useState<LastActiveTarget | null>(null);
 
   // Use refs to prevent stale closures
   const agentsRef = React.useRef(agents);
@@ -113,6 +128,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
     socket.sendAgentInput(agentId, input);
   }, [socket.sendAgentInput]);
 
+  // Last active tracking functions
+  const setLastActiveAgent = React.useCallback((agentId: string, agentName: string) => {
+    setLastActiveTarget({
+      type: 'agent',
+      id: agentId,
+      name: agentName,
+      timestamp: Date.now()
+    });
+  }, []);
+
+  const setLastActiveTerminal = React.useCallback((terminalId: string, terminalName: string) => {
+    setLastActiveTarget({
+      type: 'terminal',
+      id: terminalId,
+      name: terminalName,
+      timestamp: Date.now()
+    });
+  }, []);
+
+  const setLastActiveChat = React.useCallback(() => {
+    setLastActiveTarget({
+      type: 'chat',
+      id: 'team-chat',
+      name: 'Team Chat',
+      timestamp: Date.now()
+    });
+  }, []);
+
+  const sendToLastActive = React.useCallback((message: string): boolean => {
+    if (!lastActiveTarget) return false;
+
+    try {
+      switch (lastActiveTarget.type) {
+        case 'agent':
+          sendAgentInput(lastActiveTarget.id, message);
+          return true;
+        case 'chat':
+          sendChatMessage(message);
+          return true;
+        case 'terminal':
+          // TODO: Implement terminal message sending
+          console.warn('Terminal message sending not yet implemented');
+          return false;
+        default:
+          return false;
+      }
+    } catch (error) {
+      console.error('Failed to send to last active target:', error);
+      return false;
+    }
+  }, [lastActiveTarget, sendAgentInput, sendChatMessage]);
+
   const contextValue: AppContextType = React.useMemo(() => ({
     // Auth
     user: auth.user,
@@ -145,13 +212,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setChatMessages,
     setAgentOutputs,
     setOnlineUsers,
+
+    // Last active tracking
+    lastActiveTarget,
+    setLastActiveAgent,
+    setLastActiveTerminal,
+    setLastActiveChat,
+    sendToLastActive,
   }), [
     auth.user, auth.team, auth.isAuthenticated, auth.isLoading, auth.error,
     auth.login, auth.register, auth.logout, auth.clearError,
     agents.agents, agents.isLoading, agents.error, agents.spawnAgent, agents.killAgent, agents.clearError,
     sendChatMessage, sendAgentInput, socket.isConnected,
     chatMessages, agentOutputs, onlineUsers,
-    setChatMessages, setAgentOutputs, setOnlineUsers
+    setChatMessages, setAgentOutputs, setOnlineUsers,
+    lastActiveTarget, setLastActiveAgent, setLastActiveTerminal, setLastActiveChat, sendToLastActive
   ]);
 
   return (
