@@ -135,6 +135,11 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         timestamp: new Date().toISOString(),
         agentId: currentAgentId
       }]);
+
+      // Set this agent as the last active target when it's opened/connected
+      if (setLastActiveAgent) {
+        setLastActiveAgent(agent.id, agent.agentName || agent.userName || 'Agent');
+      }
     }
   }, [agent, currentAgentId]);
 
@@ -457,7 +462,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
       });
     }
 
-    // Track this agent as the last active target for inspector auto-injection
+    // Also update last active target when sending a message (in case it changed)
     if (setLastActiveAgent && agent) {
       setLastActiveAgent(agent.id, agent.agentName || agent.userName || 'Agent');
     }
@@ -483,6 +488,11 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
       timestamp: new Date().toISOString(),
       agentId: selectedAgent.id
     }]);
+
+    // Track this agent as the last active target when selected
+    if (setLastActiveAgent) {
+      setLastActiveAgent(selectedAgent.id, selectedAgent.agentName || selectedAgent.userName || 'Agent');
+    }
 
     onAgentSelect?.(selectedAgent.id);
     setShowDropdown(false);

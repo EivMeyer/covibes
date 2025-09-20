@@ -1006,33 +1006,6 @@ footer {
     });
   }
 
-  async restartPreview(teamId: string): Promise<void> {
-    console.log(`🔁 Restarting preview for team ${teamId}`);
-    
-    // Try to stop any existing container (even if no database record)
-    try {
-      await execAsync(`docker stop preview-${teamId}`);
-      console.log(`✅ Stopped Docker container for team ${teamId}`);
-    } catch (error) {
-      console.log(`⚠️ Container might already be stopped: ${(error as any).message}`);
-    }
-    
-    // Stop proxy if it exists
-    dedicatedPreviewProxy.stopProxy(teamId);
-    
-    // Wait a moment for cleanup
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Get team's repository URL if available
-    const team = await this.prisma.teams.findUnique({
-      where: { id: teamId }
-    });
-    
-    // Start it again (this will create database record if missing)
-    await this.startPreview(teamId, team?.repositoryUrl || undefined);
-    
-    console.log(`✅ Preview restarted for team ${teamId}`);
-  }
 }
 
 export const universalPreviewService = new UniversalPreviewService();

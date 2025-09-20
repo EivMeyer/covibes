@@ -18,29 +18,46 @@ interface AgentRowProps {
   showOwner?: boolean | undefined
 }
 
-const AgentRow: React.FC<AgentRowProps> = ({ 
-  agent, 
-  isOwner, 
-  onViewOutput, 
- 
-  showOwner = false 
+const AgentRow: React.FC<AgentRowProps> = ({
+  agent,
+  isOwner,
+  onViewOutput,
+  showOwner = false
 }) => {
   const [isHovered, setIsHovered] = useState(false)
 
-  // Get status symbol
-  const getStatusSymbol = () => {
+  // Determine agent mode - default to terminal for backward compatibility
+  const agentMode = agent.mode || 'terminal'
+  const isTerminalMode = agentMode === 'terminal'
+  const isChatMode = agentMode === 'chat'
+
+  // Get status indicator
+  const getStatusIndicator = () => {
+    const baseClasses = "w-2 h-2 rounded-full"
     switch (agent.status) {
       case 'running':
-        return <span className="text-emerald-400 animate-pulse">●</span>
+        return <div className={`${baseClasses} ${isTerminalMode ? 'bg-green-400' : 'bg-blue-400'} animate-pulse`} />
       case 'starting':
-        return <span className="text-amber-400 animate-pulse">◐</span>
+        return <div className={`${baseClasses} ${isTerminalMode ? 'bg-yellow-400' : 'bg-purple-400'} animate-pulse`} />
       case 'completed':
-        return <span className="text-blue-400">✓</span>
+        return <div className={`${baseClasses} bg-emerald-500`} />
       case 'failed':
-        return <span className="text-red-400">✗</span>
+        return <div className={`${baseClasses} bg-red-400`} />
       default:
-        return <span className="text-slate-600">○</span>
+        return <div className={`${baseClasses} bg-slate-500`} />
     }
+  }
+
+  // Get status badge
+  const getStatusBadge = () => {
+    const modeColor = isTerminalMode ? 'text-green-400 bg-green-900/30' : 'text-blue-300 bg-blue-900/30'
+    const modeText = isTerminalMode ? 'TERMINAL' : 'CHAT'
+
+    return (
+      <span className={`text-xs px-2 py-0.5 rounded ${modeColor}`}>
+        {modeText}
+      </span>
+    )
   }
 
   // Get display name
@@ -48,53 +65,87 @@ const AgentRow: React.FC<AgentRowProps> = ({
     if (showOwner && agent.userName) {
       return `${agent.userName} / ${agent.agentName || 'Agent'}`
     }
-    return agent.agentName || agent.task?.slice(0, 30) || `Agent ${agent.id.slice(-6)}`
+    return agent.agentName || `Agent ${agent.id.slice(-6)}`
   }
 
   // Get runtime display
   const getRuntime = () => {
     if (agent.status !== 'running' || !agent.startedAt) return ''
-    
+
     const start = new Date(agent.startedAt).getTime()
     const now = Date.now()
     const diff = now - start
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(minutes / 60)
-    
+
     if (hours > 0) return `${hours}h`
     if (minutes > 10) return `${minutes}m`
     return ''
+  }
+
+  // Get card styling based on mode
+  const getCardStyling = () => {
+    if (isTerminalMode) {
+      return "bg-slate-800/30 border-l-2 border-green-400/50 hover:bg-slate-800/50"
+    } else {
+      return "bg-blue-900/20 border-l-2 border-blue-400/50 hover:bg-blue-900/30"
+    }
+  }
+
+  // Get additional info based on mode
+  const getAdditionalInfo = () => {
+    if (isTerminalMode) {
+      const outputLines = agent.outputLines || 0
+      return (
+        <span className="text-xs text-slate-500 font-mono">
+          Output: {outputLines} lines
+        </span>
+      )
+    } else {
+      return (
+        <span className="text-xs text-slate-500">
+          💬 Interactive
+        </span>
+      )
+    }
   }
 
   const runtime = getRuntime()
 
   return (
     <div
-      className="group flex items-center h-7 px-2 cursor-pointer hover:bg-slate-800/30 transition-colors rounded-sm"
+      className={`${getCardStyling()} rounded-lg p-3 mb-2 cursor-pointer transition-colors`}
       onClick={onViewOutput ? onViewOutput : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       title={agent.task}
     >
-      {/* Status Symbol */}
-      <div className="w-3 text-center flex-shrink-0 text-xs mr-2">
-        {getStatusSymbol()}
-      </div>
-
-      {/* Agent Name */}
-      <div className="flex-1 min-w-0">
-        <span className={`text-xs truncate block ${
+      {/* Header: Status + Name + Mode Badge */}
+      <div className="flex items-center gap-2 mb-2">
+        {getStatusIndicator()}
+        <span className={`${isTerminalMode ? 'font-mono' : ''} text-sm ${
           isOwner ? 'text-slate-200' : 'text-slate-400'
-        }`}>
+        } flex-1 truncate`}>
           {getDisplayName()}
         </span>
+        {getStatusBadge()}
       </div>
 
-      {/* Runtime + Action */}
-      <div className="flex items-center text-xs text-slate-500 font-mono">
-        {runtime && <span className="mr-1">{runtime}</span>}
-        {agent.status === 'running' && isHovered && (
-          <span className="text-slate-400">→</span>
+      {/* Task Description */}
+      <div className={`text-xs text-slate-400 mb-2 truncate ${isTerminalMode ? 'font-mono' : ''}`}>
+        {agent.task || 'No task specified'}
+      </div>
+
+      {/* Footer: Additional Info + Runtime */}
+      <div className="flex justify-between items-center">
+        {getAdditionalInfo()}
+        {runtime && (
+          <span className={`text-xs text-slate-500 ${isTerminalMode ? 'font-mono' : ''}`}>
+            {runtime}
+          </span>
+        )}
+        {isHovered && (
+          <span className="text-slate-400 text-xs ml-2">→</span>
         )}
       </div>
     </div>
@@ -144,6 +195,7 @@ export const AgentListMinimal: React.FC<AgentListMinimalProps> = ({
   }, [agents, user?.id])
 
   const handleViewOutput = (agent: any) => {
+    console.log('🎯 [DEBUG] AgentListMinimal - clicking agent:', { id: agent.id, mode: agent.mode, agentData: agent });
     onViewOutput?.(agent)
   }
 
@@ -153,9 +205,6 @@ export const AgentListMinimal: React.FC<AgentListMinimalProps> = ({
 
   const handleDeleteAllAgents = async () => {
     if (!onDeleteAllAgents || agents.length === 0) return
-
-    const confirmMessage = `Are you sure you want to delete ALL ${agents.length} agents? This action cannot be undone.`
-    if (!confirm(confirmMessage)) return
 
     setDeletingAllAgents(true)
     try {
@@ -195,7 +244,7 @@ export const AgentListMinimal: React.FC<AgentListMinimalProps> = ({
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {/* Header with delete all button */}
       {agents.length > 0 && onDeleteAllAgents && (
         <div className="flex items-center justify-between px-2 py-1">
@@ -225,7 +274,7 @@ export const AgentListMinimal: React.FC<AgentListMinimalProps> = ({
 
       {/* Your Agents */}
       {myAgents.length > 0 && (
-        <div className="space-y-0.5">
+        <div>
           {myAgents.map(agent => (
             <AgentRow
               key={agent.id}
@@ -239,15 +288,15 @@ export const AgentListMinimal: React.FC<AgentListMinimalProps> = ({
 
       {/* Team Section Separator */}
       {myAgents.length > 0 && teamAgents.length > 0 && (
-        <div className="flex items-center gap-2 py-1">
-          <span className="text-xs text-slate-600">team</span>
+        <div className="flex items-center gap-2 py-2">
+          <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">Team Agents</span>
           <div className="flex-1 h-px bg-slate-700/40" />
         </div>
       )}
 
       {/* Team Agents */}
       {teamAgents.length > 0 && (
-        <div className="space-y-0.5">
+        <div>
           {teamAgents.map(agent => (
             <AgentRow
               key={agent.id}

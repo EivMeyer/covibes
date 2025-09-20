@@ -45,10 +45,6 @@ export const Header: React.FC<HeaderProps> = ({
       return;
     }
 
-    if (!confirm('Are you sure you want to logout?')) {
-      return;
-    }
-
     setIsLoggingOut(true);
     try {
       await logout();
@@ -151,8 +147,8 @@ export const Header: React.FC<HeaderProps> = ({
           {showRepoConfig && (
             <div className="hidden lg:flex items-center space-x-2 px-3 py-2 bg-midnight-700 rounded-lg">
               <div className={`w-2 h-2 rounded-full ${team?.repositoryUrl ? 'bg-success animate-pulse' : 'bg-midnight-500'}`} />
-              <div className="text-sm">
-                <span className="text-gray-400 mr-2">Repo:</span>
+              <div className="text-xs">
+                <span className="text-gray-400 mr-1">Repo:</span>
                 <span className={team?.repositoryUrl ? 'text-success' : 'text-gray-400'}>
                   {team?.repositoryUrl ? 
                     (() => {
@@ -189,8 +185,8 @@ export const Header: React.FC<HeaderProps> = ({
                 pingStatus.status === 'offline' ? 'bg-red-500' :
                 'bg-gray-500'
               }`} />
-              <div className="text-sm">
-                <span className="text-gray-400 mr-2">VM:</span>
+              <div className="text-xs">
+                <span className="text-gray-400 mr-1">VM:</span>
                 <span className={
                   pingStatus.status === 'online' ? 'text-green-400' :
                   pingStatus.status === 'checking' ? 'text-yellow-400' :
@@ -318,18 +314,22 @@ export const Header: React.FC<HeaderProps> = ({
                 </Button>
               )}
 
-              <Button
-                size="sm"
-                variant="danger"
+              <button
                 onClick={handleLogout}
-                loading={isLoggingOut}
                 disabled={isLoggingOut}
+                className="group px-3 py-1.5 text-gray-400 hover:text-gray-300 bg-midnight-700/50 hover:bg-midnight-600/50 rounded-lg transition-all duration-200 flex items-center space-x-1.5 text-sm"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
+                {!isLoggingOut ? (
+                  <>
+                    <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span className="hidden sm:inline">Sign out</span>
+                  </>
+                ) : (
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                )}
+              </button>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { PreviewInspector } from '../features/preview/PreviewInspector';
+import { Sparkles } from 'lucide-react';
 
 interface LastActiveTarget {
   type: 'agent' | 'terminal' | 'chat';
@@ -11,31 +12,54 @@ interface LastActiveTarget {
 interface PreviewTileProps {
   url?: string | undefined; // Explicit undefined for exactOptionalPropertyTypes
   onRefresh?: (() => void) | undefined;
-  onRestart?: (() => Promise<void>) | undefined;
   onOpenIDE?: (() => void) | undefined;
   isLoading?: boolean | undefined;
-  isRestarting?: boolean | undefined;
   onLoad?: (() => void) | undefined;
   teamId?: string | undefined; // Team ID for inspector API calls
   lastActiveTarget?: LastActiveTarget | null;
   sendToLastActive?: (message: string) => boolean;
+  agents?: any[] | undefined; // List of available agents for inspector
 }
 
 export const PreviewTile: React.FC<PreviewTileProps> = ({
   url,
   onRefresh,
-  onRestart,
   onOpenIDE,
   isLoading = false,
-  isRestarting = false,
   onLoad,
   teamId,
   lastActiveTarget,
   sendToLastActive,
+  agents,
 }) => {
   const [previewError, setPreviewError] = useState(false);
   const [inspectorActive, setInspectorActive] = useState(false);
+  const [showInspectorHint, setShowInspectorHint] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Check if user has seen the inspector hint before
+  useEffect(() => {
+    if (url && teamId) {
+      const hasSeenHint = localStorage.getItem('inspector-hint-seen');
+      if (!hasSeenHint) {
+        setShowInspectorHint(true);
+        // Auto-hide after 8 seconds
+        const timer = setTimeout(() => {
+          setShowInspectorHint(false);
+          localStorage.setItem('inspector-hint-seen', 'true');
+        }, 8000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [url, teamId]);
+
+  const handleInspectorClick = () => {
+    setInspectorActive(!inspectorActive);
+    if (showInspectorHint) {
+      setShowInspectorHint(false);
+      localStorage.setItem('inspector-hint-seen', 'true');
+    }
+  };
 
   const handleRefresh = () => {
     if (iframeRef.current && url) {
@@ -53,9 +77,6 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
     onRefresh?.();
   };
 
-  const handleRestart = () => {
-    onRestart?.();
-  };
 
   const handleIframeError = () => {
     setPreviewError(true);
@@ -86,6 +107,58 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
         </div>
         
         <div className="flex items-center space-x-2">
+          {/* Inspector Button - Enhanced with subtle magic */}
+          {url && (
+            <div className="relative">
+              <button
+                onClick={handleInspectorClick}
+                className={`relative p-1.5 rounded-lg transition-all transform hover:scale-105 ${
+                  inspectorActive
+                    ? 'bg-blue-500/20 text-blue-400 shadow-sm'
+                    : 'bg-midnight-700/50 text-gray-400 hover:bg-midnight-600/50 hover:text-blue-400'
+                }`}
+                title="✨ Element Inspector - Click any element to modify it with AI"
+              >
+                <Sparkles className="w-5 h-5" />
+              </button>
+
+              {/* First-time user hint tooltip */}
+              {showInspectorHint && (
+                <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 z-50 animate-slide-in">
+                  <div className="bg-midnight-800 border border-blue-500/30 text-white px-3 py-2 rounded-lg shadow-lg max-w-xs">
+                    <div className="flex items-start gap-2">
+                      <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-blue-400" />
+                      <div>
+                        <div className="text-xs font-semibold mb-0.5 text-blue-400">NEW: Element Inspector</div>
+                        <div className="text-xs text-gray-300">
+                          Click here, then select any element to modify it
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowInspectorHint(false);
+                          localStorage.setItem('inspector-hint-seen', 'true');
+                        }}
+                        className="text-gray-400 hover:text-white ml-1"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-midnight-800"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Vertical divider after inspector */}
+          {url && (
+            <div className="h-4 w-px bg-gray-700" />
+          )}
+
           {/* Open in New Tab Button */}
           {url && (
             <button
@@ -94,26 +167,8 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
               title="Open in new tab"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </button>
-          )}
-
-          {/* Inspector Button */}
-          {url && (
-            <button
-              onClick={() => setInspectorActive(!inspectorActive)}
-              className={`p-1 transition-colors ${
-                inspectorActive
-                  ? 'text-blue-400 hover:text-blue-300'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title={inspectorActive ? "Deactivate Element Inspector" : "Activate Element Inspector"}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </button>
           )}
@@ -128,31 +183,6 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </button>
-          )}
-          
-          {/* Restart Button */}
-          {onRestart && (
-            <button
-              onClick={handleRestart}
-              disabled={isRestarting || !url}
-              className="p-1 text-gray-400 hover:text-coral transition-colors disabled:opacity-50"
-              title="Restart preview container"
-            >
-              <svg 
-                className={`w-4 h-4 ${isRestarting ? 'animate-spin' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-                />
-                <circle cx="12" cy="12" r="1" fill="currentColor" />
               </svg>
             </button>
           )}
@@ -254,17 +284,18 @@ export const PreviewTile: React.FC<PreviewTileProps> = ({
             teamId={teamId}
             lastActiveTarget={lastActiveTarget}
             sendToLastActive={sendToLastActive}
+            agents={agents}
           />
         )}
 
-        {(isLoading || isRestarting) && url && (
+        {isLoading && url && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <div className="bg-midnight-800 p-4 rounded-lg">
               <div className="flex items-center space-x-3">
                 <svg className="animate-spin h-5 w-5 text-electric" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <p className="text-white text-sm">{isRestarting ? 'Restarting container...' : 'Updating preview...'}</p>
+                <p className="text-white text-sm">Updating preview...</p>
               </div>
             </div>
           </div>

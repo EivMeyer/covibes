@@ -15,6 +15,7 @@ import { ChatTile } from '@/components/tiles/ChatTile';
 import { PreviewTile } from '@/components/tiles/PreviewTile';
 import { IDETile } from '@/components/tiles/IDETile';
 import { AgentChatTile } from '@/components/tiles/AgentChatTile';
+import { AgentTile } from '@/components/tiles/AgentTile';
 import { AgentListMinimal } from '@/components/features/agents/AgentListMinimal';
 import { ContainerManagement } from '@/components/features/containers/ContainerManagement';
 
@@ -49,7 +50,6 @@ interface DashboardProps {
   setPreviewStatus?: ((status: 'loading' | 'ready' | 'error') => void) | undefined;
   previewDeploymentMeta?: any;
   refreshPreview: () => void;
-  restartPreview?: (() => Promise<void>) | undefined;
   // Last active target tracking
   lastActiveTarget?: {
     type: 'agent' | 'terminal' | 'chat';
@@ -386,6 +386,12 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       return;
     }
 
+    // If adding an agent tile, open the spawn agent modal instead of creating empty tile
+    if (type === 'agent') {
+      handleSpawnAgent();
+      return;
+    }
+
     // If adding a terminal without an agent, open the spawn agent modal instead
     if (type === 'terminal' && !agentId) {
       handleSpawnAgent();
@@ -397,7 +403,13 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       type: type as GridTile['type'], // Ensure type casting
       title: type === 'terminal' && agentId ?
         agents.find(a => a.id === agentId)?.agentName || `Agent ${agentId.slice(-6)}` :
+        type === 'agentchat' && agentId ?
+        agents.find(a => a.id === agentId)?.agentName || `Chat Agent ${agentId.slice(-6)}` :
+        type === 'agent' && agentId ?
+        agents.find(a => a.id === agentId)?.agentName || `Agent ${agentId.slice(-6)}` :
+        type === 'agent' ? 'Agent' :
         type === 'terminal' ? 'Agent Terminal' :
+        type === 'agentchat' ? 'Agent Chat' :
         type === 'chat' ? 'Team Chat' :
         type === 'preview' ? 'Preview' :
         type === 'ide' ? 'Code Editor' :
@@ -425,15 +437,29 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     });
   }, [saveWorkspace]);
 
-  const handleOpenTerminal = useCallback((agent: any) => {
-    // Check if terminal for this agent is already open
-    const existingTerminal = gridTiles.find(tile => 
-      tile.type === 'terminal' && tile.agentId === agent.id
-    );
-    
-    if (!existingTerminal) {
-      handleAddTile('terminal', agent.id);
+  const handleOpenAgent = useCallback((agent: any) => {
+    // Determine agent mode - default to terminal for backward compatibility
+    const agentMode = agent.mode || 'terminal';
+    console.log('🎯 [DEBUG] handleOpenAgent called with agent:', { id: agent.id, mode: agent.mode, agentMode });
+
+    if (agentMode === 'chat') {
+      // Check if agent chat tile for this agent is already open
+      const existingAgentChat = gridTiles.find(tile =>
+        tile.type === 'agentchat' && tile.agentId === agent.id
+      );
+
+      if (!existingAgentChat) {
+        handleAddTile('agentchat', agent.id);
+      }
     } else {
+      // Terminal mode or default - check if terminal for this agent is already open
+      const existingTerminal = gridTiles.find(tile =>
+        tile.type === 'terminal' && tile.agentId === agent.id
+      );
+
+      if (!existingTerminal) {
+        handleAddTile('terminal', agent.id);
+      }
     }
   }, [gridTiles, handleAddTile]);
   
@@ -491,10 +517,11 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
         // Get the most recent agent (first in the array - newest agents appear first)
         if (agents.length > 0) {
           const mostRecentAgent = agents[0];
-          handleOpenTerminal(mostRecentAgent);
+          handleOpenAgent(mostRecentAgent);
           
+          const agentMode = mostRecentAgent.mode || 'terminal';
           addNotification({
-            message: `Terminal opened for ${mostRecentAgent.agentName || 'recent agent'}`,
+            message: `${agentMode === 'chat' ? 'Chat' : 'Terminal'} opened for ${mostRecentAgent.agentName || 'recent agent'}`,
             type: 'success',
           });
         } else {
@@ -602,7 +629,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [agents, selectedAgentId, gridTiles, handleOpenTerminal, handleSpawnAgent, handleAddTile, addNotification]);
+  }, [agents, selectedAgentId, gridTiles, handleOpenAgent, handleSpawnAgent, handleAddTile, addNotification]);
   
 
 
@@ -678,31 +705,19 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     />
   ), [user, chatMessages, sendChatMessage, isSocketConnected, props.setLastActiveChat]);
 
-  const [isRestarting, setIsRestarting] = useState(false);
-
-  const handleRestartPreview = async () => {
-    setIsRestarting(true);
-    try {
-      await props.restartPreview?.();
-    } finally {
-      setIsRestarting(false);
-    }
-  };
-
   const renderPreviewTile = useCallback(() => (
     <PreviewTile
       url={previewUrl}
       onRefresh={refreshPreview}
-      onRestart={props.restartPreview ? handleRestartPreview : undefined}
       onOpenIDE={() => setFullscreenIDE(true)}
       isLoading={previewStatus === 'loading'}
-      isRestarting={isRestarting}
       onLoad={() => setPreviewStatus?.('ready')}
       teamId={props.team?.id}
       lastActiveTarget={props.lastActiveTarget}
       sendToLastActive={props.sendToLastActive}
+      agents={agents}
     />
-  ), [previewUrl, refreshPreview, props.restartPreview, previewStatus, setPreviewStatus, isRestarting, props.team?.id, props.lastActiveTarget, props.sendToLastActive]);
+  ), [previewUrl, refreshPreview, previewStatus, setPreviewStatus, props.team?.id, props.lastActiveTarget, props.sendToLastActive, agents]);
 
   const renderIDETile = useCallback(() => (
     <IDETile
@@ -770,9 +785,83 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
     );
   }, [agents, user, props.socket, gridTiles, saveWorkspace]);
 
+  const renderAgentTile = useCallback((tile: GridTile) => {
+    const agent = agents.find(a => a.id === tile.agentId);
+
+    // Sanitize agent data to prevent circular references
+    const sanitizedAgent = agent ? {
+      id: agent.id,
+      userId: agent.userId,
+      userName: agent.userName,
+      type: agent.type,
+      agentType: agent.agentType,
+      task: agent.task,
+      status: agent.status,
+      output: agent.output || '',
+      startedAt: agent.startedAt,
+      completedAt: agent.completedAt,
+      lastActivity: agent.lastActivity,
+      outputLines: agent.outputLines || 0,
+      isOwner: agent.userId === user?.id,
+      repositoryUrl: agent.repositoryUrl,
+      agentName: agent.agentName || undefined,
+      mode: agent.mode || 'chat', // Default to chat mode
+      container: agent.container ? {
+        containerId: agent.container.containerId,
+        status: agent.container.status,
+        terminalPort: agent.container.terminalPort,
+        previewPort: agent.container.previewPort,
+        proxyUrl: agent.container.proxyUrl,
+        createdAt: agent.container.createdAt
+      } : undefined
+    } : undefined;
+
+    // Sanitize agents array for agent selector
+    const sanitizedAgents = agents.map(a => ({
+      id: a.id,
+      userId: a.userId,
+      userName: a.userName,
+      agentName: a.agentName || a.userName,
+      status: a.status,
+      task: a.task,
+      mode: a.mode || 'chat'
+    }));
+
+    return (
+      <div className="h-full flex flex-col">
+        <AgentTile
+          agent={sanitizedAgent}
+          agentId={tile.agentId}
+          agents={sanitizedAgents}
+          user={user}
+          socket={props.socket}
+          onAgentSelect={(agentId: string) => {
+            const updatedTiles = gridTiles.map(t =>
+              t.id === tile.id ? { ...t, agentId, title: agents.find(a => a.id === agentId)?.agentName || 'Agent' } : t
+            );
+            setGridTiles(updatedTiles);
+            saveWorkspace({ tiles: updatedTiles });
+          }}
+          onDisconnect={() => {
+            const updatedTiles = gridTiles.map(t =>
+              t.id === tile.id ? { ...t, agentId: undefined, title: 'Agent' } : t
+            );
+            setGridTiles(updatedTiles);
+            saveWorkspace({ tiles: updatedTiles });
+          }}
+          onSpawnAgent={handleSpawnAgent}
+          setLastActiveAgent={props.setLastActiveAgent}
+          setLastActiveTerminal={props.setLastActiveTerminal}
+        />
+      </div>
+    );
+  }, [agents, user, props.socket, gridTiles, saveWorkspace, handleSpawnAgent, props.setLastActiveAgent, props.setLastActiveTerminal]);
+
   // Render tile content based on type - optimized
   const renderTile = useCallback((tile: GridTile) => {
     switch (tile.type) {
+      case 'agent':
+        return renderAgentTile(tile);
       case 'terminal':
         return renderTerminalTile(tile);
       case 'chat':
@@ -786,7 +875,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
       default:
         return null;
     }
-  }, [renderTerminalTile, renderChatTile, renderPreviewTile, renderIDETile, renderAgentChatTile]);
+  }, [renderAgentTile, renderTerminalTile, renderChatTile, renderPreviewTile, renderIDETile, renderAgentChatTile]);
 
   const handleVMConfigSuccess = async () => {
     // VM status handled via props
@@ -943,7 +1032,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
                   agentsLoading={agentsLoading}
                   killAgent={killAgent}
                   user={user}
-                  onViewOutput={handleOpenTerminal}
+                  onViewOutput={handleOpenAgent}
                   onDeleteAllAgents={deleteAllAgents}
                   className="max-h-[300px] overflow-y-auto"
                 />

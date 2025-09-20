@@ -644,69 +644,6 @@ router.post('/stop', createAuthHandler(async (req, res) => {
   }
 }));
 
-/**
- * POST /api/preview/restart
- * Restart a preview container
- */
-router.post('/restart', createAuthHandler(async (req, res) => {
-  try {
-    const teamId = req.user?.teamId;
-    if (!teamId) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-
-    // Check preview mode
-    const previewMode = process.env['PREVIEW_MODE'] || 'local';
-    
-    if (previewMode === 'vm-docker') {
-      // Restart VM preview
-      try {
-        await vmPreviewService.stopPreview(teamId);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause
-        const result = await vmPreviewService.startPreview(teamId);
-        
-        return res.json({
-          message: 'Workspace preview restarted successfully',
-          port: result?.localPort || 0,
-          status: result?.status || 'error',
-          mode: 'vm-docker',
-          url: `/api/preview/${teamId}/workspace/`
-        });
-      } catch (error) {
-        return res.status(501).json({
-          message: 'VM preview mode not configured',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          mode: 'vm-docker'
-        });
-      }
-    }
-
-    if (previewMode === 'local' || previewMode === 'docker') {
-      // Restart universal Docker preview
-      await universalPreviewService.restartPreview(teamId);
-      await universalPreviewService.getPreviewStatus(teamId);
-      
-      // Always use clean URLs through main server
-      const publicUrl = `http://${BASE_HOST}/preview/${teamId}/`;
-      return res.json({
-        message: 'Universal preview restarted successfully',
-        mode: 'docker',
-        url: publicUrl
-      });
-    }
-
-    // Fall back to repository preview mode
-    return res.status(400).json({ 
-      message: 'Restart not supported for repository preview mode' 
-    });
-
-  } catch (error) {
-    console.error('Error restarting preview:', error);
-    res.status(500).json({ 
-      message: error instanceof Error ? error.message : 'Failed to restart preview' 
-    });
-  }
-}));
 
 /**
  * GET /api/preview/logs/:branch

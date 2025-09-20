@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette, Copy, Minimize2, Maximize2, AlignCenter, Type, Droplets, Smartphone, Space, Zap, Trash2, Sparkles, Layout, Heart, TestTube } from 'lucide-react';
+import { Target, MousePointer, X, Send, Bot, MessageSquare, Terminal, Palette, Copy, Minimize2, Maximize2, AlignCenter, Type, Droplets, Smartphone, Space, Zap, Trash2, Sparkles, Layout, Heart, TestTube, ChevronDown } from 'lucide-react';
 
 interface SelectedElement {
   html: string;
@@ -26,6 +26,7 @@ interface PreviewInspectorProps {
   teamId: string; // Need team ID for API calls
   lastActiveTarget?: LastActiveTarget | null;
   sendToLastActive?: (message: string) => boolean;
+  agents?: any[] | undefined; // List of available agents
 }
 
 export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
@@ -35,6 +36,7 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
   teamId,
   lastActiveTarget,
   sendToLastActive,
+  agents,
 }) => {
   const [selectedElement, setSelectedElement] = useState<SelectedElement | null>(null);
   const [showContextMenu, setShowContextMenu] = useState(false);
@@ -46,7 +48,54 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
   const [newText, setNewText] = useState('');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showTextEditor, setShowTextEditor] = useState(false);
+  const [showTargetDropdown, setShowTargetDropdown] = useState(false);
+  const [selectedTarget, setSelectedTarget] = useState<LastActiveTarget | null>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Update selected target when lastActiveTarget changes
+  useEffect(() => {
+    if (lastActiveTarget && !selectedTarget) {
+      setSelectedTarget(lastActiveTarget);
+    }
+  }, [lastActiveTarget]); // Remove selectedTarget from deps to prevent infinite loop
+
+  // Prepare available targets for dropdown - only running agents
+  const availableTargets: LastActiveTarget[] = (agents || [])
+    .filter(agent => agent.status === 'running') // Only show running agents
+    .map(agent => ({
+      type: 'agent' as const,
+      id: agent.id,
+      name: agent.agentName || agent.userName || `Agent ${agent.id.slice(-6)}`,
+      timestamp: Date.now()
+    }));
+
+  // Get current target or fallback to lastActiveTarget
+  const currentTarget = selectedTarget || lastActiveTarget;
+
+  // Function to send to a specific target (selected or last active)
+  const sendToTarget = (message: string, target?: LastActiveTarget | null): boolean => {
+    const targetToUse = target || currentTarget;
+    if (!targetToUse || !sendToLastActive) return false;
+
+    // For now, use the existing sendToLastActive function
+    // In the future, this could be enhanced to handle different target types
+    return sendToLastActive(message);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTargetDropdown && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowTargetDropdown(false);
+      }
+    };
+
+    if (showTargetDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showTargetDropdown]);
 
   useEffect(() => {
     if (!iframeRef.current || !isActive) return;
@@ -78,7 +127,38 @@ export const PreviewInspector: React.FC<PreviewInspectorProps> = ({
       if (event.data.type === 'inspector-element-selected') {
         console.log(`📥 [FRONTEND] Received element selection:`, event.data.data);
         setSelectedElement(event.data.data);
-        setMenuPosition({ x: event.data.position.x, y: event.data.position.y });
+
+        // Calculate menu position within preview bounds
+        if (iframeRef.current) {
+          const iframeRect = iframeRef.current.getBoundingClientRect();
+          const menuWidth = 260;
+          const menuHeight = 400; // Approximate max height
+          const padding = 10; // Padding from edges
+
+          let x = event.data.position.x;
+          let y = event.data.position.y;
+
+          // Ensure menu stays within horizontal bounds
+          if (x + menuWidth > iframeRect.width - padding) {
+            x = iframeRect.width - menuWidth - padding;
+          }
+          if (x < padding) {
+            x = padding;
+          }
+
+          // Ensure menu stays within vertical bounds
+          if (y + menuHeight > iframeRect.height - padding) {
+            y = iframeRect.height - menuHeight - padding;
+          }
+          if (y < padding) {
+            y = padding;
+          }
+
+          setMenuPosition({ x, y });
+        } else {
+          setMenuPosition({ x: event.data.position.x, y: event.data.position.y });
+        }
+
         setShowContextMenu(true);
       }
     };
@@ -244,6 +324,7 @@ HTML: ${element.html}
     // Special handling for copy context
     if (action.id === 'copy-context') {
       await copyToClipboard();
+      setShowContextMenu(false);  // Close the menu after copying
       return;
     }
 
@@ -251,6 +332,7 @@ HTML: ${element.html}
     if (action.id === 'change-color') {
       setShowColorPicker(true);
       setShowTextEditor(false);
+      setShowContextMenu(false);  // Close the menu when opening color picker
       return;
     }
 
@@ -259,21 +341,22 @@ HTML: ${element.html}
       setNewText(selectedElement.text || '');
       setShowTextEditor(true);
       setShowColorPicker(false);
+      setShowContextMenu(false);  // Close the menu when opening text editor
       return;
     }
 
-    if (!sendToLastActive) return;
+    if (!currentTarget || !sendToLastActive) return;
 
     const prompt = action.generatePrompt(selectedElement);
-    const success = sendToLastActive(prompt);
+    const success = sendToTarget(prompt, currentTarget);
 
     if (success) {
-      setLastSentAction(action.title);
+      setLastSentAction(`${action.title} → ${currentTarget.name}`);
       setTimeout(() => setLastSentAction(null), 3000);
       setShowContextMenu(false);
       setSelectedElement(null);
     } else {
-      console.warn('No active agent or terminal to send to');
+      console.warn('No target to send to');
     }
   };
 
@@ -352,8 +435,8 @@ HTML: ${element.html}
         <div
           className="absolute z-50 rounded-md overflow-hidden"
           style={{
-            top: Math.min(menuPosition.y, window.innerHeight - 280),
-            left: Math.min(menuPosition.x, window.innerWidth - 280),
+            top: menuPosition.y,
+            left: menuPosition.x,
             background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%)',
             backdropFilter: 'blur(24px) saturate(180%)',
             WebkitBackdropFilter: 'blur(24px) saturate(180%)',
@@ -376,33 +459,84 @@ HTML: ${element.html}
           />
 
           {/* Minimal header */}
-          <div className="relative px-3 py-1.5 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-transparent via-white/[0.02] to-transparent">
-            <code className="text-xs text-blue-400/80 font-mono truncate flex-1">
-              {selectedElement.tagName.toLowerCase()}
-              {selectedElement.id && `#${selectedElement.id.split(' ')[0]}`}
-              {selectedElement.className && `.${selectedElement.className.split(' ')[0]}`}
-            </code>
-            <button
-              onClick={() => setShowContextMenu(false)}
-              className="ml-2 p-0.5 hover:bg-white/10 rounded transition-colors"
-            >
-              <X className="w-3 h-3 text-gray-400 hover:text-white" />
-            </button>
+          <div className="relative px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <code className="text-xs text-blue-400/80 font-mono truncate">
+                    {selectedElement.tagName.toLowerCase()}
+                    {selectedElement.id && `#${selectedElement.id.split(' ')[0]}`}
+                    {selectedElement.className && `.${selectedElement.className.split(' ')[0]}`}
+                  </code>
+                  <span className="text-xs text-gray-500 flex-shrink-0">
+                    {Math.round(selectedElement.rect.width)}×{Math.round(selectedElement.rect.height)}
+                  </span>
+                </div>
+                {selectedElement.text && (
+                  <div className="mt-0.5">
+                    <span className="text-xs text-gray-400 truncate block" title={selectedElement.text}>
+                      "{selectedElement.text}"
+                    </span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setShowContextMenu(false)}
+                className="p-0.5 hover:bg-white/10 rounded transition-colors flex-shrink-0"
+              >
+                <X className="w-3 h-3 text-gray-400 hover:text-white" />
+              </button>
+            </div>
           </div>
 
-          {/* Status bar */}
-          {lastActiveTarget ? (
-            <div className="relative px-3 py-1 border-b border-white/10 bg-gradient-to-r from-transparent via-green-500/[0.02] to-transparent">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_4px_rgba(74,222,128,0.5)]" />
-                <span className="text-xs text-gray-400">Sending to: {lastActiveTarget.name}</span>
+          {/* Target Selection Dropdown */}
+          <div className="relative px-3 py-1 border-b border-white/10 bg-gradient-to-r from-transparent via-green-500/[0.02] to-transparent">
+            {currentTarget ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowTargetDropdown(!showTargetDropdown)}
+                  className="flex items-center gap-1.5 w-full hover:bg-white/5 px-1 py-0.5 rounded transition-colors"
+                >
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_4px_rgba(74,222,128,0.5)]" />
+                  <span className="text-xs text-gray-300 flex-1 text-left">
+                    Sending to: {currentTarget.name}
+                  </span>
+                  <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showTargetDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showTargetDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-white/20 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                    {availableTargets.map((target) => (
+                      <button
+                        key={`${target.type}-${target.id}`}
+                        onClick={() => {
+                          setSelectedTarget(target);
+                          setShowTargetDropdown(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/10 transition-colors ${
+                          currentTarget?.id === target.id ? 'bg-white/5 text-blue-400' : 'text-gray-300'
+                        }`}
+                      >
+                        {target.type === 'agent' && <Bot className="w-3 h-3" />}
+                        {target.type === 'terminal' && <Terminal className="w-3 h-3" />}
+                        {target.type === 'chat' && <MessageSquare className="w-3 h-3" />}
+                        <span className="flex-1 text-left">{target.name}</span>
+                        {currentTarget?.id === target.id && (
+                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          ) : (
-            <div className="relative px-3 py-1 border-b border-white/10 bg-gradient-to-r from-transparent via-orange-500/[0.02] to-transparent">
-              <span className="text-xs text-orange-400/80">No active agent/terminal</span>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-orange-400 rounded-full" />
+                <span className="text-xs text-orange-400/80">No active agent/terminal</span>
+              </div>
+            )}
+          </div>
 
 
           {/* Compact action list */}
@@ -550,13 +684,13 @@ HTML: ${element.html}
               </button>
               <button
                 onClick={() => {
-                  if (selectedElement && sendToLastActive) {
+                  if (selectedElement && currentTarget) {
                     const colorAction = actionPrompts.find(a => a.id === 'change-color');
                     if (colorAction) {
                       const prompt = colorAction.generatePrompt(selectedElement);
-                      const success = sendToLastActive(prompt);
+                      const success = sendToTarget(prompt, currentTarget);
                       if (success) {
-                        setLastSentAction(`Color: ${selectedColor}`);
+                        setLastSentAction(`Color: ${selectedColor} → ${currentTarget.name}`);
                         setTimeout(() => setLastSentAction(null), 2000);
                         setShowColorPicker(false);
                         setShowContextMenu(false);
@@ -658,13 +792,13 @@ HTML: ${element.html}
               </button>
               <button
                 onClick={() => {
-                  if (selectedElement && sendToLastActive && newText) {
+                  if (selectedElement && currentTarget && newText) {
                     const textAction = actionPrompts.find(a => a.id === 'change-text');
                     if (textAction) {
                       const prompt = textAction.generatePrompt(selectedElement);
-                      const success = sendToLastActive(prompt);
+                      const success = sendToTarget(prompt, currentTarget);
                       if (success) {
-                        setLastSentAction(`Text Changed`);
+                        setLastSentAction(`Text Changed → ${currentTarget.name}`);
                         setTimeout(() => setLastSentAction(null), 2000);
                         setShowTextEditor(false);
                         setShowContextMenu(false);

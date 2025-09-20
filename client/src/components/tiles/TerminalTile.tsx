@@ -49,6 +49,14 @@ const TerminalTileComponent: React.FC<TerminalTileProps> = ({
       if (terminalSize !== fontSize) {
         setFontSize(terminalSize);
       }
+
+      // Set this agent as the last active target when terminal is opened/connected
+      if (setLastActiveAgent) {
+        setLastActiveAgent(agent.id, agent.agentName || agent.userName || 'Agent');
+      } else if (setLastActiveTerminal) {
+        // Fallback to terminal tracking if agent tracking not available
+        setLastActiveTerminal(currentAgentId, `Terminal ${currentAgentId.slice(-6)}`);
+      }
     }
   }, [currentAgentId, agent, fontSize]);
 

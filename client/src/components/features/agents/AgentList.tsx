@@ -176,11 +176,6 @@ export const AgentList: React.FC<AgentListProps> = ({
 
   const handleKillAgent = async (agent: any) => {
     const agentName = agent.agentName || `${agent.userName}'s Agent`;
-    const confirmMessage = `Are you sure you want to delete "${agentName}"? This action cannot be undone.`;
-    
-    if (!confirm(confirmMessage)) {
-      return;
-    }
 
     setKillingAgent(agent.id);
     try {
@@ -202,12 +197,6 @@ export const AgentList: React.FC<AgentListProps> = ({
 
   const handleDeleteAllAgents = async () => {
     if (agents.length === 0) {
-      return;
-    }
-
-    const confirmMessage = `Are you sure you want to delete ALL ${agents.length} agents? This action cannot be undone.`;
-    
-    if (!confirm(confirmMessage)) {
       return;
     }
 

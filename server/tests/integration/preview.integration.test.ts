@@ -233,54 +233,6 @@ describe('Preview API Integration Tests', () => {
     });
   });
 
-  describe('POST /api/preview/restart', () => {
-    it('should require authentication', async () => {
-      const response = await request(app)
-        .post('/api/preview/restart');
-
-      expect(response.status).toBe(401);
-    });
-
-    if (dockerAvailable) {
-      it('should restart preview container', async () => {
-        // Create preview first
-        await request(app)
-          .post('/api/preview/create')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({});
-
-        // Restart preview
-        const response = await request(app)
-          .post('/api/preview/restart')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({});
-
-        expect(response.status).toBe(200);
-        expect(response.body.message).toContain('restarted successfully');
-      }, 40000);
-
-      it('should maintain proxy port after restart', async () => {
-        // Create preview
-        const createResponse = await request(app)
-          .post('/api/preview/create')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({});
-        
-        const originalPort = createResponse.body.port;
-
-        // Restart
-        const restartResponse = await request(app)
-          .post('/api/preview/restart')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({});
-
-        // Port might be the same or different depending on implementation
-        expect(restartResponse.body).toHaveProperty('url');
-      }, 40000);
-    } else {
-      it.skip('Docker not available - skipping restart tests', () => {});
-    }
-  });
 
   describe('POST /api/preview/stop', () => {
     it('should require authentication', async () => {

@@ -65,8 +65,10 @@ export default {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'breathe': 'breathe 2s ease-in-out infinite alternate',
         'slide-in': 'slideIn 0.3s ease-out',
+        'shimmer': 'shimmer 3s ease-in-out infinite',
+        'shrink': 'shrink linear forwards',
       },
-      
+
       // Custom keyframes
       keyframes: {
         float: {
@@ -80,6 +82,15 @@ export default {
         slideIn: {
           '0%': { transform: 'translateX(-100%)', opacity: '0' },
           '100%': { transform: 'translateX(0)', opacity: '1' }
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-200%)' },
+          '50%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-200%)' }
+        },
+        shrink: {
+          '0%': { width: '100%' },
+          '100%': { width: '0%' }
         }
       },
       

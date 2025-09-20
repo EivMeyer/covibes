@@ -83,6 +83,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
     if (newTiles.length > 0) {
       const newLayouts: DashboardLayout[] = newTiles.map((tile, index) => {
         const defaultLayouts: Record<GridTile['type'], Partial<DashboardLayout>> = {
+          agent: { w: 5, h: 10, minW: 3, minH: 6 },
           terminal: { w: 6, h: 12, minW: 3, minH: 6 },
           chat: { w: 4, h: 10, minW: 3, minH: 4 },
           preview: { w: 6, h: 8, minW: 3, minH: 4 },
@@ -170,6 +171,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
   const handleAddTileWithCollab = (type: GridTile['type']) => {
     // Get the tile title for the type
     const tileNames: Record<GridTile['type'], string> = {
+      agent: 'Agent',
       terminal: 'Agent Terminal',
       chat: 'Team Chat',
       preview: 'Preview',
@@ -196,11 +198,11 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
 
   const menuItems = [
     {
-      type: 'terminal' as GridTile['type'],
-      label: 'Terminal',
+      type: 'agent' as GridTile['type'],
+      label: 'Agent',
       icon: '⚡',
-      description: 'Agent terminal interface',
-      color: 'from-cyan-500 to-cyan-600',
+      description: 'AI assistant for terminal & chat',
+      color: 'from-blue-500 to-purple-600',
     },
     {
       type: 'chat' as GridTile['type'],
@@ -222,13 +224,6 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
       icon: '📝',
       description: 'Code editor',
       color: 'from-blue-500 to-blue-600',
-    },
-    {
-      type: 'agentchat' as GridTile['type'],
-      label: 'Agent Chat',
-      icon: '🤖',
-      description: 'Chat with agents',
-      color: 'from-indigo-500 to-purple-600',
     },
   ]
 

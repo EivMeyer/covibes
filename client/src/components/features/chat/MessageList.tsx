@@ -31,19 +31,16 @@ export const MessageList: React.FC<MessageListProps> = ({
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
     if (diffInMinutes < 1) {
-      return 'Just now';
+      return '[now]';
     } else if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
+      return `[${String(diffInMinutes).padStart(2, '0')}m]`;
     } else if (diffInMinutes < 1440) { // 24 hours
       const hours = Math.floor(diffInMinutes / 60);
-      return `${hours}h ago`;
+      return `[${String(hours).padStart(2, '0')}h]`;
     } else {
-      return date.toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `[${hours}:${minutes}]`;
     }
   };
 
@@ -96,7 +93,7 @@ export const MessageList: React.FC<MessageListProps> = ({
     if (message.type === 'system') {
       return {
         container: 'justify-center',
-        bubble: 'bg-gray-800/50 text-gray-400 text-xs px-3 py-2 rounded-full border border-gray-700',
+        bubble: 'bg-gray-800/50 text-gray-400 text-xs px-3 py-2 rounded-full border border-[#00ff41]/20',
         timestamp: 'text-gray-600 text-xs mt-1',
       };
     }
@@ -104,7 +101,7 @@ export const MessageList: React.FC<MessageListProps> = ({
     if (message.type === 'agent') {
       return {
         container: 'justify-start',
-        bubble: 'bg-gradient-to-br from-violet-600 to-purple-700 text-white max-w-lg shadow-lg border border-violet-500/30',
+        bubble: 'bg-gradient-to-br from-violet-600 to-purple-700 text-white max-w-lg shadow-lg border border-[#00ff41]/25 shadow-violet-500/10',
         timestamp: 'text-gray-400 text-xs mt-1',
       };
     }
@@ -112,14 +109,14 @@ export const MessageList: React.FC<MessageListProps> = ({
     if (isOwn) {
       return {
         container: 'justify-end',
-        bubble: 'bg-gradient-to-br from-blue-600 to-blue-700 text-white max-w-lg ml-auto shadow-lg',
+        bubble: 'bg-gradient-to-br from-blue-600 to-blue-700 text-white max-w-lg ml-auto shadow-lg border border-[#00ff41]/20 shadow-[#00ff41]/10',
         timestamp: 'text-gray-400 text-xs mt-1 text-right',
       };
     }
 
     return {
       container: 'justify-start',
-      bubble: 'bg-gray-800 text-gray-100 max-w-lg shadow-lg border border-gray-700',
+      bubble: 'bg-gray-800 text-gray-100 max-w-lg shadow-lg border border-[#00ff41]/30 shadow-[#00ff41]/5',
       timestamp: 'text-gray-400 text-xs mt-1',
     };
   };
@@ -174,7 +171,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               </div>
             )}
 
-            <div className={`flex ${styles.container} group mb-4`}>
+            <div className={`flex ${styles.container} group mb-4 hover:brightness-110 transition-all duration-200`}>
               {/* Avatar for non-own messages */}
               {!isOwn && message.type !== 'system' && (
                 <div className="flex-shrink-0 mr-3 mt-1">
@@ -199,7 +196,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                     <span className="text-sm font-medium text-gray-300">
                       {message.type === 'agent' ? '🤖 AI Assistant' : message.userName}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[#00ff41] font-mono">
                       {formatTimestamp(message.timestamp)}
                     </span>
                   </div>
@@ -210,7 +207,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   {/* Own message header */}
                   {isOwn && message.type !== 'system' && (
                     <div className="flex items-center justify-end gap-2 mb-1">
-                      <span className="text-xs text-gray-300 opacity-75">
+                      <span className="text-xs text-[#00ff41] opacity-75 font-mono">
                         {formatTimestamp(message.timestamp)}
                       </span>
                       <span className="text-sm font-medium text-white/90">You</span>
@@ -227,7 +224,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   
                   {/* System message timestamp */}
                   {message.type === 'system' && (
-                    <div className="text-xs text-gray-500 mt-1 text-center">
+                    <div className="text-xs text-[#00ff41] mt-1 text-center font-mono opacity-60">
                       {formatTimestamp(message.timestamp)}
                     </div>
                   )}

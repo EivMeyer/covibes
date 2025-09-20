@@ -266,7 +266,7 @@ export type Environment = 'development' | 'production' | 'test';
 // Grid Tile interface for workspace management
 export interface GridTile {
   id: string;
-  type: 'terminal' | 'chat' | 'preview' | 'ide' | 'agentchat';
+  type: 'terminal' | 'chat' | 'preview' | 'ide' | 'agentchat' | 'agent';
   agentId?: string | undefined; // For terminal tiles - explicit undefined for exactOptionalPropertyTypes
   title: string;
   minimized?: boolean | undefined; // Explicit undefined for exactOptionalPropertyTypes

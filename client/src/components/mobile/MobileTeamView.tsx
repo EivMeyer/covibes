@@ -71,16 +71,12 @@ export const MobileTeamView: React.FC<MobileTeamViewProps> = ({
           {/* Logout button - Icon only */}
           {logout && (
             <button
-              onClick={() => {
-                if (confirm('Are you sure you want to logout?')) {
-                  logout();
-                }
-              }}
-              className="p-1 bg-red-500/20 text-red-400 rounded flex-shrink-0"
-              title="Logout"
+              onClick={logout}
+              className="p-1 bg-midnight-700/50 text-gray-400 hover:text-gray-300 hover:bg-midnight-600/50 rounded flex-shrink-0 transition-colors duration-200"
+              title="Sign out"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>

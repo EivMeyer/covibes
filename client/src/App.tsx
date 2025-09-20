@@ -527,48 +527,6 @@ function AppContent() {
     });
   };
 
-  const restartPreview = async () => {
-    if (!team?.id) return;
-    
-    setPreviewStatus('loading');
-    
-    try {
-      const response = await fetch('/api/preview/restart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('covibes_auth_token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to restart preview: ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      
-      // Update preview URL if it changed
-      if (result.url) {
-        const token = localStorage.getItem('covibes_auth_token');
-        const urlWithToken = `${result.url}?token=${encodeURIComponent(token || '')}`;
-        setPreviewUrl(urlWithToken);
-      }
-      
-      // Wait a bit before marking as ready to ensure container is fully started
-      setTimeout(() => {
-        setPreviewStatus('ready');
-        // Update preview URL if it changed
-        if (result.url && previewUrl !== result.url) {
-          const token = localStorage.getItem('covibes_auth_token');
-          const urlWithToken = `${result.url}?token=${encodeURIComponent(token || '')}`;
-          setPreviewUrl(urlWithToken);
-        }
-      }, 2000);
-    } catch (error) {
-      console.error('❌ Failed to restart preview:', error);
-      setPreviewStatus('error');
-    }
-  };
 
   const handleGitHubSignupComplete = (authData: any) => {
     setUser(authData.user);
@@ -769,7 +727,6 @@ function AppContent() {
     previewDeploymentMeta,
     startPreviewContainer,
     refreshPreview,
-    restartPreview,
     
     // State setters (for compatibility)
     setChatMessages: setMessages,
@@ -834,7 +791,6 @@ function AppContent() {
       previewUrl={previewUrl}
       setPreviewStatus={setPreviewStatus}
       deleteAllAgents={deleteAllAgents}
-      restartPreview={restartPreview}
       refreshUserAndTeam={refreshUserAndTeam}
     />
   ) : (

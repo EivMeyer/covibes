@@ -95,9 +95,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full ${className} backdrop-blur-sm bg-gray-900/80 border border-gray-700/50`}>
       {/* Header with zoom controls */}
-      <div className="px-3 py-2 border-b border-gray-700 text-sm text-gray-400 flex items-center justify-between">
+      <div className="px-3 py-2 border-b border-gray-700/60 text-sm text-gray-400 flex items-center justify-between">
         <span>Chat • {onlineUsers.length} online</span>
         <div className="flex items-center space-x-1">
           <button
@@ -135,9 +135,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-hidden" style={{ fontSize: `${fontSize}px` }}>
-        <MessageList 
-          messages={messages} 
+      <div className="flex-1 overflow-hidden relative" style={{ fontSize: `${fontSize}px` }}>
+        {/* Scanline effect */}
+        <div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(0,255,65,0.08) 50%, transparent 100%)',
+            height: '2px',
+            animation: 'scanline 8s linear infinite'
+          }}
+        />
+        <MessageList
+          messages={messages}
           currentUserId={user?.id}
           isLoading={false}
         />
@@ -152,21 +161,35 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
 
         <form onSubmit={handleSendMessage} className="flex">
-          <input
-            ref={inputRef}
-            type="text"
-            value={messageText}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder="Type a message..."
-            disabled={!isSocketConnected() || isSending}
-            className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-l-md text-sm text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
-            autoComplete="off"
-          />
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={messageText}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
+              placeholder="Type a message..."
+              disabled={!isSocketConnected() || isSending}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-l-md text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#00ff41]/50 focus:shadow-[0_0_12px_rgba(0,255,65,0.25)] transition-all duration-300"
+              autoComplete="off"
+              style={{ fontFamily: 'JetBrains Mono, Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace' }}
+            />
+            {inputRef.current === document.activeElement && (
+              <div
+                className="absolute top-1/2 transform -translate-y-1/2 pointer-events-none"
+                style={{
+                  left: `${3 + (messageText.length * 8.4)}px`,
+                  animation: 'terminal-cursor 1s infinite'
+                }}
+              >
+                <span className="text-[#00ff41] text-sm font-mono">█</span>
+              </div>
+            )}
+          </div>
           <button
             type="submit"
             disabled={!messageText.trim() || !isSocketConnected() || isSending}
-            className="px-3 py-2 bg-gray-700 border border-l-0 border-gray-600 rounded-r-md text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-2 bg-gray-700 border border-l-0 border-gray-600 rounded-r-md text-gray-300 hover:bg-gray-600 hover:shadow-[0_0_8px_rgba(0,255,65,0.15)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
           >
             {isSending ? '•••' : '→'}
           </button>
