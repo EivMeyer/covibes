@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
+import { VoiceRecorder } from '@/components/ui/VoiceRecorder';
 import { X } from 'lucide-react';
 // Simplified types to avoid import issues
 interface AgentDetails {
@@ -58,6 +59,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [fontSize, setFontSize] = useState(12);
   const [spinnerIndex, setSpinnerIndex] = useState(0);
+  const [voiceMode, setVoiceMode] = useState(false);
   const thinkingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const streamingContentRef = useRef<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -411,13 +413,16 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     };
   }, [socket, currentAgentId, agents]);
 
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || isLoading || !canInteract || !socket || !currentAgentId) return;
+  const handleSend = useCallback(async (messageText?: string) => {
+    // Use provided text or fall back to input state
+    const textToSend = messageText || input;
+
+    if (!textToSend.trim() || isLoading || !canInteract || !socket || !currentAgentId) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: textToSend.trim(),
       timestamp: new Date().toISOString(),
       agentId: currentAgentId
     };
@@ -451,14 +456,14 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
       // Use chat-specific socket event for chat agents
       socket.emit('agent_chat_message', {
         agentId: currentAgentId,
-        message: input.trim()
+        message: textToSend.trim()
       });
     } else {
       // Fallback to terminal input for terminal mode agents
       socket.emit('terminal_input', {
         agentId: currentAgentId,
         type: 'input',
-        data: input.trim() + '\r'
+        data: textToSend.trim() + '\r'
       });
     }
 
@@ -668,6 +673,12 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
 
       {/* Input */}
       <div className="border-t border-gray-800 p-3">
+        {/* Voice mode indicator */}
+        {voiceMode && (
+          <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-green-900/20 border border-green-800/30 rounded">
+            <span className="text-green-400 text-xs font-mono">🎙️ Voice mode active - speak your message</span>
+          </div>
+        )}
         <div className="flex gap-2">
           <span className="text-green-400 font-mono py-2" style={{ fontSize: `${fontSize}px` }}>{'>'}</span>
           <textarea
@@ -689,8 +700,21 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             spellCheck={isMobile}
             autoComplete="on"
           />
+          <VoiceRecorder
+            onTranscript={(text) => {
+              setInput(text);
+              // Auto-send if in voice mode
+              if (voiceMode && text.trim()) {
+                // Pass text directly to avoid state race condition
+                handleSend(text);
+              }
+            }}
+            disabled={isLoading}
+            persistentMode={voiceMode}
+            onModeChange={setVoiceMode}
+          />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!input.trim() || !canInteract || isLoading}
             className="px-3 py-2 font-mono text-gray-400 hover:text-green-400 disabled:text-gray-700 disabled:cursor-not-allowed transition-colors"
             style={{ fontSize: `${Math.max(fontSize - 2, 10)}px` }}
