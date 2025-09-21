@@ -59,19 +59,6 @@ model messages {
   users     users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model preview_containers {
-  id          String   @id
-  teamId      String
-  branch      String
-  containerId String?
-  port        Int
-  status      String   @default("stopped")
-  projectType String   @default("unknown")
-  lastUpdated DateTime @default(now())
-  createdAt   DateTime @default(now())
-
-  @@unique([teamId, branch])
-}
 
 model preview_deployments {
   id              String    @id

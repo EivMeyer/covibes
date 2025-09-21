@@ -1,0 +1,262 @@
+# HTTPS-Only Configuration for Covibes
+# HTTP to HTTPS redirect
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name ec2-13-48-135-139.eu-north-1.compute.amazonaws.com;
+
+    # Redirect all HTTP traffic to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS Server
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name ec2-13-48-135-139.eu-north-1.compute.amazonaws.com;
+
+    # SSL Certificate Configuration
+    ssl_certificate /etc/nginx/ssl/covibes.crt;
+    ssl_certificate_key /etc/nginx/ssl/covibes.key;
+
+    # SSL Security Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Security Headers
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Client max body size for file uploads
+    client_max_body_size 100M;
+
+    # Proxy timeouts for long-running operations
+    proxy_connect_timeout 600;
+    proxy_send_timeout 600;
+    proxy_read_timeout 600;
+    send_timeout 600;
+
+
+    # Vite HMR WebSocket - route /@vite/client
+    location ~ ^/preview/demo-team-001/@vite/(.*)$ {
+        proxy_pass http://127.0.0.1:8000/@vite/$1;
+        proxy_http_version 1.1;
+        
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        
+        proxy_buffering off;
+
+    # Vite HMR WebSocket - root path for direct connections
+    location ~ ^/\?token=(.*)$ {
+        proxy_pass http://127.0.0.1:8000/?token=$1;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_buffering off;
+    }
+    }
+
+    # PREVIEW: Strip base path for API calls
+    location ~ ^/preview/demo-team-001/api/(.*)$ {
+        # Strip the preview base path and forward to container
+        proxy_pass http://127.0.0.1:8000/api/$1;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        # Disable buffering for real-time updates
+        proxy_buffering off;
+
+    # Vite HMR WebSocket - root path for direct connections
+    location ~ ^/\?token=(.*)$ {
+        proxy_pass http://127.0.0.1:8000/?token=$1;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_buffering off;
+    }
+    }
+
+    # PREVIEW: Direct to container with base path handling
+    # Vite WebSocket for HMR
+    location ~ ^/?token=(.*)$ {
+        proxy_pass http://127.0.0.1:8000/?token=$1;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_buffering off;
+    }
+
+    location /preview/demo-team-001/ {
+        # Proxy to container's base path
+        proxy_pass http://127.0.0.1:8000/;
+        proxy_http_version 1.1;
+
+        # Important: Use the container's host for HMR to work
+        proxy_set_header Host localhost:8000;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-Host $host;
+
+        # WebSocket support for HMR
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+
+        # Disable buffering for real-time updates
+        proxy_buffering off;
+        proxy_cache_bypass $http_upgrade;
+
+        # Allow iframe embedding for preview
+        add_header X-Frame-Options "";
+        proxy_hide_header X-Frame-Options;
+
+    # Vite HMR WebSocket - root path for direct connections
+    location ~ ^/\?token=(.*)$ {
+        proxy_pass http://127.0.0.1:8000/?token=$1;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_buffering off;
+    }
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Socket.io specific path
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3001/socket.io/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Socket.io specific settings
+        proxy_buffering off;
+
+    # Vite HMR WebSocket - root path for direct connections
+    location ~ ^/\?token=(.*)$ {
+        proxy_pass http://127.0.0.1:8000/?token=$1;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_buffering off;
+    }
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # API endpoints
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/api/;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        # Support for SSE and long polling
+        proxy_set_header Connection "";
+        proxy_buffering off;
+
+    # Vite HMR WebSocket - root path for direct connections
+    location ~ ^/\?token=(.*)$ {
+        proxy_pass http://127.0.0.1:8000/?token=$1;
+        proxy_http_version 1.1;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        proxy_buffering off;
+    }
+    }
+
+    # Vite HMR WebSocket on /hmr path
+    location /hmr {
+        proxy_pass http://127.0.0.1:8000/hmr;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host localhost:5173;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_buffering off;
+    }
+
+    # Frontend application (everything else)
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+
+        # WebSocket support for development HMR
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+}
+
+# WebSocket upgrade mapping
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}

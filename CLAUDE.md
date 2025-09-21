@@ -16,9 +16,10 @@ cd client && npm run dev       # Frontend on port 3000
 ```
 
 ### Access Points
-- **Frontend**: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3000
-- **Backend API**: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001
-- **Health Check**: http://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com:3001/health
+- **Frontend**: https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
+- **Backend API**: https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com
+- **Health Check**: https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/health
+- **Note**: Using self-signed certificate - Accept browser security warning
 
 ### Important Notes
 - **Servers auto-reload** on file changes (nodemon for backend, HMR for frontend)

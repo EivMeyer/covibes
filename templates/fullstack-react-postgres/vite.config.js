@@ -37,19 +37,20 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3002',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false
       }
     },
-    // Configure HMR to work through nginx direct proxy WebSocket
+    // Configure HMR to work through nginx proxy
     hmr: {
-      clientPort: 80,  // Client connects to nginx
-      host: 'EC2_HOST_PLACEHOLDER',
-      // Use nginx direct proxy path for WebSocket connections
-      path: '/preview/TEAM_ID_PLACEHOLDER/',
-      overlay: true
+      port: 5173,
+      clientPort: 443,
+      host: 'ec2-13-48-135-139.eu-north-1.compute.amazonaws.com',
+      protocol: 'wss',
+      path: '/hmr'
     },
     cors: true,
-    allowedHosts: "all",
+    allowedHosts: ["ec2-13-48-135-139.eu-north-1.compute.amazonaws.com", "localhost", "127.0.0.1"],
     // Ensure proper file serving
     fs: {
       strict: false,

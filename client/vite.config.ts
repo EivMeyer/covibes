@@ -97,6 +97,10 @@ export default defineConfig(({ mode }) => {
       minify: isProduction ? 'esbuild' : false,
       rollupOptions: {
         output: {
+          // Force cache busting
+          entryFileNames: `[name]-[hash]-${Date.now()}.js`,
+          chunkFileNames: `[name]-[hash]-${Date.now()}.js`,
+          assetFileNames: `[name]-[hash]-${Date.now()}.[ext]`,
           manualChunks: {
             vendor: ['react', 'react-dom'],
             monaco: ['@monaco-editor/react'],

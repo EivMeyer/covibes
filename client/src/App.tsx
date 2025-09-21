@@ -195,28 +195,21 @@ function AppContent() {
     // Mobile detection for transport selection
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // REQUIRED: Backend URL must be explicitly set - NO FALLBACKS
-    let backendUrl = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL;
-    if (!backendUrl) {
-      throw new Error('VITE_BACKEND_URL or VITE_API_URL environment variable is required. No fallbacks allowed.');
-    }
-    
-    // Mobile fix: Use same port as frontend to avoid mobile browser blocking
-    if (isMobile) {
-      backendUrl = window.location.origin; // Use current origin (port 3000) - Vite will proxy to 3001
-    }
-    
-    console.log(`🔍 Socket init - Mobile: ${isMobile}, URL: ${backendUrl}, Token: ${!!token}`);
-    
+    // Use relative path for socket connection to inherit HTTPS properly
+    // This ensures the socket connects via the nginx proxy
+    const socketUrl = undefined; // Relative path
+
+    console.log(`🔍 Socket init - Mobile: ${isMobile}, URL: relative path (nginx proxy), Token: ${!!token}`);
+
     // Store debug info in sessionStorage for diagnostics
     sessionStorage.setItem('socketDebug', JSON.stringify({
       mobile: isMobile,
-      url: backendUrl,
+      url: 'relative path (nginx proxy)',
       hasToken: !!token,
       timestamp: new Date().toISOString()
     }));
-    
-    const socket = io(backendUrl, {
+
+    const socket = io(socketUrl || '/', {
       auth: {
         token: token
       },

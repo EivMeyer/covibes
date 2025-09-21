@@ -132,15 +132,12 @@ class SocketService {
       this.connectionState = 'connecting';
       
       // Create new socket connection with both polling and WebSocket for real-time terminal
-      // In dev mode, don't specify URL to use relative path (enables proxy)
-      // In production, use the configured WebSocket URL
-      const isDev = import.meta.env.DEV;
-      const wsUrl = isDev
-        ? undefined  // No URL = relative path = uses proxy
-        : (import.meta.env.VITE_WS_URL || window.location.origin);
+      // Always use relative path to ensure HTTPS is used when the page is loaded over HTTPS
+      // This allows nginx to properly proxy the WebSocket connection
+      const wsUrl = undefined; // Always use relative path for proper HTTPS handling
 
-      console.log('🔌 Socket connecting:', isDev ? 'via proxy (relative path)' : `to ${wsUrl}`);
-      console.log('🔍 Environment:', { isDev, origin: window.location.origin, VITE_WS_URL: import.meta.env.VITE_WS_URL });
+      console.log('🔌 Socket connecting via relative path (nginx proxy)');
+      console.log('🔍 Environment:', { origin: window.location.origin, protocol: window.location.protocol });
 
       // When wsUrl is undefined, io() uses relative path automatically
       this.socket = io(wsUrl || '/', {

@@ -74,7 +74,7 @@ class UniversalPreviewService {
           
           await this.prisma.preview_deployments.update({
             where: { id: deployment.id },
-            data: { 
+            data: {
               status: 'stopped',
               errorMessage: 'Container not found after server restart'
             }
@@ -201,9 +201,9 @@ class UniversalPreviewService {
   }
 
   async startPreview(teamId: string, repositoryUrl?: string): Promise<{ port: number; url: string }> {
-    console.log(`🚀 Starting universal preview for team ${teamId}`);
-    console.log(`🔍 Repository URL provided: ${repositoryUrl || 'undefined'}`);
-    
+    console.log(`🚀 Starting universal preview for team ${teamId} - fresh client regenerated`);
+    console.log(`📦 Always using template (ignoring any repository URL)`);
+
     // Check if Docker is available
     try {
       await execAsync('docker --version');
@@ -261,14 +261,9 @@ class UniversalPreviewService {
     const projectDir = path.join(this.workspaceDir, teamId);
 
     try {
-      // If repository URL is provided, clone it; otherwise use template
-      if (repositoryUrl) {
-        console.log(`🔗 Cloning repository: ${repositoryUrl}`);
-        await this.cloneRepositoryWithFallback(repositoryUrl, projectDir);
-      } else {
-        console.log('📦 Using fullstack template with PostgreSQL...');
-        await this.initializeWorkspaceFromTemplate(teamId);
-      }
+      // ALWAYS use template, ignore repository URL
+      console.log('📦 Using fullstack template with PostgreSQL...');
+      await this.initializeWorkspaceFromTemplate(teamId);
 
       // Create Dockerfile for development server
       const dockerfile = `FROM node:20-alpine
@@ -946,7 +941,7 @@ footer {
     // Commented out flaky health check that causes false "stopped" status
     // const isHealthy = await this.validateContainerHealth(deployment.containerName);
     // if (!isHealthy && deployment.status === 'running') {
-    //   await this.prisma.preview_deployments.update({
+    //   await this.prisma.preview_containers.update({
     //     where: { teamId },
     //     data: { status: 'stopped' }
     //   });

@@ -1459,13 +1459,15 @@ app.use(async (req, res, next) => {
   }
   
   // Extract team from referer if present
-  const teamMatch = referer.match(/\/api\/preview\/proxy\/([^\/]+)\/main\//);
+  // Support both old HTTP pattern (/api/preview/proxy/teamId/main/) and new HTTPS pattern (/preview/teamId/)
+  const teamMatch = referer.match(/\/(?:api\/preview\/proxy\/([^\/]+)\/main\/|preview\/([^\/]+)\/)/);
   if (!teamMatch) {
     console.log(`🔍 [VITE-ROUTER] No team found in referer, passing through: ${path}`);
     return next();
   }
   
-  const teamId = teamMatch[1];
+  // Extract team ID from either capture group (group 1: old pattern, group 2: new pattern)
+  const teamId = teamMatch[1] || teamMatch[2];
   console.log(`🔍 [VITE-ROUTER] Routing ${path} to team ${teamId} based on referer`);
   
   // Forward to team preview proxy using Express redirect
