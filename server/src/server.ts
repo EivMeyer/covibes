@@ -1957,7 +1957,7 @@ io.on('connection', (socket: Socket) => {
 
       // Create agent message in database
       // Using a special format to distinguish agent messages
-      const agentMessage = await prisma.messages.create({
+      await prisma.messages.create({
         data: {
           id: crypto.randomUUID(),
           content: `[AGENT:${agent.agentName || agent.id}] ${data.message}`,
@@ -1966,24 +1966,23 @@ io.on('connection', (socket: Socket) => {
         }
       });
 
-      // Create message data for broadcast with agent metadata
-      const messageData = {
-        id: agentMessage.id,
-        userId: `agent-${agent.id}`, // Use a special agent userId format
-        user: {
-          userName: agent.agentName || `Agent ${agent.id.slice(-6)}`
-        },
-        content: data.message,
-        createdAt: agentMessage.createdAt.toISOString(),
-        teamId: data.teamId,
-        isAgent: true,
-        agentId: agent.id,
-        agentType: agent.type,
-        type: 'agent' // Explicitly set message type
-      };
-
       // Don't broadcast agent messages to team chat
       // Agents should not post to the team chat
+      // Uncomment below if you want to broadcast agent messages:
+      // const messageData = {
+      //   id: agentMessage.id,
+      //   userId: `agent-${agent.id}`,
+      //   user: {
+      //     userName: agent.agentName || `Agent ${agent.id.slice(-6)}`
+      //   },
+      //   content: data.message,
+      //   createdAt: agentMessage.createdAt.toISOString(),
+      //   teamId: data.teamId,
+      //   isAgent: true,
+      //   agentId: agent.id,
+      //   agentType: agent.type,
+      //   type: 'agent'
+      // };
       // io.to(data.teamId).emit('chat-message', messageData);
 
     } catch (error) {

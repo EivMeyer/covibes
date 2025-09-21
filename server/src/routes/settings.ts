@@ -1,16 +1,19 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.js';
-import type { RequestWithUser } from '../middleware/auth.js';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // Get both user and team settings
-router.get('/', authenticateToken, async (req: RequestWithUser, res) => {
+router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
-    const teamId = req.user!.teamId;
+    const userId = (req as any).user?.userId;
+    const teamId = (req as any).user?.teamId;
+
+    if (!userId || !teamId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     // Fetch user settings
     const user = await prisma.users.findUnique({
@@ -43,9 +46,13 @@ router.get('/', authenticateToken, async (req: RequestWithUser, res) => {
 });
 
 // Update user settings
-router.put('/user', authenticateToken, async (req: RequestWithUser, res) => {
+router.put('/user', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
     const { soundsEnabled } = req.body;
 
     const updatedUser = await prisma.users.update({
@@ -62,9 +69,13 @@ router.put('/user', authenticateToken, async (req: RequestWithUser, res) => {
 });
 
 // Update team settings (all users can update since everyone is admin)
-router.put('/team', authenticateToken, async (req: RequestWithUser, res) => {
+router.put('/team', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const teamId = req.user!.teamId;
+    const teamId = (req as any).user?.teamId;
+
+    if (!teamId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
     const { enableContextSharing } = req.body;
 
     const updatedTeam = await prisma.teams.update({

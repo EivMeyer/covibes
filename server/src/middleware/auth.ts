@@ -18,6 +18,11 @@ export interface JWTPayload {
   exp?: number;
 }
 
+export interface RequestWithUser extends Request {
+  user?: JWTUser;
+  userId?: string;
+}
+
 export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
   console.log('Auth middleware called for:', req.path);
   const authHeader = req.headers['authorization'];

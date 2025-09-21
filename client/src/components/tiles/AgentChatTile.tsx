@@ -148,11 +148,12 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-resize textarea
+  // Auto-resize textarea with reasonable limits
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+      // Limit to max 80px height (about 3-4 lines)
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 80)}px`;
     }
   }, [input]);
 
@@ -810,7 +811,13 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
                 ? 'text-gray-500 border-red-400/40 bg-red-900/10 placeholder-red-400 cursor-not-allowed'
                 : 'text-gray-100 border-green-400/30 focus:border-green-400/60'
             }`}
-            style={{ fontSize: `${fontSize}px`, resize: 'none', WebkitAppearance: 'none' }}
+            style={{
+              fontSize: `${fontSize}px`,
+              resize: 'none',
+              WebkitAppearance: 'none',
+              maxHeight: '80px',
+              overflowY: 'auto'
+            }}
             rows={1}
             disabled={!canInteract || isLoading || isRecording}
             readOnly={isRecording}

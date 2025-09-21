@@ -146,16 +146,6 @@ router.put('/config', authenticateToken, async (req, res) => {
         sidebarWidth: true
       }
     });
-    
-    // Verify the data was actually saved
-    const verifyTeam = await prisma.teams.findUnique({
-      where: { id: user.teamId },
-      select: {
-        workspaceTiles: true,
-        workspaceLayouts: true,
-        sidebarWidth: true
-      }
-    });
 
     console.log(`✅ Workspace updated successfully for team ${updatedTeam.id}`);
 
