@@ -25,20 +25,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {...props}
     >
       {/* Simple header */}
-      <div className="p-3 border-b border-gray-700">
+      <div className="p-2 border-b border-midnight-700/30">
         <button
           onClick={onSpawnAgent}
           disabled={!canSpawnAgent}
-          className={`w-full px-3 py-2 text-sm text-left rounded-md transition-colors ${
-            canSpawnAgent 
-              ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
-              : 'text-gray-500 cursor-not-allowed'
+          className={`w-full px-2 py-1.5 text-xs text-left rounded transition-colors ${
+            canSpawnAgent
+              ? 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+              : 'text-gray-600 cursor-not-allowed'
           }`}
         >
           + New Agent
         </button>
         {!canSpawnAgent && (
-          <div className="mt-2 px-3 py-1 text-xs text-gray-500">
+          <div className="mt-1 px-2 text-[10px] text-gray-600">
             {!vmConnected ? 'Configure VM first' : 'Connecting...'}
           </div>
         )}
@@ -75,7 +75,7 @@ export const SidebarSection: React.FC<SidebarSectionProps> = ({
   // defaultExpanded is opposite of defaultCollapsed
   const initialCollapsed = defaultExpanded !== undefined ? !defaultExpanded : defaultCollapsed;
   const [isCollapsed, setIsCollapsed] = React.useState(initialCollapsed);
-  
+
   // Ensure state is properly initialized only once
   React.useEffect(() => {
     setIsCollapsed(defaultCollapsed);
@@ -88,22 +88,22 @@ export const SidebarSection: React.FC<SidebarSectionProps> = ({
   };
 
   return (
-    <div className={`border-b border-midnight-600/50 last:border-b-0 ${className}`}>
-      <div 
-        className={`p-3 sm:p-4 ${collapsible ? 'cursor-pointer hover:bg-midnight-700/50 transition-colors duration-200' : ''}`}
+    <div className={`border-b border-midnight-700/30 last:border-b-0 ${className}`}>
+      <div
+        className={`py-2 px-3 ${collapsible ? 'cursor-pointer hover:bg-midnight-700/20 transition-colors duration-200' : ''}`}
         onClick={toggleCollapsed}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            {icon && <div className="text-gray-400">{icon}</div>}
-            <h3 className="text-sm font-bold text-electric uppercase tracking-wider">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            {icon && <div className="text-gray-500 text-xs">{icon}</div>}
+            <h3 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
               {title}
             </h3>
             {collapsible && (
-              <svg 
-                className={`w-4 h-4 text-electric transition-all duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className={`w-3 h-3 text-slate-500 transition-all duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -114,9 +114,9 @@ export const SidebarSection: React.FC<SidebarSectionProps> = ({
             <div className="flex-shrink-0">{action}</div>
           )}
         </div>
-        
+
         {!isCollapsed && children && (
-          <div className="mt-3">
+          <div className="mt-1">
             {children}
           </div>
         )}

@@ -356,7 +356,53 @@ router.use('/proxy/:teamId/:branch/*', async (req, res) => {
           .replace(/href="\/(@vite\/[^"]+)"/g, `href="${baseProxyPath}/$1"`)
           .replace(/href="\/src\/([^"]+)"/g, `href="${baseProxyPath}/src/$1"`);
 
-        console.log(`✅ [HTML-REWRITE] Fixed absolute paths for proxy: ${baseProxyPath}`);
+        // Inject HMR fix script to use correct WebSocket host
+        const hmrFixScript = `
+<script>
+(function() {
+  // Fix Vite HMR WebSocket URL to use current host instead of EC2
+  const currentHost = window.location.hostname;
+  const currentPort = window.location.port || '80';
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const baseProxyPath = '${baseProxyPath}';
+
+  // Override WebSocket before any Vite code runs
+  const originalSocket = window.WebSocket;
+  window.WebSocket = function(url, ...args) {
+    // Check if this is a Vite HMR WebSocket
+    if (url && (url.includes('/__vite_hmr') || url.includes('__vite_hmr'))) {
+      // Parse the URL to extract components
+      try {
+        const urlObj = new URL(url);
+        // Construct new WebSocket URL using current host
+        const newUrl = protocol + '//' + currentHost + ':' + currentPort + baseProxyPath + '/__vite_hmr';
+        console.log('[HMR Fix] Redirecting WebSocket from', url, 'to', newUrl);
+        return new originalSocket(newUrl, ...args);
+      } catch (e) {
+        // If URL parsing fails, try simple replacement
+        const newUrl = url.replace(/wss?:\\/\\/[^/]+/, protocol + '//' + currentHost + ':' + currentPort + baseProxyPath);
+        console.log('[HMR Fix] Redirecting WebSocket (fallback) from', url, 'to', newUrl);
+        return new originalSocket(newUrl, ...args);
+      }
+    }
+    return new originalSocket(url, ...args);
+  };
+
+  console.log('[HMR Fix] WebSocket interceptor installed for localhost HMR support');
+})();
+</script>`;
+
+        // Inject the script right after <head> or before </head>
+        if (responseBody.includes('<head>')) {
+          responseBody = responseBody.replace('<head>', '<head>' + hmrFixScript);
+        } else if (responseBody.includes('</head>')) {
+          responseBody = responseBody.replace('</head>', hmrFixScript + '</head>');
+        } else {
+          // If no head tag, inject at the beginning
+          responseBody = hmrFixScript + responseBody;
+        }
+
+        console.log(`✅ [HTML-REWRITE] Fixed absolute paths and HMR WebSocket for proxy: ${baseProxyPath}`);
       } else if (isHTML) {
         console.log(`⏭️ [HTML-SKIP] Not root path, skipping HTML rewrite for: "${proxyPath}"`);
       }

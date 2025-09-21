@@ -1543,6 +1543,30 @@ const globalSSHSessions = new Map<string, GlobalSSHSession>();
 // Track active sockets per agent for broadcasting
 const agentSockets = new Map<string, Set<string>>();
 
+// Tile focus tracking - ephemeral state for showing where teammates are focused
+const tileFocusMap = new Map<string, Map<string, { tile: string; timestamp: number }>>();
+
+// Clean up stale focus entries every 30 seconds
+setInterval(() => {
+  const now = Date.now();
+  const STALE_THRESHOLD = 30000; // 30 seconds
+
+  tileFocusMap.forEach((teamFocus, teamId) => {
+    teamFocus.forEach((focus, userId) => {
+      if (now - focus.timestamp > STALE_THRESHOLD) {
+        teamFocus.delete(userId);
+        // Emit blur event for stale focus
+        io.to(teamId).emit('teammate-focus', {
+          userId,
+          userName: 'Unknown',
+          tile: focus.tile,
+          action: 'blur'
+        });
+      }
+    });
+  });
+}, 30000);
+
 io.on('connection', (socket: Socket) => {
   console.log(`🔗 Client connected: ${socket.id}`);
   
@@ -1651,6 +1675,13 @@ io.on('connection', (socket: Socket) => {
             }
           },
           messages: {
+            where: {
+              NOT: {
+                content: {
+                  startsWith: '[AGENT:'
+                }
+              }
+            },
             orderBy: { createdAt: 'desc' },
             take: 50,
             include: {
@@ -1698,6 +1729,17 @@ io.on('connection', (socket: Socket) => {
         userEmail: user?.email || '',
         connectedUsers: teamConnections.get(data.teamId)?.size || 0
       });
+
+      // Also send the full updated online users list to all team members
+      const updatedOnlineUsers = Array.from(teamOnlineUsers.get(data.teamId)?.values() || []).map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        lastActivity: u.lastActivity,
+        device: u.device,
+        isOnline: true
+      }));
+      io.to(data.teamId).emit('online_users', updatedOnlineUsers);
 
     } catch (error) {
       console.error('Error joining team:', error);
@@ -1838,6 +1880,55 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  // Test handler
+  socket.on('test-handler', () => {
+    console.log('[TEST] Test handler called!');
+  });
+
+  // Handle clearing team chat
+  socket.on('clear-chat', (data: any) => {
+    console.log('[clear-chat] Handler executing!');
+    console.log('[clear-chat] Event received:', {
+      userId: socket.userId,
+      teamId: socket.teamId,
+      requestedTeamId: data?.teamId,
+      userName: socket.userName
+    });
+
+    if (!socket.userId || !socket.teamId || socket.teamId !== data?.teamId) {
+      console.log('[clear-chat] Authentication check failed');
+      socket.emit('error', { message: 'Not authenticated or invalid team' });
+      return;
+    }
+
+    // Use async IIFE to handle async operations
+    (async () => {
+      try {
+        // Delete all messages for the team
+        const deleteResult = await prisma.messages.deleteMany({
+        where: {
+          teamId: data.teamId
+        }
+      });
+
+      console.log('[clear-chat] Deleted messages:', deleteResult);
+
+      // Notify all team members that chat was cleared
+      const clearEvent = {
+        clearedBy: socket.userName || 'Unknown',
+        timestamp: new Date().toISOString()
+      };
+
+        console.log('[clear-chat] Emitting chat-cleared to team:', data.teamId, clearEvent);
+        io.to(data.teamId).emit('chat-cleared', clearEvent);
+
+      } catch (error) {
+        console.error('Error clearing chat:', error);
+        socket.emit('error', { message: 'Failed to clear chat' });
+      }
+    })();
+  });
+
   // Handle agent chat messages
   socket.on('agent-chat-message', async (data: { 
     agentId: string; 
@@ -1891,8 +1982,9 @@ io.on('connection', (socket: Socket) => {
         type: 'agent' // Explicitly set message type
       };
 
-      // Broadcast agent message to all team members
-      io.to(data.teamId).emit('chat-message', messageData);
+      // Don't broadcast agent messages to team chat
+      // Agents should not post to the team chat
+      // io.to(data.teamId).emit('chat-message', messageData);
 
     } catch (error) {
       console.error('Error handling agent chat message:', error);
@@ -2803,6 +2895,17 @@ io.on('connection', (socket: Socket) => {
                 userName: socket.userName,
                 connectedUsers: connections.size
               });
+
+              // Send updated online users list to all remaining team members
+              const remainingUsers = Array.from(onlineUsers.values()).map(u => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                lastActivity: u.lastActivity,
+                device: u.device,
+                isOnline: true
+              }));
+              socket.to(socket.teamId).emit('online_users', remainingUsers);
             }
           }
           
@@ -2915,6 +3018,61 @@ io.on('connection', (socket: Socket) => {
       tileId: data.tileId,
       removedBy: socket.userId,
       timestamp: new Date().toISOString()
+    });
+  });
+
+  socket.on('tile-focus', (data: { tile: string }) => {
+    console.log(`📍 [tile-focus] User ${socket.userId} focused on ${data.tile} tile in team ${socket.teamId}`);
+
+    if (!socket.teamId || !socket.userId) {
+      console.log(`📍 [tile-focus] Missing teamId or userId, ignoring`);
+      return;
+    }
+
+    // Get or create team focus map
+    if (!tileFocusMap.has(socket.teamId)) {
+      tileFocusMap.set(socket.teamId, new Map());
+    }
+    const teamFocus = tileFocusMap.get(socket.teamId)!;
+
+    // Update user's focus
+    teamFocus.set(socket.userId, {
+      tile: data.tile,
+      timestamp: Date.now()
+    });
+
+    // Get user info for broadcast
+    const user = (socket as any).user || { id: socket.userId, userName: 'Unknown' };
+
+    // Broadcast to team members
+    socket.to(socket.teamId).emit('teammate-focus', {
+      userId: socket.userId,
+      userName: user.userName,
+      tile: data.tile,
+      action: 'focus'
+    });
+  });
+
+  socket.on('tile-blur', (data: { tile: string }) => {
+    if (!socket.teamId || !socket.userId) {
+      return;
+    }
+
+    // Remove from focus map
+    const teamFocus = tileFocusMap.get(socket.teamId);
+    if (teamFocus) {
+      teamFocus.delete(socket.userId);
+    }
+
+    // Get user info for broadcast
+    const user = (socket as any).user || { id: socket.userId, userName: 'Unknown' };
+
+    // Broadcast to team members
+    socket.to(socket.teamId).emit('teammate-focus', {
+      userId: socket.userId,
+      userName: user.userName,
+      tile: data.tile,
+      action: 'blur'
     });
   });
 

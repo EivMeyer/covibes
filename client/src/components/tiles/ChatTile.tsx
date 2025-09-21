@@ -50,7 +50,8 @@ export const ChatTile: React.FC<ChatTileProps> = ({
       if (container) {
         const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
         if (isNearBottom) {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          // Scroll the container itself, not the page
+          container.scrollTop = container.scrollHeight;
         }
       }
     }

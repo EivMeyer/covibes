@@ -153,33 +153,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      {/* Main Content - More Compact */}
+      <div className="max-w-3xl mx-auto px-6 py-6">
         {loading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Personal Preferences Section */}
-            <div className="bg-midnight-800 rounded-xl border border-midnight-600 overflow-hidden">
-              <div className="px-6 py-4 border-b border-midnight-600">
-                <h2 className="text-lg font-medium text-white">Personal Preferences</h2>
-                <p className="mt-1 text-sm text-gray-400">
-                  Customize your individual experience
-                </p>
+          <div className="space-y-4">
+            {/* Combined Settings Section */}
+            <div className="bg-midnight-800 rounded-lg border border-midnight-600 overflow-hidden">
+              {/* Personal Preferences */}
+              <div className="px-4 py-3 border-b border-midnight-600">
+                <h2 className="text-sm font-semibold text-white">Personal Preferences</h2>
               </div>
-
-              <div className="p-6 space-y-6">
+              <div className="p-4 space-y-3">
                 {/* Sound Settings */}
-                <div className="flex items-start justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-white">
-                      Notification Sounds
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-400">
-                      Play sounds when notifications appear
-                    </p>
+                    <h3 className="text-sm font-medium text-white">Notification Sounds</h3>
+                    <p className="text-xs text-gray-500">Play sounds when notifications appear</p>
                   </div>
                   <button
                     type="button"
@@ -188,9 +181,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     onClick={() => handleSoundToggle(!soundsEnabled)}
                     disabled={saving}
                     className={`
-                      relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
+                      relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full
                       border-2 border-transparent transition-colors duration-200 ease-in-out
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
                       focus:ring-offset-midnight-800
                       ${soundsEnabled ? 'bg-indigo-600' : 'bg-midnight-600'}
                       ${saving ? 'opacity-50 cursor-not-allowed' : ''}
@@ -199,72 +192,54 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     <span className="sr-only">Enable notification sounds</span>
                     <span
                       className={`
-                        pointer-events-none inline-block h-5 w-5 transform rounded-full
+                        pointer-events-none inline-block h-4 w-4 transform rounded-full
                         bg-white shadow ring-0 transition duration-200 ease-in-out
-                        ${soundsEnabled ? 'translate-x-5' : 'translate-x-0'}
+                        ${soundsEnabled ? 'translate-x-4' : 'translate-x-0'}
                       `}
                     />
                   </button>
                 </div>
 
                 {/* Theme Settings (Future) */}
-                <div className="flex items-start justify-between opacity-50">
+                <div className="flex items-center justify-between opacity-50">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-white">
-                      Dark Mode
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-400">
-                      Use dark theme (always on for now)
-                    </p>
+                    <h3 className="text-sm font-medium text-white">Dark Mode</h3>
+                    <p className="text-xs text-gray-500">Always on</p>
                   </div>
                   <button
                     type="button"
                     role="switch"
                     aria-checked={true}
                     disabled
-                    className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-not-allowed rounded-full
+                    className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-not-allowed rounded-full
                       border-2 border-transparent bg-indigo-600"
                   >
                     <span className="sr-only">Dark mode</span>
-                    <span className="pointer-events-none inline-block h-5 w-5 transform rounded-full
-                      bg-white shadow translate-x-5" />
+                    <span className="pointer-events-none inline-block h-4 w-4 transform rounded-full
+                      bg-white shadow translate-x-4" />
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Team Settings Section */}
-            <div className="bg-midnight-800 rounded-xl border border-midnight-600 overflow-hidden">
-              <div className="px-6 py-4 border-b border-midnight-600">
+              {/* Team Settings */}
+              <div className="px-4 py-3 border-t border-b border-midnight-600 bg-midnight-700/30">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-medium text-white">Team Settings</h2>
-                    <p className="mt-1 text-sm text-gray-400">
-                      Configure settings for {team?.name || 'your team'}
-                    </p>
-                  </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-900/50 text-indigo-400 border border-indigo-500/30">
+                  <h2 className="text-sm font-semibold text-white">
+                    Team Settings - {team?.name || 'Your Team'}
+                  </h2>
+                  <span className="px-2 py-0.5 rounded text-xs font-medium bg-indigo-900/50 text-indigo-400">
                     {team?.inviteCode}
                   </span>
                 </div>
               </div>
-
-              <div className="p-6 space-y-6">
-                {/* Context Sharing */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-white">
-                      Context Sharing
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-400">
-                      Allow agents to see what other team members are working on via active.json
+              <div className="p-4 space-y-3">
+                {/* Context Sharing - Compact */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium text-white">Context Sharing</h3>
+                    <p className="text-xs text-gray-500">
+                      Allow agents to see team activity via active.json for better coordination
                     </p>
-                    <div className="mt-2 p-3 bg-midnight-700/50 rounded-lg border border-midnight-600">
-                      <p className="text-xs text-gray-500">
-                        When enabled, agents can read team activity from a shared file.
-                        This helps with coordination but can be disabled for privacy.
-                      </p>
-                    </div>
                   </div>
                   <button
                     type="button"
@@ -273,9 +248,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     onClick={() => handleContextSharingToggle(!enableContextSharing)}
                     disabled={saving}
                     className={`
-                      relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
+                      relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full
                       border-2 border-transparent transition-colors duration-200 ease-in-out
-                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
                       focus:ring-offset-midnight-800
                       ${enableContextSharing ? 'bg-indigo-600' : 'bg-midnight-600'}
                       ${saving ? 'opacity-50 cursor-not-allowed' : ''}
@@ -284,21 +259,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     <span className="sr-only">Enable context sharing</span>
                     <span
                       className={`
-                        pointer-events-none inline-block h-5 w-5 transform rounded-full
+                        pointer-events-none inline-block h-4 w-4 transform rounded-full
                         bg-white shadow ring-0 transition duration-200 ease-in-out
-                        ${enableContextSharing ? 'translate-x-5' : 'translate-x-0'}
+                        ${enableContextSharing ? 'translate-x-4' : 'translate-x-0'}
                       `}
                     />
                   </button>
                 </div>
 
-                {/* Repository Settings (Link to existing) */}
+                {/* Repository Settings - Compact */}
                 {team?.repositoryUrl && (
-                  <div className="pt-4 border-t border-midnight-600">
-                    <div className="flex items-center justify-between">
-                      <div>
+                  <div className="pt-3 border-t border-midnight-600">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
                         <h3 className="text-sm font-medium text-white">Repository</h3>
-                        <p className="mt-1 text-xs text-gray-500 font-mono">
+                        <p className="text-xs text-gray-500 font-mono truncate">
                           {team.repositoryUrl}
                         </p>
                       </div>
@@ -306,6 +281,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                         size="sm"
                         variant="secondary"
                         onClick={onBack}
+                        className="flex-shrink-0"
                       >
                         Configure
                       </Button>
@@ -315,27 +291,22 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               </div>
             </div>
 
-            {/* Danger Zone */}
-            <div className="bg-midnight-800 rounded-xl border border-red-900/30 overflow-hidden">
-              <div className="px-6 py-4 border-b border-red-900/30 bg-red-900/10">
-                <h2 className="text-lg font-medium text-red-400">Danger Zone</h2>
-                <p className="mt-1 text-sm text-gray-400">
-                  Irreversible actions
-                </p>
+            {/* Danger Zone - Compact */}
+            <div className="bg-midnight-800 rounded-lg border border-red-900/30 overflow-hidden">
+              <div className="px-4 py-2.5 bg-red-900/10">
+                <h2 className="text-sm font-semibold text-red-400">Danger Zone</h2>
               </div>
-
-              <div className="p-6 space-y-4">
+              <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-medium text-white">Leave Team</h3>
-                    <p className="mt-1 text-sm text-gray-400">
-                      Remove yourself from {team?.name}
-                    </p>
+                    <p className="text-xs text-gray-500">Remove yourself from {team?.name}</p>
                   </div>
                   <Button
                     size="sm"
                     variant="danger"
                     disabled
+                    className="text-xs"
                   >
                     Coming Soon
                   </Button>

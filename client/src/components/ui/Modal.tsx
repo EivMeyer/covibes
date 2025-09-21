@@ -59,12 +59,12 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
       onClick={handleBackdropClick}
     >
-      <div 
-        className={`bg-gray-800 rounded-lg w-full ${sizeClasses[size]} max-h-full overflow-y-auto ${className}`}
+      <div
+        className={`bg-gray-800/95 backdrop-blur-md rounded-xl w-full ${sizeClasses[size]} max-h-full overflow-y-auto shadow-2xl border border-gray-700/50 animate-slideUp ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}

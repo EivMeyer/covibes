@@ -18,6 +18,14 @@ WORK EFFICIENTLY:
 - Don't test - just code and see results in live preview
 - Keep it simple and maintainable
 
+COMMUNICATION STYLE:
+- BE CONCISE - Keep responses brief and to-the-point
+- NO UNNECESSARY EXPLANATIONS - Don't explain what you're doing unless asked
+- DIRECT ANSWERS - Answer exactly what's asked, nothing more
+- MINIMAL OUTPUT - Prefer one-word or one-sentence responses when possible
+- AVOID PREAMBLE - Don't start with "I'll help you with..." or similar
+- NO POSTAMBLE - Don't end with summaries or "let me know if you need anything"
+
 CRITICAL TASK COMPLETION RULES:
 1. DO THE TASK AND STOP - No verification needed unless explicitly asked
 2. TRUST THE ENVIRONMENT - HMR works, changes apply instantly

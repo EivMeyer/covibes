@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import { VoiceRecorder } from '@/components/ui/VoiceRecorder';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { X } from 'lucide-react';
 // Simplified types to avoid import issues
 interface AgentDetails {
@@ -55,16 +56,21 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   const [ignoreNextResponse, setIgnoreNextResponse] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [toolUseStatus, setToolUseStatus] = useState<string>('');
+  const [waitingForChunk, setWaitingForChunk] = useState(false);
   // Same small size for both mobile and desktop: 12px
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   const [fontSize, setFontSize] = useState(12);
   const [spinnerIndex, setSpinnerIndex] = useState(0);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [showVoiceModeIndicator, setShowVoiceModeIndicator] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const thinkingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const streamingContentRef = useRef<string>('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const spinnerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const chunkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const voiceModeIndicatorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Braille spinner characters for smooth animation
   const spinnerChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -72,9 +78,37 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   const isOwner = agent?.userId === currentUser?.id;
   const canInteract = isOwner && (agent?.status === 'running' || agent?.status === 'starting');
 
-  // Animate spinner when thinking
+  // Show voice mode indicator temporarily when voice mode changes
   useEffect(() => {
-    if (isThinking && !streamingContent) {
+    if (voiceMode) {
+      setShowVoiceModeIndicator(true);
+
+      // Clear any existing timeout
+      if (voiceModeIndicatorTimeoutRef.current) {
+        clearTimeout(voiceModeIndicatorTimeoutRef.current);
+      }
+
+      // Hide indicator after 3 seconds
+      voiceModeIndicatorTimeoutRef.current = setTimeout(() => {
+        setShowVoiceModeIndicator(false);
+      }, 3000);
+    } else {
+      setShowVoiceModeIndicator(false);
+      if (voiceModeIndicatorTimeoutRef.current) {
+        clearTimeout(voiceModeIndicatorTimeoutRef.current);
+      }
+    }
+
+    return () => {
+      if (voiceModeIndicatorTimeoutRef.current) {
+        clearTimeout(voiceModeIndicatorTimeoutRef.current);
+      }
+    };
+  }, [voiceMode]);
+
+  // Animate spinner when thinking or waiting for chunks
+  useEffect(() => {
+    if (isThinking || waitingForChunk) {
       spinnerIntervalRef.current = setInterval(() => {
         setSpinnerIndex(prev => (prev + 1) % spinnerChars.length);
       }, 80);
@@ -91,7 +125,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         clearInterval(spinnerIntervalRef.current);
       }
     };
-  }, [isThinking, streamingContent]);
+  }, [isThinking, waitingForChunk]);
 
   // Filter agents that are running
   const availableAgents = agents.filter(a =>
@@ -122,9 +156,11 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     }
   }, [input]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom within the messages container only
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages, streamingContent]);
 
   // Initialize with welcome message when agent connects
@@ -321,9 +357,24 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
           }, 100); // Short delay to clear after minimum time
         }
 
+        // Clear waiting state since we got a chunk
+        setWaitingForChunk(false);
+
+        // Clear any existing chunk timeout
+        if (chunkTimeoutRef.current) {
+          clearTimeout(chunkTimeoutRef.current);
+        }
+
+        // Set a timeout to show spinner if no chunk arrives soon
+        chunkTimeoutRef.current = setTimeout(() => {
+          if (isStreaming) { // Only if we're still streaming
+            setWaitingForChunk(true);
+          }
+        }, 300); // Show spinner after 300ms of no chunks
+
         setStreamingContent(prev => {
-          // Add double line break after sentences (ending with period) for better readability
-          const separator = prev && prev.endsWith('.') ? '\n\n' : '';
+          // Add double line break after sentences (ending with period, exclamation, or colon) for better readability
+          const separator = prev && (prev.endsWith('.') || prev.endsWith('!') || prev.endsWith(':')) ? '\n\n' : '';
           const newContent = prev + separator + data.content;
           console.log('📝 [FRONTEND] Total streaming content now:', newContent.substring(0, 100));
           return newContent;
@@ -357,6 +408,13 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         streamingContentRef.current = '';
         setIsThinking(false);  // Ensure thinking is cleared
         setToolUseStatus('');  // Ensure tool status is cleared
+        setWaitingForChunk(false);  // Clear waiting state
+
+        // Clear chunk timeout
+        if (chunkTimeoutRef.current) {
+          clearTimeout(chunkTimeoutRef.current);
+          chunkTimeoutRef.current = null;
+        }
 
         // Mark that we should ignore the next agent_chat_response to avoid duplicates
         setIgnoreNextResponse(true);
@@ -372,17 +430,58 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     // Tool use handler
     const handleToolUse = (data: any) => {
       if (data.agentId === currentAgentId) {
-        console.log('🔧 [FRONTEND] Tool use:', data.tool);
-        const toolMessages = {
-          'Read': '> read file.txt',
-          'Bash': '> exec command',
-          'Grep': '> grep pattern',
-          'Glob': '> find files',
-          'Write': '> write file.txt',
-          'Edit': '> edit file.txt',
-          'MultiEdit': '> edit files'
-        };
-        setToolUseStatus(toolMessages[data.tool] || `> ${data.tool.toLowerCase()}`);
+        console.log('🔧 [FRONTEND] Tool use:', data.tool, 'with data:', data);
+
+        // Build status message based on tool and available data
+        let statusMessage = '';
+
+        if (data.tool === 'Edit' || data.tool === 'Write' || data.tool === 'Read') {
+          // For file operations, show the actual file path if available
+          if (data.file_path) {
+            statusMessage = `> ${data.tool.toLowerCase()} ${data.file_path}`;
+          } else if (data.filePath) {
+            statusMessage = `> ${data.tool.toLowerCase()} ${data.filePath}`;
+          } else {
+            statusMessage = `> ${data.tool.toLowerCase()}ing file...`;
+          }
+        } else if (data.tool === 'Bash') {
+          // For bash commands, show the command if available
+          if (data.command) {
+            // Truncate long commands
+            const cmd = data.command.length > 50 ? data.command.substring(0, 50) + '...' : data.command;
+            statusMessage = `> ${cmd}`;
+          } else {
+            statusMessage = '> executing command...';
+          }
+        } else if (data.tool === 'Grep') {
+          // For grep, show the pattern if available
+          if (data.pattern) {
+            statusMessage = `> searching for "${data.pattern}"`;
+          } else {
+            statusMessage = '> searching pattern...';
+          }
+        } else if (data.tool === 'Glob') {
+          // For glob, show the pattern if available
+          if (data.pattern) {
+            statusMessage = `> finding ${data.pattern}`;
+          } else {
+            statusMessage = '> finding files...';
+          }
+        } else if (data.tool === 'MultiEdit') {
+          // For multi-edit, show file if available
+          if (data.file_path) {
+            statusMessage = `> editing ${data.file_path}`;
+          } else if (data.filePath) {
+            statusMessage = `> editing ${data.filePath}`;
+          } else {
+            statusMessage = '> editing multiple sections...';
+          }
+        } else {
+          // Default fallback
+          statusMessage = `> ${data.tool.toLowerCase()}...`;
+        }
+
+        setToolUseStatus(statusMessage);
       }
     };
 
@@ -543,8 +642,11 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             </button>
             <button
               onClick={() => setFontSize(12)}
-              className="px-1 py-0.5 text-xs font-mono text-gray-400 hover:text-gray-200 transition-colors ml-1"
-              title="Reset font size"
+              className={`px-1 py-0.5 text-xs font-mono transition-colors ml-1 ${
+                fontSize === 12 ? 'text-gray-600 cursor-default' : 'text-gray-400 hover:text-gray-200 cursor-pointer'
+              }`}
+              title={fontSize === 12 ? "Font size is at default (12px)" : "Reset font size to 12px"}
+              disabled={fontSize === 12}
             >
               reset
             </button>
@@ -567,7 +669,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
 
             {showDropdown && (
               <div className="absolute right-0 top-full mt-1 w-64 bg-gray-900 border border-gray-800 z-50">
-                <div className="max-h-60 overflow-y-auto font-mono" style={{ fontSize: '12px' }}>
+                <div className="max-h-60 overflow-y-auto font-mono" style={{ fontSize: `${fontSize}px` }}>
                   {availableAgents.length > 0 ? (
                     availableAgents.map((a) => (
                       <button
@@ -609,7 +711,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 font-mono" style={{ fontSize: `${fontSize}px` }}>
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 font-mono" style={{ fontSize: `${fontSize}px` }}>
         {messages.length === 0 && !agent ? (
           <div className="text-gray-600">
             <p>// no agent connected</p>
@@ -629,9 +731,18 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
                   {message.role === 'user' ? '>' : message.role === 'system' ? '//' : ' '}
                 </span>
                 <div className="flex-1">
-                  <div className="whitespace-pre-wrap text-gray-100">
-                    {message.content}
-                  </div>
+                  {message.role === 'assistant' ? (
+                    <MarkdownRenderer
+                      content={message.content}
+                      className={`text-gray-100`}
+                    />
+                  ) : (
+                    <div className={`whitespace-pre-wrap ${
+                      message.role === 'user' ? 'text-green-400' : 'text-gray-100'
+                    }`}>
+                      {message.content}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -640,7 +751,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
 
         {/* Thinking/Tool Use Indicator */}
         {(() => {
-          const shouldShow = (isThinking || toolUseStatus) && !streamingContent;
+          const shouldShow = (isThinking || toolUseStatus);
           return shouldShow;
         })() && (
           <div className="mb-3">
@@ -659,42 +770,50 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             <div className="flex items-start gap-2">
               <span className="text-gray-400"> </span>
               <div className="flex-1">
-                <div className="whitespace-pre-wrap text-gray-100">
-                  {streamingContent}
+                <MarkdownRenderer
+                  content={streamingContent + ((isThinking || waitingForChunk) ? ` ${spinnerChars[spinnerIndex]}` : '')}
+                  className="text-gray-100"
+                />
+                {!(isThinking || waitingForChunk) && (
                   <span className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1"></span>
-                </div>
+                )}
               </div>
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
       <div className="border-t border-gray-800 p-3">
         {/* Voice mode indicator */}
-        {voiceMode && (
-          <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-green-900/20 border border-green-800/30 rounded">
-            <span className="text-green-400 text-xs font-mono">🎙️ Voice mode active - speak your message</span>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <span className="text-green-400 font-mono py-2" style={{ fontSize: `${fontSize}px` }}>{'>'}</span>
+        <div className={`flex items-center gap-2 mb-2 px-2 py-1 bg-green-900/20 border border-green-800/30 rounded transition-all duration-500 ${
+          showVoiceModeIndicator ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0 overflow-hidden'
+        }`}>
+          <span className="text-green-400 text-xs font-mono">🎙️ Voice mode active - speak your message</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-green-400 font-mono self-start pt-2" style={{ fontSize: `${fontSize}px` }}>{'>'}</span>
           <textarea
             ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            value={isRecording ? '' : input}
+            onChange={(e) => !isRecording && setInput(e.target.value)}
+            onKeyPress={!isRecording ? handleKeyPress : undefined}
             placeholder={
-              agent
+              isRecording || voiceMode
+                ? "Listening..."
+                : agent
                 ? ""
                 : "// no agent connected"
             }
-            className="flex-1 px-2 py-2 bg-transparent font-mono text-gray-100 placeholder-gray-600 focus:outline-none resize-none"
-            style={{ fontSize: `${fontSize}px` }}
+            className={`flex-1 px-2 py-2 bg-transparent font-mono placeholder-gray-600 focus:outline-none resize-none border rounded transition-all ${
+              isRecording
+                ? 'text-gray-500 border-red-400/40 bg-red-900/10 placeholder-red-400 cursor-not-allowed'
+                : 'text-gray-100 border-green-400/30 focus:border-green-400/60'
+            }`}
+            style={{ fontSize: `${fontSize}px`, resize: 'none', WebkitAppearance: 'none' }}
             rows={1}
-            disabled={!canInteract || isLoading}
+            disabled={!canInteract || isLoading || isRecording}
+            readOnly={isRecording}
             autoCorrect={isMobile ? "on" : "off"}
             autoCapitalize={isMobile ? "sentences" : "off"}
             spellCheck={isMobile}
@@ -712,11 +831,12 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             disabled={isLoading}
             persistentMode={voiceMode}
             onModeChange={setVoiceMode}
+            onRecordingStateChange={setIsRecording}
           />
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || !canInteract || isLoading}
-            className="px-3 py-2 font-mono text-gray-400 hover:text-green-400 disabled:text-gray-700 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1 font-mono text-gray-400 hover:text-green-400 disabled:text-gray-700 disabled:cursor-not-allowed transition-colors self-center"
             style={{ fontSize: `${Math.max(fontSize - 2, 10)}px` }}
           >
             [send]

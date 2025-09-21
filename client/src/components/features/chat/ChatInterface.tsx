@@ -11,6 +11,7 @@ interface ChatInterfaceProps {
   chatMessages: any[];
   onlineUsers: any[];
   sendChatMessage: (content: string) => void;
+  clearChat?: () => void;
   isSocketConnected: () => boolean;
 }
 
@@ -20,6 +21,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   chatMessages: messages,
   onlineUsers,
   sendChatMessage,
+  clearChat,
   isSocketConnected,
 }) => {
   const [messageText, setMessageText] = useState('');
@@ -100,6 +102,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="px-3 py-2 border-b border-gray-700/60 text-sm text-gray-400 flex items-center justify-between">
         <span>Chat • {onlineUsers.length} online</span>
         <div className="flex items-center space-x-1">
+          {clearChat && (
+            <button
+              onClick={() => clearChat()}
+              className="p-1 text-gray-400 hover:text-red-400 transition-colors mr-2"
+              title="Clear chat"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
           <button
             onClick={zoomOut}
             className="p-1 text-gray-400 hover:text-white transition-colors"

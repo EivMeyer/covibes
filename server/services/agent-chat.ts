@@ -59,7 +59,9 @@ class AgentChatService {
           type: 'agent' // Explicitly set message type
         };
 
-        this.io.to(data.teamId).emit('chat-message', messageData);
+        // Emit agent-specific message event instead of general chat-message
+        // This prevents agents from posting to the team chat
+        this.io.to(data.teamId).emit('agent-message', messageData);
       }
 
       return message;

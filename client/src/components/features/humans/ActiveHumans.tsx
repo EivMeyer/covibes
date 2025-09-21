@@ -56,55 +56,42 @@ export const ActiveHumans: React.FC<ActiveHumansProps> = ({
   });
 
   return (
-    <div className={`space-y-1 ${className}`}>
+    <div className={`${className}`}>
       {sortedUsers.length === 0 ? (
-        <div className="text-center text-gray-500 text-xs py-2">
+        <div className="text-center text-gray-500 text-[10px] py-1">
           No users online
         </div>
       ) : (
-        sortedUsers.map((user) => (
-          <div
-            key={user.id}
-            className="flex items-center space-x-2 p-1 rounded hover:bg-midnight-700 transition-colors"
-          >
-            {/* Status Indicator - Smaller */}
-            <div className="relative flex-shrink-0">
-              <div className="w-6 h-6 bg-midnight-600 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white uppercase">
-                  {user.userName.charAt(0)}
-                </span>
-              </div>
+        <div className="space-y-0.5">
+          {sortedUsers.map((user) => (
+            <div
+              key={user.id}
+              className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-midnight-700/30 transition-colors"
+            >
+              {/* Status dot only */}
               <div
-                className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-midnight-800 ${getStatusColor(user)}`}
+                className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusColor(user)}`}
               />
-            </div>
 
-            {/* User Info - Compact */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-1">
-                <span className="text-xs font-medium text-white truncate">
-                  {user.userName.split(' ')[0]} {/* First name only */}
-                </span>
-                {user.id === currentUserId && (
-                  <span className="text-xs bg-electric/30 text-electric px-1 rounded">
-                    you
-                  </span>
-                )}
-              </div>
-              
+              {/* Name */}
+              <span className={`text-xs ${user.id === currentUserId ? 'text-white' : 'text-slate-300'} truncate`}>
+                {user.userName.split(' ')[0]}
+              </span>
+
+              {/* Time ago for offline users */}
               {!user.isOnline && (
-                <div className="text-xs text-gray-500">
+                <span className="text-[10px] text-gray-600 ml-auto">
                   {getTimeAgo(user.lastSeen)}
-                </div>
+                </span>
               )}
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
-      
-      {/* Team Stats - Compact */}
-      <div className="border-t border-midnight-600 pt-1 mt-2">
-        <div className="text-xs text-gray-500 px-1">
+
+      {/* Team Stats - Super compact */}
+      <div className="border-t border-midnight-700/30 mt-1.5 pt-1">
+        <div className="text-[10px] text-gray-600 px-2">
           {onlineUsers.filter(u => u.isOnline).length}/{onlineUsers.length} online
         </div>
       </div>

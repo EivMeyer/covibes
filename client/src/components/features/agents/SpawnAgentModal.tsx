@@ -162,131 +162,169 @@ export const SpawnAgentModal: React.FC<SpawnAgentModalProps> = ({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Agent Selection */}
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-gray-400 mb-2">
+        <div className="space-y-3">
+          <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
             AI AGENT
           </label>
 
           {/* Claude - Available */}
           <div
-            className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-400 rounded-lg p-3 cursor-pointer transition-all hover:from-blue-500/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-blue-500/20"
+            className={`relative group bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-cyan-500/10 border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${
+              formData.agentType === 'claude'
+                ? 'border-blue-400 shadow-lg shadow-blue-500/25 animate-pulse-slow'
+                : 'border-gray-700 hover:border-blue-400/60'
+            }`}
             onClick={() => setFormData({ ...formData, agentType: 'claude' })}
           >
-            <div className="flex items-center justify-between">
+            {formData.agentType === 'claude' && (
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl animate-pulse" />
+            )}
+            <div className="relative flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">C</span>
+                <div className="relative">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-3 transition-transform duration-300">
+                    <span className="text-white text-lg font-bold">C</span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-800 animate-pulse" />
                 </div>
                 <div>
-                  <p className="font-medium text-white text-sm">Claude Code</p>
-                  <p className="text-xs text-blue-300">Anthropic's AI assistant</p>
+                  <p className="font-semibold text-white text-sm">Claude Code</p>
+                  <p className="text-xs text-gray-400 group-hover:text-blue-300 transition-colors">Anthropic's AI assistant</p>
                 </div>
               </div>
-              <div className="w-4 h-4 border-2 border-blue-400 rounded-full bg-blue-400" />
+              <div className={`w-5 h-5 rounded-full border-2 transition-all duration-300 ${
+                formData.agentType === 'claude'
+                  ? 'bg-blue-400 border-blue-400 shadow-lg shadow-blue-400/50'
+                  : 'border-gray-600 group-hover:border-blue-400'
+              }`}>
+                {formData.agentType === 'claude' && (
+                  <svg className="w-full h-full text-white p-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Gemini - Coming Soon */}
-          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-3 opacity-40 cursor-not-allowed">
+          <div className="relative bg-gray-800/30 border-2 border-gray-700/50 rounded-xl p-4 opacity-50 cursor-not-allowed">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-400 text-sm font-bold">G</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center">
+                  <span className="text-gray-500 text-lg font-bold">G</span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-400 text-sm">Gemini</p>
-                  <p className="text-xs text-gray-500">Google AI</p>
+                  <p className="font-semibold text-gray-400 text-sm">Gemini</p>
+                  <p className="text-xs text-gray-600">Google AI</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded-full">Soon</span>
+              <span className="text-xs text-amber-400/70 bg-amber-400/10 border border-amber-400/30 px-2 py-1 rounded-full font-medium animate-pulse">Coming Soon</span>
             </div>
           </div>
 
-          {/* Codex - Coming Soon */}
-          <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-3 opacity-40 cursor-not-allowed">
+          {/* OpenAI - Coming Soon */}
+          <div className="relative bg-gray-800/30 border-2 border-gray-700/50 rounded-xl p-4 opacity-50 cursor-not-allowed">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-400 text-sm font-bold">O</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center">
+                  <span className="text-gray-500 text-lg font-bold">O</span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-400 text-sm">OpenAI</p>
-                  <p className="text-xs text-gray-500">GPT models</p>
+                  <p className="font-semibold text-gray-400 text-sm">OpenAI</p>
+                  <p className="text-xs text-gray-600">GPT models</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-600 bg-gray-800 px-2 py-0.5 rounded-full">Soon</span>
+              <span className="text-xs text-amber-400/70 bg-amber-400/10 border border-amber-400/30 px-2 py-1 rounded-full font-medium animate-pulse">Coming Soon</span>
             </div>
           </div>
         </div>
 
         {/* Mode Selection */}
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-gray-400 mb-2">
+        <div className="space-y-3">
+          <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">
             MODE
           </label>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {/* Chat Mode (Assistant) - Default, shown first */}
             <div
-              className={`border rounded-lg p-3 cursor-pointer transition-all ${
+              className={`relative group border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                 formData.mode === 'chat'
-                  ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-400 hover:shadow-lg hover:shadow-purple-500/20'
-                  : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                  ? 'bg-gradient-to-br from-purple-500/15 via-purple-500/10 to-pink-500/15 border-purple-400 shadow-lg shadow-purple-500/20'
+                  : 'bg-gray-800/40 border-gray-700 hover:border-purple-400/50 hover:bg-gray-800/60'
               }`}
               onClick={() => setFormData({ ...formData, mode: 'chat' })}
             >
-              <div className="flex flex-col items-center space-y-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              {formData.mode === 'chat' && (
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl animate-pulse" />
+              )}
+              <div className="relative flex flex-col items-center space-y-3">
+                <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
                   formData.mode === 'chat'
-                    ? 'bg-gradient-to-br from-purple-400 to-pink-400'
-                    : 'bg-gray-700'
+                    ? 'bg-gradient-to-br from-purple-400 to-pink-400 shadow-lg'
+                    : 'bg-gradient-to-br from-gray-700 to-gray-800'
                 }`}>
-                  <span className="text-white text-sm">💬</span>
+                  <span className="text-2xl">💬</span>
+                  {formData.mode === 'chat' && (
+                    <div className="absolute -inset-1 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl opacity-20 animate-pulse blur-sm" />
+                  )}
                 </div>
                 <div className="text-center">
-                  <p className="font-medium text-white text-sm">Assistant</p>
-                  <p className="text-xs text-gray-400">Chat mode</p>
+                  <p className="font-semibold text-white text-sm">Assistant</p>
+                  <p className={`text-xs transition-colors ${
+                    formData.mode === 'chat' ? 'text-purple-300' : 'text-gray-500 group-hover:text-gray-400'
+                  }`}>Chat mode</p>
                 </div>
               </div>
             </div>
 
             {/* Terminal Mode */}
             <div
-              className={`border rounded-lg p-3 cursor-pointer transition-all ${
+              className={`relative group border-2 rounded-xl p-4 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                 formData.mode === 'terminal'
-                  ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-400 hover:shadow-lg hover:shadow-green-500/20'
-                  : 'bg-gray-800/30 border-gray-700 hover:border-gray-600'
+                  ? 'bg-gradient-to-br from-green-500/15 via-green-500/10 to-emerald-500/15 border-green-400 shadow-lg shadow-green-500/20'
+                  : 'bg-gray-800/40 border-gray-700 hover:border-green-400/50 hover:bg-gray-800/60'
               }`}
               onClick={() => setFormData({ ...formData, mode: 'terminal' })}
             >
-              <div className="flex flex-col items-center space-y-2">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              {formData.mode === 'terminal' && (
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl animate-pulse" />
+              )}
+              <div className="relative flex flex-col items-center space-y-3">
+                <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
                   formData.mode === 'terminal'
-                    ? 'bg-gradient-to-br from-green-400 to-emerald-400'
-                    : 'bg-gray-700'
+                    ? 'bg-gradient-to-br from-green-400 to-emerald-400 shadow-lg'
+                    : 'bg-gradient-to-br from-gray-700 to-gray-800'
                 }`}>
-                  <span className="text-white text-lg">›_</span>
+                  <span className="text-white text-xl font-mono font-bold">›_</span>
+                  {formData.mode === 'terminal' && (
+                    <div className="absolute -inset-1 bg-gradient-to-br from-green-400 to-emerald-400 rounded-xl opacity-20 animate-pulse blur-sm" />
+                  )}
                 </div>
                 <div className="text-center">
-                  <p className="font-medium text-white text-sm">Terminal</p>
-                  <p className="text-xs text-gray-400">Raw output</p>
+                  <p className="font-semibold text-white text-sm">Terminal</p>
+                  <p className={`text-xs transition-colors ${
+                    formData.mode === 'terminal' ? 'text-green-300' : 'text-gray-500 group-hover:text-gray-400'
+                  }`}>Raw output</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <p className="text-xs text-gray-500">
-            {formData.mode === 'terminal'
-              ? 'See raw terminal output as commands execute. Best for debugging and system tasks.'
-              : 'Clean conversation interface with full coding capabilities. Recommended for most users.'}
-          </p>
+          <div className="bg-gray-800/30 border border-gray-700/50 rounded-lg p-3 mt-3">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {formData.mode === 'terminal'
+                ? '🖥️ See raw terminal output as commands execute. Best for debugging and system tasks.'
+                : '✨ Clean conversation interface with full coding capabilities. Recommended for most users.'}
+            </p>
+          </div>
         </div>
 
         <ModalFooter
           onCancel={handleClose}
           onConfirm={handleSubmit}
           cancelText="Cancel"
-          confirmText="Spawn"
+          confirmText={isSubmitting ? "Spawning..." : "🚀 Spawn Agent"}
           confirmVariant="primary"
           isLoading={isSubmitting}
         />

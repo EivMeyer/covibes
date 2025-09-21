@@ -7,6 +7,8 @@ interface VoiceRecorderProps {
   className?: string;
   persistentMode?: boolean;
   onModeChange?: (enabled: boolean) => void;
+  onStreamChange?: (stream: MediaStream | null) => void;
+  onRecordingStateChange?: (isRecording: boolean) => void;
 }
 
 type RecorderState = 'idle' | 'listening' | 'recording' | 'processing' | 'error';
@@ -16,7 +18,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   disabled = false,
   className = '',
   persistentMode = false,
-  onModeChange
+  onModeChange,
+  onStreamChange,
+  onRecordingStateChange
 }) => {
   const [state, setState] = useState<RecorderState>('idle');
   const [error, setError] = useState<string>('');
@@ -24,6 +28,14 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const recognitionRef = useRef<any>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const persistentModeRef = useRef<boolean>(persistentMode);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const isRestartingRef = useRef<boolean>(false);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    persistentModeRef.current = persistentMode;
+  }, [persistentMode]);
 
   // Check for Web Speech API support
   useEffect(() => {
@@ -31,18 +43,42 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     setIsSupported(!!SpeechRecognition);
   }, []);
 
-  // Auto-start listening when persistent mode is enabled
-  useEffect(() => {
-    if (persistentMode && !disabled && state === 'idle') {
-      startListening();
-    } else if (!persistentMode && (state === 'listening' || state === 'recording')) {
-      stopRecording();
-    }
-  }, [persistentMode, disabled]);
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     try {
       setError('');
+
+      // Stop any existing recognition first
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current = null;
+        } catch (err) {
+          // Ignore errors when stopping
+        }
+      }
+
+      // TEMPORARILY DISABLED: Audio visualization to debug speech recognition
+      // The visualization might be conflicting with speech recognition
+      /*
+      if ((onStreamChange || onRecordingStateChange) && !mediaStreamRef.current) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            }
+          });
+          mediaStreamRef.current = stream;
+          if (onStreamChange) {
+            onStreamChange(stream);
+          }
+        } catch (err) {
+          console.warn('Could not get media stream for visualization:', err);
+        }
+      }
+      */
 
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
@@ -53,17 +89,20 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       const recognition = new SpeechRecognition();
       recognitionRef.current = recognition;
 
-      recognition.continuous = persistentMode;
-      recognition.interimResults = false;
+      recognition.continuous = true;  // Always keep continuous to avoid stopping
+      recognition.interimResults = true;  // Enable to detect ongoing speech
       recognition.lang = 'en-US';
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
-        setState(persistentMode ? 'listening' : 'recording');
+        setState(persistentModeRef.current ? 'listening' : 'recording');
       };
 
       recognition.onspeechstart = () => {
-        setState('recording');
+        // This only fires once in continuous mode, on first speech
+        if (!persistentModeRef.current) {
+          setState('recording');
+        }
         // Clear any existing silence timeout
         if (silenceTimeoutRef.current) {
           clearTimeout(silenceTimeoutRef.current);
@@ -72,40 +111,57 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       recognition.onspeechend = () => {
-        if (persistentMode) {
-          // In persistent mode, go back to listening after a short pause
+        // This may not fire reliably in continuous mode
+        if (!persistentModeRef.current) {
           setState('processing');
-          silenceTimeoutRef.current = setTimeout(() => {
-            setState('listening');
-          }, 500);
         }
       };
 
       recognition.onresult = (event: any) => {
         const lastResult = event.results[event.results.length - 1];
-        if (lastResult.isFinal) {
+
+        if (!lastResult.isFinal) {
+          // Interim result - user is actively speaking
+          if (persistentModeRef.current) {
+            setState('recording');
+            if (onRecordingStateChange) {
+              onRecordingStateChange(true);
+            }
+          }
+        } else {
+          // Final result - process the transcript
           const transcript = lastResult[0].transcript;
           if (transcript) {
             onTranscript(transcript);
 
-            if (persistentMode) {
-              // In persistent mode, immediately go back to listening
+            if (persistentModeRef.current) {
+              // In persistent mode, go back to listening
               setState('listening');
+              if (onRecordingStateChange) {
+                onRecordingStateChange(false);
+              }
+              // Don't stop the recognition - let it continue
             } else {
               setState('idle');
+              if (onRecordingStateChange) {
+                onRecordingStateChange(false);
+              }
             }
           }
         }
       };
 
       recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-
-        // Don't show error for no-speech in persistent mode
-        if (persistentMode && event.error === 'no-speech') {
-          setState('listening');
-          return;
+        // Handle specific error types in persistent mode
+        if (persistentModeRef.current) {
+          if (event.error === 'no-speech' || event.error === 'aborted') {
+            // These are expected in continuous mode, just go back to listening
+            setState('listening');
+            return;
+          }
         }
+
+        console.error('Speech recognition error:', event.error);
 
         let errorMessage = 'Speech recognition failed';
         if (event.error === 'not-allowed') {
@@ -126,19 +182,25 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       recognition.onend = () => {
-        // Restart if in persistent mode and not explicitly stopped
-        if (persistentMode && state !== 'idle' && state !== 'error') {
+        // Clean up the reference since this instance has ended
+        if (recognitionRef.current === recognition) {
+          recognitionRef.current = null;
+        }
+
+        // Only restart if in persistent mode and not already restarting
+        if (persistentModeRef.current && !isRestartingRef.current) {
+          isRestartingRef.current = true;
+
           setTimeout(() => {
-            if (persistentMode && recognitionRef.current) {
-              try {
-                recognition.start();
-              } catch (err) {
-                console.log('Restarting recognition...');
-              }
+            if (persistentModeRef.current && !recognitionRef.current) {
+              // Create a new recognition instance
+              startListening();
             }
-          }, 100);
+            isRestartingRef.current = false;
+          }, 500); // Longer delay to ensure clean restart
         } else {
           setState('idle');
+          isRestartingRef.current = false;
         }
 
         // Clear timeouts
@@ -164,7 +226,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       setState('error');
       setTimeout(() => setState('idle'), 3000);
     }
-  }, [onTranscript, persistentMode, state, onModeChange]);
+  }, [onTranscript, onModeChange]);
 
   const stopRecording = useCallback(() => {
     // Clear timeouts
@@ -177,6 +239,15 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       silenceTimeoutRef.current = null;
     }
 
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+      if (onStreamChange) {
+        onStreamChange(null);
+      }
+    }
+
     // Stop recognition
     if (recognitionRef.current) {
       try {
@@ -187,8 +258,21 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       recognitionRef.current = null;
     }
 
+    if (onRecordingStateChange) {
+      onRecordingStateChange(false);
+    }
+
     setState('idle');
-  }, []);
+  }, [onStreamChange, onRecordingStateChange]);
+
+  // Auto-start listening when persistent mode is enabled
+  useEffect(() => {
+    if (persistentMode && !disabled && state === 'idle') {
+      startListening();
+    } else if (!persistentMode && (state === 'listening' || state === 'recording')) {
+      stopRecording();
+    }
+  }, [persistentMode, disabled, state, startListening, stopRecording]);
 
   const handleClick = useCallback(() => {
     if (disabled || !isSupported) return;
@@ -284,7 +368,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         onClick={handleClick}
         disabled={disabled || !isSupported}
         className={`
-          relative p-2 rounded transition-all
+          relative p-1 rounded transition-all
           ${disabled || !isSupported ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-800'}
           ${persistentMode ? 'bg-green-900/20 ring-1 ring-green-500/30' : ''}
           ${state === 'recording' ? 'bg-red-900/20' : ''}
@@ -296,14 +380,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         {getButtonContent()}
       </button>
 
-      {/* Mode indicator */}
-      {persistentMode && (
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2
-                        px-2 py-1 text-xs text-green-400 bg-gray-900
-                        border border-green-800 rounded whitespace-nowrap">
-          Voice mode
-        </div>
-      )}
 
       {/* Error message */}
       {error && state === 'error' && !persistentMode && (

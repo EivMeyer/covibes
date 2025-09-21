@@ -54,10 +54,12 @@ const AgentRow: React.FC<AgentRowProps> = ({
       draggable={isOwner && agent.status === 'running'}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      className={`group flex items-center h-8 px-2 rounded transition-all duration-150 ${
-        isSelected 
-          ? 'bg-slate-800/60' 
-          : 'hover:bg-slate-800/30'
+      className={`group flex items-center h-5 px-1.5 rounded transition-all duration-150 ${
+        isSelected
+          ? 'bg-blue-900/40 ring-1 ring-blue-500/30'
+          : agent.status === 'running'
+            ? 'bg-emerald-950/20 hover:bg-emerald-900/30'
+            : 'bg-slate-800/20 hover:bg-slate-800/40'
       } ${isDragging ? 'opacity-50' : ''} ${
         isOwner && agent.status === 'running' ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
       }`}
@@ -71,50 +73,57 @@ const AgentRow: React.FC<AgentRowProps> = ({
       }}
     >
       {/* Status dot */}
-      <div className={`w-1.5 h-1.5 rounded-full mr-2 flex-shrink-0 ${statusInfo.color} ${
+      <div className={`w-1 h-1 rounded-full mr-1.5 flex-shrink-0 ${statusInfo.color} ${
         statusInfo.pulse ? 'animate-pulse' : ''
       }`} />
 
-      {/* Agent Name - compact */}
-      <div className="flex-1 min-w-0 mr-2">
-        <span className="text-xs text-slate-200 truncate block">
-          {agent.agentName || `A-${agent.id.slice(0, 6)}`}
+      {/* Agent Name and info - single line */}
+      <div className="flex-1 min-w-0 mr-1 flex items-center gap-1">
+        <span className={`text-xs truncate ${
+          agent.status === 'running' ? 'text-emerald-200 font-medium' :
+          agent.status === 'completed' ? 'text-blue-200' :
+          agent.status === 'failed' ? 'text-red-300' :
+          'text-slate-300'
+        }`}>
+          {agent.agentName || `A-${agent.id.slice(0, 4)}`}
         </span>
-        {/* Container ID - very compact */}
         {agent.container && (
-          <span className="text-xs text-slate-600 truncate block font-mono">
-            {agent.container.containerId.slice(-6)}
+          <span className="text-xs text-slate-500 font-mono">
+            .{agent.container.containerId.slice(-4)}
           </span>
         )}
       </div>
 
-      {/* Container status icon */}
-      <div className="mr-1.5" title={agent.container ? `Container: ${agent.container.status}` : 'No container'}>
-        <span className="text-xs">
+      {/* Compact status indicators */}
+      <div className="flex items-center gap-1 mr-1">
+        {/* Container status */}
+        <span className="text-xs" title={agent.container ? `Container: ${agent.container.status}` : 'No container'}>
           {getContainerStatusIcon(agent.container)}
+        </span>
+
+        {/* Status letter */}
+        <span className={`text-xs font-bold ${
+          agent.status === 'running' ? 'text-emerald-400' :
+          agent.status === 'completed' ? 'text-blue-400' :
+          agent.status === 'failed' ? 'text-red-400' :
+          'text-slate-500'
+        }`}>
+          {agent.status[0].toUpperCase()}
         </span>
       </div>
 
-      {/* Status letter indicator */}
-      <span className={`text-xs font-bold mr-2 ${
-        agent.status === 'running' ? 'text-emerald-400' :
-        agent.status === 'completed' ? 'text-blue-400' :
-        agent.status === 'failed' ? 'text-red-400' :
-        'text-slate-500'
-      }`}>
-        {agent.status[0].toUpperCase()}
-      </span>
-
       {/* Runtime - compact */}
-      <div className="text-xs text-slate-500 font-mono tabular-nums mr-2">
+      <div className={`text-xs font-mono tabular-nums mr-1 min-w-[2rem] ${
+        agent.status === 'running' ? 'text-emerald-400' : 'text-slate-400'
+      }`}>
         {formatRuntime(agent.lastActivity || agent.createdAt)}
       </div>
 
-      {/* Terminal indicator - enhanced for container port */}
-      <div 
-        className={`w-1 h-1 rounded-full mr-1.5 ${
-          agent.container?.terminalPort ? 'bg-emerald-400' : 
-          hasTerminal ? 'bg-emerald-400' : 
+      {/* Terminal indicator - smaller */}
+      <div
+        className={`w-1 h-1 rounded-full mr-1 ${
+          agent.container?.terminalPort ? 'bg-emerald-400' :
+          hasTerminal ? 'bg-emerald-400' :
           'bg-slate-700'
         }`}
         title={agent.container?.terminalPort ? `Terminal port: ${agent.container.terminalPort}` : hasTerminal ? 'Terminal available' : 'No terminal'}
@@ -129,11 +138,11 @@ const AgentRow: React.FC<AgentRowProps> = ({
             onKill(agent);
           }}
           disabled={isBeingKilled}
-          className={`opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-opacity`}
+          className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-opacity"
           title="Kill"
         >
           {isBeingKilled ? (
-            <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg className="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
@@ -271,11 +280,11 @@ export const AgentList: React.FC<AgentListProps> = ({
     return (
       <div className={`space-y-0.5 ${className}`}>
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-8 px-2 flex items-center bg-slate-800/20 rounded">
-            <div className="w-1.5 h-1.5 bg-slate-700 rounded-full mr-2 animate-pulse" />
-            <div className="h-2.5 bg-slate-700 rounded w-20 animate-pulse" />
+          <div key={i} className="h-5 px-1.5 flex items-center bg-slate-800/20 rounded">
+            <div className="w-1 h-1 bg-slate-700 rounded-full mr-1.5 animate-pulse" />
+            <div className="h-2 bg-slate-700 rounded w-16 animate-pulse" />
             <div className="flex-1" />
-            <div className="h-2.5 bg-slate-700 rounded w-8 animate-pulse" />
+            <div className="h-2 bg-slate-700 rounded w-6 animate-pulse" />
           </div>
         ))}
       </div>
@@ -346,7 +355,7 @@ export const AgentList: React.FC<AgentListProps> = ({
           {['running', 'completed', 'failed'].map(status => (
             <button
               key={status}
-              className="px-1.5 py-0.5 text-xs bg-slate-800/30 text-slate-400 rounded hover:bg-slate-700/40 hover:text-slate-300 transition-all"
+              className="px-1.5 py-0.5 text-xs bg-slate-800/40 text-slate-300 rounded hover:bg-slate-700/50 hover:text-slate-100 transition-all"
             >
               {status[0].toUpperCase()}
             </button>
@@ -355,7 +364,7 @@ export const AgentList: React.FC<AgentListProps> = ({
       )}
 
       {/* Compact agent list */}
-      <div className="rounded bg-slate-800/20 border border-slate-700/40">
+      <div className="rounded bg-slate-900/30 border border-slate-700/50 shadow-lg">
         <div className="p-1">
           {/* Your Agents */}
           {userAgents.length > 0 && (

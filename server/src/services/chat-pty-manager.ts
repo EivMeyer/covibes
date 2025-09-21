@@ -225,8 +225,9 @@ DEVELOPMENT COMMANDS:
             console.log(`🆔 UUID Session ID stored: ${data.sessionId}`);
           }
 
-          // Emit complete response
-          this.emit('chat-response', agentId, data.fullContent);
+          // Don't emit chat-response when streaming - frontend already has the content from chunks
+          // This prevents duplicate messages in the UI
+          // this.emit('chat-response', agentId, data.fullContent);
 
           // Store in terminal history
           await this.storeTerminalHistory(agentId, data.fullContent, 'output');

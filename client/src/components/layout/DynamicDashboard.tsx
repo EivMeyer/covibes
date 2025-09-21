@@ -76,12 +76,66 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
     };
   }, []);
 
+  // Helper function to find next available position in grid
+  const findNextAvailablePosition = (existingLayouts: DashboardLayout[], newTileWidth: number, newTileHeight: number) => {
+    const cols = 12 // Grid has 12 columns
+
+    if (existingLayouts.length === 0) {
+      return { x: 0, y: 0 }
+    }
+
+    // Helper to check if a position is occupied
+    const isPositionOccupied = (x: number, y: number, width: number, height: number) => {
+      return existingLayouts.some(layout => {
+        // Check if rectangles overlap
+        const horizontalOverlap = !(x + width <= layout.x || x >= layout.x + layout.w)
+        const verticalOverlap = !(y + height <= layout.y || y >= layout.y + layout.h)
+        return horizontalOverlap && verticalOverlap
+      })
+    }
+
+    // Create a list of all possible positions sorted by priority:
+    // 1. First by Y (higher up is better)
+    // 2. Then by X (further left is better)
+    const possiblePositions: Array<{x: number, y: number, score: number}> = []
+
+    // Find the maximum Y to know when to stop checking
+    const maxExistingY = Math.max(0, ...existingLayouts.map(l => l.y + l.h))
+    const maxCheckY = maxExistingY + newTileHeight // Check a bit beyond existing tiles
+
+    // Generate all valid positions
+    for (let y = 0; y <= maxCheckY; y++) {
+      for (let x = 0; x <= cols - newTileWidth; x++) {
+        if (!isPositionOccupied(x, y, newTileWidth, newTileHeight)) {
+          // Score: prioritize higher positions (lower y), then leftmost positions (lower x)
+          // Multiply y by 1000 to make vertical position much more important than horizontal
+          const score = y * 1000 + x
+          possiblePositions.push({ x, y, score })
+        }
+      }
+    }
+
+    // Sort by score (lowest score = highest priority)
+    possiblePositions.sort((a, b) => a.score - b.score)
+
+    // Return the best position (or fallback to bottom-left if no positions found)
+    if (possiblePositions.length > 0) {
+      return { x: possiblePositions[0].x, y: possiblePositions[0].y }
+    }
+
+    // Fallback: place at the bottom-left
+    return { x: 0, y: maxExistingY }
+  }
+
   // Only add layouts for genuinely new tiles - FIXED: Split into separate effects to prevent infinite loops
   useEffect(() => {
     const newTiles = tiles.filter(tile => !seenTiles.has(tile.id))
 
     if (newTiles.length > 0) {
-      const newLayouts: DashboardLayout[] = newTiles.map((tile, index) => {
+      const currentLayouts = layouts.lg || []
+      const newLayouts: DashboardLayout[] = []
+
+      newTiles.forEach((tile) => {
         const defaultLayouts: Record<GridTile['type'], Partial<DashboardLayout>> = {
           agent: { w: 5, h: 10, minW: 3, minH: 6 },
           terminal: { w: 6, h: 12, minW: 3, minH: 6 },
@@ -98,12 +152,20 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
           minH: 3,
         }
 
-        return {
+        // Find next available position considering all existing and newly added layouts
+        const allExistingLayouts = [...currentLayouts, ...newLayouts]
+        const position = findNextAvailablePosition(
+          allExistingLayouts,
+          tileDefaults.w as number,
+          tileDefaults.h as number
+        )
+
+        newLayouts.push({
           i: tile.id,
-          x: (index % 3) * 4,
-          y: Math.floor(index / 3) * 6,
+          x: position.x,
+          y: position.y,
           ...tileDefaults,
-        }
+        })
       })
 
       setLayouts(prev => ({
@@ -476,7 +538,7 @@ export const DynamicDashboard: React.FC<DynamicDashboardProps> = ({
         <div className="text-center space-y-6">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-white">
-              Welcome to Your Dashboard
+              Welcome to Your Team Dashboard
             </h2>
             <p className="text-gray-400">
               Start building your workspace by adding components
