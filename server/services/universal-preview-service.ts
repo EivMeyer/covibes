@@ -200,7 +200,7 @@ class UniversalPreviewService {
     console.log(`🧹 Cleaned up dead preview for team ${teamId}`);
   }
 
-  async startPreview(teamId: string, repositoryUrl?: string): Promise<{ port: number; url: string }> {
+  async startPreview(teamId: string, _repositoryUrl?: string): Promise<{ port: number; url: string }> {
     console.log(`🚀 Starting universal preview for team ${teamId} - fresh client regenerated`);
     console.log(`📦 Always using template (ignoring any repository URL)`);
 
@@ -350,7 +350,7 @@ CMD ["sh", "-c", "if [ -f start.sh ]; then ./start.sh; else npm run dev -- --hos
   /**
    * Generate Vite configuration with MIME type fix and HMR support (DRY)
    */
-  private generateViteConfig(_containerPort: number = 8000, includeGlobalDefine: boolean = false, teamId: string = 'demo'): string {
+  private generateViteConfig(_containerPort: number = 8000, includeGlobalDefine: boolean = false, _teamId: string = 'demo'): string {
     const additionalConfig = includeGlobalDefine ? `,
   // Additional configuration
   define: {
@@ -392,12 +392,12 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    // Configure HMR to work through nginx direct proxy WebSocket  
+    // Configure HMR to work through nginx HTTPS WebSocket proxy
     hmr: {
-      clientPort: 80,  // Client connects to nginx 
+      port: 443,          // Use HTTPS port directly
+      protocol: 'wss',    // Secure WebSocket
       host: '${BASE_HOST}',
-      // Use nginx direct proxy path for WebSocket connections
-      path: '/preview/${teamId}/',
+      // NO PATH - let HMR connect directly through nginx
       overlay: true
     },
     cors: true,
@@ -431,7 +431,8 @@ export default defineConfig({
 
   // REMOVED: _cloneRepository method - superseded by cloneRepositoryWithFallback with better branch handling
 
-  private async cloneRepositoryWithFallback(repositoryUrl: string, targetDir: string): Promise<void> {
+  /* Commented out - not currently used
+  private async _cloneRepositoryWithFallback(repositoryUrl: string, targetDir: string): Promise<void> {
     console.log(`📥 Cloning repository with branch fallback: ${repositoryUrl}`);
     
     // Check if directory already has a project
@@ -475,6 +476,7 @@ export default defineConfig({
       }
     }
   }
+  */
 
   // Keeping this for reference but now using template instead
   /* private async createViteReactProject(projectDir: string, teamId: string, _port: number): Promise<void> {
