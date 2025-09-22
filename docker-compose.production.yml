@@ -1,0 +1,470 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Primary with High Availability
+  postgres-primary:
+    image: postgres:15-alpine
+    container_name: covibes-postgres-primary
+    restart: always
+    environment:
+      POSTGRES_DB: covibes
+      POSTGRES_USER: covibes
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      POSTGRES_MAX_CONNECTIONS: 500
+      POSTGRES_SHARED_BUFFERS: 2GB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 6GB
+      POSTGRES_MAINTENANCE_WORK_MEM: 512MB
+      POSTGRES_CHECKPOINT_COMPLETION_TARGET: 0.9
+      POSTGRES_WAL_BUFFERS: 16MB
+      POSTGRES_DEFAULT_STATISTICS_TARGET: 100
+      POSTGRES_RANDOM_PAGE_COST: 1.1
+      POSTGRES_WORK_MEM: 8MB
+      # Replication settings
+      POSTGRES_REPLICATION_MODE: master
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+    volumes:
+      - postgres-primary-data:/var/lib/postgresql/data
+      - ./scripts/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./scripts/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - covibes-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U covibes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # PostgreSQL Read Replica
+  postgres-replica:
+    image: postgres:15-alpine
+    container_name: covibes-postgres-replica
+    restart: always
+    environment:
+      POSTGRES_REPLICATION_MODE: slave
+      POSTGRES_MASTER_HOST: postgres-primary
+      POSTGRES_MASTER_PORT: 5432
+      POSTGRES_REPLICATION_USER: replicator
+      POSTGRES_REPLICATION_PASSWORD: ${REPLICATION_PASSWORD}
+      POSTGRES_USER: covibes
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-replica-data:/var/lib/postgresql/data
+    networks:
+      - covibes-network
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # PgBouncer Connection Pooler
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: covibes-pgbouncer
+    restart: always
+    environment:
+      DATABASES_HOST: postgres-primary
+      DATABASES_PORT: 5432
+      DATABASES_DBNAME: covibes
+      DATABASES_USER: covibes
+      DATABASES_PASSWORD: ${DB_PASSWORD}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 5
+      RESERVE_POOL_SIZE: 5
+      MAX_DB_CONNECTIONS: 100
+      MAX_USER_CONNECTIONS: 100
+    volumes:
+      - ./scripts/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./scripts/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    ports:
+      - "6432:6432"
+    networks:
+      - covibes-network
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+  # Redis Master
+  redis-master:
+    image: redis:7-alpine
+    container_name: covibes-redis-master
+    restart: always
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --tcp-backlog 511
+      --tcp-keepalive 60
+      --timeout 0
+      --protected-mode no
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - redis-master-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - covibes-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Redis Replica 1
+  redis-replica-1:
+    image: redis:7-alpine
+    container_name: covibes-redis-replica-1
+    restart: always
+    command: >
+      redis-server
+      --slaveof redis-master 6379
+      --appendonly yes
+      --slave-read-only yes
+    volumes:
+      - redis-replica-1-data:/data
+    networks:
+      - covibes-network
+    depends_on:
+      redis-master:
+        condition: service_healthy
+
+  # Redis Replica 2
+  redis-replica-2:
+    image: redis:7-alpine
+    container_name: covibes-redis-replica-2
+    restart: always
+    command: >
+      redis-server
+      --slaveof redis-master 6379
+      --appendonly yes
+      --slave-read-only yes
+    volumes:
+      - redis-replica-2-data:/data
+    networks:
+      - covibes-network
+    depends_on:
+      redis-master:
+        condition: service_healthy
+
+  # Redis Sentinel for High Availability
+  redis-sentinel-1:
+    image: redis:7-alpine
+    container_name: covibes-redis-sentinel-1
+    restart: always
+    command: redis-sentinel /etc/redis-sentinel/sentinel.conf
+    volumes:
+      - ./scripts/redis/sentinel.conf:/etc/redis-sentinel/sentinel.conf:ro
+    networks:
+      - covibes-network
+    depends_on:
+      - redis-master
+      - redis-replica-1
+      - redis-replica-2
+
+  redis-sentinel-2:
+    image: redis:7-alpine
+    container_name: covibes-redis-sentinel-2
+    restart: always
+    command: redis-sentinel /etc/redis-sentinel/sentinel.conf
+    volumes:
+      - ./scripts/redis/sentinel.conf:/etc/redis-sentinel/sentinel.conf:ro
+    networks:
+      - covibes-network
+    depends_on:
+      - redis-master
+      - redis-replica-1
+      - redis-replica-2
+
+  redis-sentinel-3:
+    image: redis:7-alpine
+    container_name: covibes-redis-sentinel-3
+    restart: always
+    command: redis-sentinel /etc/redis-sentinel/sentinel.conf
+    volumes:
+      - ./scripts/redis/sentinel.conf:/etc/redis-sentinel/sentinel.conf:ro
+    networks:
+      - covibes-network
+    depends_on:
+      - redis-master
+      - redis-replica-1
+      - redis-replica-2
+
+  # HAProxy Load Balancer
+  haproxy:
+    image: haproxy:2.8-alpine
+    container_name: covibes-haproxy
+    restart: always
+    volumes:
+      - ./scripts/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8404:8404"  # Stats page
+    networks:
+      - covibes-network
+    depends_on:
+      - backend-1
+      - backend-2
+      - backend-3
+      - websocket-1
+      - websocket-2
+
+  # Backend Instances
+  backend-1:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    container_name: covibes-backend-1
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://covibes:${DB_PASSWORD}@pgbouncer:6432/covibes
+      REDIS_URL: redis://redis-master:6379
+      JWT_SECRET: ${JWT_SECRET}
+      EC2_HOST: ${EC2_HOST}
+      EC2_USERNAME: ${EC2_USERNAME}
+      INSTANCE_ID: backend-1
+    networks:
+      - covibes-network
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis-master:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  backend-2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    container_name: covibes-backend-2
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://covibes:${DB_PASSWORD}@pgbouncer:6432/covibes
+      REDIS_URL: redis://redis-master:6379
+      JWT_SECRET: ${JWT_SECRET}
+      EC2_HOST: ${EC2_HOST}
+      EC2_USERNAME: ${EC2_USERNAME}
+      INSTANCE_ID: backend-2
+    networks:
+      - covibes-network
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis-master:
+        condition: service_healthy
+
+  backend-3:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    container_name: covibes-backend-3
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://covibes:${DB_PASSWORD}@pgbouncer:6432/covibes
+      REDIS_URL: redis://redis-master:6379
+      JWT_SECRET: ${JWT_SECRET}
+      EC2_HOST: ${EC2_HOST}
+      EC2_USERNAME: ${EC2_USERNAME}
+      INSTANCE_ID: backend-3
+    networks:
+      - covibes-network
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis-master:
+        condition: service_healthy
+
+  # WebSocket Instances with Redis Adapter
+  websocket-1:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    container_name: covibes-websocket-1
+    restart: always
+    environment:
+      NODE_ENV: production
+      SERVICE_TYPE: websocket
+      PORT: 3001
+      DATABASE_URL: postgresql://covibes:${DB_PASSWORD}@pgbouncer:6432/covibes
+      REDIS_URL: redis://redis-master:6379
+      SOCKET_IO_REDIS_ADAPTER: "true"
+      JWT_SECRET: ${JWT_SECRET}
+      INSTANCE_ID: websocket-1
+    networks:
+      - covibes-network
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis-master:
+        condition: service_healthy
+
+  websocket-2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.production
+    container_name: covibes-websocket-2
+    restart: always
+    environment:
+      NODE_ENV: production
+      SERVICE_TYPE: websocket
+      PORT: 3001
+      DATABASE_URL: postgresql://covibes:${DB_PASSWORD}@pgbouncer:6432/covibes
+      REDIS_URL: redis://redis-master:6379
+      SOCKET_IO_REDIS_ADAPTER: "true"
+      JWT_SECRET: ${JWT_SECRET}
+      INSTANCE_ID: websocket-2
+    networks:
+      - covibes-network
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis-master:
+        condition: service_healthy
+
+  # Frontend with CDN-ready static build
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.production
+      args:
+        VITE_BACKEND_URL: https://api.covibes.com
+        VITE_FRONTEND_URL: https://covibes.com
+    container_name: covibes-frontend
+    restart: always
+    volumes:
+      - frontend-static:/usr/share/nginx/html
+    networks:
+      - covibes-network
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: covibes-prometheus
+    restart: always
+    volumes:
+      - ./scripts/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - covibes-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: covibes-grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_INSTALL_PLUGINS: redis-datasource,postgres-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./scripts/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./scripts/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - covibes-network
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: covibes-node-exporter
+    restart: always
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    networks:
+      - covibes-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: covibes-cadvisor
+    restart: always
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - covibes-network
+    privileged: true
+
+networks:
+  covibes-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres-primary-data:
+  postgres-replica-data:
+  redis-master-data:
+  redis-replica-1-data:
+  redis-replica-2-data:
+  prometheus-data:
+  grafana-data:
+  frontend-static:

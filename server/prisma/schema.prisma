@@ -25,6 +25,12 @@ model agents {
   tmuxSessionName     String?
   mode                String                @default("terminal")
   sessionId           String?
+  agentState          String                @default("initializing") // initializing, available, working, error
+  isReady             Boolean               @default(false)
+  lastHeartbeat       DateTime?
+  currentTaskId       String?
+  messageQueue        Json                  @default("[]")
+  startupTime         DateTime              @default(now())
   teams               teams                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
   users               users                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   container_instances container_instances[]

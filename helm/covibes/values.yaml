@@ -1,0 +1,258 @@
+global:
+  environment: production
+  domain: covibes.com
+  storageClass: gp3
+
+backend:
+  enabled: true
+  replicaCount: 10
+  image:
+    repository: covibes/backend
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 3001
+
+  autoscaling:
+    enabled: true
+    minReplicas: 10
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - covibes-backend
+          topologyKey: kubernetes.io/hostname
+
+websocket:
+  enabled: true
+  replicaCount: 20
+  image:
+    repository: covibes/backend
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 3001
+    sessionAffinity: ClientIP
+    sessionAffinityTimeout: 10800
+
+  autoscaling:
+    enabled: true
+    minReplicas: 20
+    maxReplicas: 200
+    targetCPUUtilizationPercentage: 60
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  stickySession: true
+  redisAdapter: true
+
+frontend:
+  enabled: true
+  replicaCount: 5
+  image:
+    repository: covibes/frontend
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+preview:
+  enabled: true
+  maxContainersPerNode: 50
+  nodePoolSize: 30
+
+  resourceQuota:
+    requests.cpu: "150"
+    requests.memory: "300Gi"
+    limits.cpu: "300"
+    limits.memory: "600Gi"
+
+  defaultResources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  nodeSelector:
+    node-role: preview
+
+  tolerations:
+  - key: "preview"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+postgresql:
+  enabled: true
+  auth:
+    database: covibes
+    username: covibes
+    existingSecret: covibes-db-secret
+
+  architecture: replication
+  postgresql:
+    replicaCount: 2
+    resources:
+      requests:
+        cpu: 1
+        memory: 2Gi
+      limits:
+        cpu: 2
+        memory: 4Gi
+
+  persistence:
+    enabled: true
+    storageClass: gp3
+    size: 100Gi
+
+  metrics:
+    enabled: true
+
+redis:
+  enabled: true
+  architecture: replication
+  auth:
+    enabled: true
+    existingSecret: covibes-redis-secret
+
+  master:
+    persistence:
+      enabled: true
+      storageClass: gp3
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
+
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      storageClass: gp3
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+  sentinel:
+    enabled: true
+    quorum: 2
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+
+  hosts:
+  - host: covibes.com
+    paths:
+    - path: /
+      pathType: Prefix
+
+  tls:
+  - secretName: covibes-tls
+    hosts:
+    - covibes.com
+    - "*.covibes.com"
+
+monitoring:
+  prometheus:
+    enabled: true
+    retention: 30d
+    storageSize: 50Gi
+
+  grafana:
+    enabled: true
+    adminPassword: changeme
+    persistence:
+      enabled: true
+      size: 10Gi
+
+  alertmanager:
+    enabled: true
+    config:
+      global:
+        slack_api_url: 'YOUR_SLACK_WEBHOOK_URL'
+      route:
+        group_by: ['alertname', 'cluster', 'service']
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 12h
+        receiver: 'slack'
+      receivers:
+      - name: 'slack'
+        slack_configs:
+        - channel: '#alerts'
+          title: 'Covibes Alert'
+
+serviceMonitor:
+  enabled: true
+  interval: 30s
+
+networkPolicy:
+  enabled: true
+  policyTypes:
+  - Ingress
+  - Egress
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%
+
+secrets:
+  create: false
+  existingSecret: covibes-secrets

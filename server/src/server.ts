@@ -54,6 +54,7 @@ import { universalPreviewService } from '../services/universal-preview-service.j
 // import { mockAgentService, isMockAgentEnabled } from '../services/mock-agent.js';
 import { previewService } from '../services/preview-service.js';
 import { agentChatService } from '../services/agent-chat.js';
+import { agentStateManager } from '../services/agent-state-manager.js';
 import { terminalManagerFactory } from './services/terminal-manager-factory.js';
 import terminalBuffer from './services/terminal-buffer.js';
 import { dockerManager } from './services/docker-manager-compat.js';
@@ -227,6 +228,9 @@ io.use(async (socket: any, next) => {
 // Initialize agent chat service with Socket.io server
 agentChatService.setSocketServer(io);
 
+// Initialize agent state manager with Socket.io server
+agentStateManager.setSocketServer(io);
+
 // PTY Event Handling - Connect dockerManager events to WebSocket broadcasting
 dockerManager.on('pty-ready', (data: { agentId: string; ptyProcess: any }) => {
   console.log(`🎯 PTY ready for agent: ${data.agentId}`);
@@ -280,15 +284,21 @@ dockerManager.on('pty-cleaned', (data: { agentId: string; reason: string }) => {
 // CRITICAL FIX: Handle PTY data events from DockerManager
 dockerManager.on('pty-data', async (data: { agentId: string; data: string; timestamp: number }) => {
   console.log(`📡 PTY data event received for agent ${data.agentId}: ${data.data.length} bytes`);
-  
+
   // Add output to terminal buffer for history and processing
   terminalBuffer.addOutput(data.agentId, data.data);
-  
+
   // Get agent owner info
   const agent = await prisma.agents.findUnique({
     where: { id: data.agentId },
-    select: { userId: true }
+    select: { userId: true, agentState: true, isReady: true }
   }).catch(() => null);
+
+  // Mark agent as ready if it's outputting data while in initializing state
+  if (agent && agent.agentState === 'initializing' && !agent.isReady) {
+    console.log(`🚀 [AGENT-STATE] Agent ${data.agentId} is outputting data - marking as ready`);
+    await agentStateManager.markAgentReady(data.agentId);
+  }
   
   // Broadcast to all sockets connected to this agent
   const sockets = agentSockets.get(data.agentId);

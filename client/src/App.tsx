@@ -316,13 +316,29 @@ function AppContent() {
     });
 
     socket.on('agent-status', (data: { agentId: string; status: 'starting' | 'running' | 'completed' | 'failed' | 'killed'; message?: string }) => {
-      setAgents(prev => prev.map(agent => 
-        agent.id === data.agentId 
+      setAgents(prev => prev.map(agent =>
+        agent.id === data.agentId
           ? { ...agent, status: data.status }
           : agent
       ));
     });
 
+    // Agent state change handler for the new state management
+    socket.on('agent-state-change', (data: {
+      agentId: string;
+      agentName: string;
+      oldState: string;
+      newState: string;
+      isReady: boolean;
+      queueLength: number;
+    }) => {
+      console.log(`🔄 Agent state change: ${data.agentName} (${data.oldState} → ${data.newState})`);
+      setAgents(prev => prev.map(agent =>
+        agent.id === data.agentId
+          ? { ...agent, agentState: data.newState, isReady: data.isReady, queueLength: data.queueLength }
+          : agent
+      ));
+    });
 
     // Agent deletion handlers
     socket.on('agent-deleted', (data: { agentId: string; userId: string }) => {

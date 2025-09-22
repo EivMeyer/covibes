@@ -19,6 +19,7 @@ import { authenticateToken } from '../middleware/auth.js';
 import { getIO } from '../server.js';
 import { generateAgentName } from '../utils/nameGenerator.js';
 import { agentChatService } from '../../services/agent-chat.js';
+import { agentStateManager } from '../../services/agent-state-manager.js';
 import { dockerManager } from '../services/docker-manager-compat.js';
 import { terminalManagerFactory } from '../services/terminal-manager-factory.js';
 // import fs from 'fs/promises';
@@ -113,9 +114,15 @@ async function executeAgentAsync(
           where: { id: agentId },
           data: {
             status: 'running',
+            agentState: 'available',
+            isReady: true,
+            lastHeartbeat: new Date(),
             output: `Claude agent running in Docker container\nContainer ID: ${container.containerId}\nSession: ${sessionId}\n\nExecuting: claude "${task}"\n\nFiles created/modified by this agent will appear in the preview.`
           }
         });
+
+        // Mark agent as ready in state manager
+        await agentStateManager.markAgentReady(agentId);
 
         // Notify team that agent is running in container
         if (teamId && io) {
@@ -162,9 +169,15 @@ async function executeAgentAsync(
           where: { id: agentId },
           data: {
             status: 'running',
+            agentState: 'available',
+            isReady: true,
+            lastHeartbeat: new Date(),
             output: `Claude agent running with ${modeDescription}\nAgent: ${agentId}\nMode: ${mode}\n\nTask: ${task}\n\nAgent is ready for ${mode === 'chat' ? 'chat messages' : 'interactive commands'}.`
           }
         });
+
+        // Mark agent as ready in state manager
+        await agentStateManager.markAgentReady(agentId);
 
         // Notify team that agent is running
         if (teamId && io) {
@@ -336,7 +349,7 @@ router.post('/spawn', async (req: express.Request, res) => {
     // Generate session ID for chat mode agents (must be valid UUID for Claude CLI)
     const sessionId = mode === 'chat' ? randomUUID() : null;
 
-    // Create agent record
+    // Create agent record with new state fields
     const agent = await prisma.agents.create({
       data: {
         id: randomUUID(),
@@ -346,17 +359,23 @@ router.post('/spawn', async (req: express.Request, res) => {
         task,
         repositoryUrl: user.teams?.repositoryUrl ?? null, // Use team repository or null for team workspace
         status: 'starting',
+        agentState: 'initializing',
+        isReady: false,
         agentName,
         terminalLocation: terminalLocation || 'local',
         terminalIsolation: terminalIsolation || 'none',
         mode: mode || 'terminal',
         sessionId,
+        startupTime: new Date(),
         updatedAt: new Date()
       },
       include: {
         users: { select: { userName: true } }
       }
     });
+
+    // Initialize agent state management
+    await agentStateManager.initializeAgent(agent.id);
 
     console.log(`🚀 Calling executeAgentAsync with agentName: ${agentName}`);
     // Start agent execution asynchronously
@@ -898,6 +917,26 @@ router.post('/:id/input', async (req: express.Request, res) => {
       return res.status(404).json({ error: 'Agent not found or access denied' });
     }
 
+    // Check agent state before sending input
+    const stateCheck = await agentStateManager.handleIncomingMessage(agentId, input, req.user.userId);
+
+    if (!stateCheck.success) {
+      return res.status(400).json({
+        error: stateCheck.error,
+        queued: stateCheck.queued,
+        queuePosition: stateCheck.queuePosition
+      });
+    }
+
+    if (stateCheck.queued) {
+      return res.json({
+        message: 'Message queued',
+        queued: true,
+        queuePosition: stateCheck.queuePosition,
+        info: stateCheck.error
+      });
+    }
+
     // Send input to the running agent process using unified PTY approach
     console.log(`💬 Sending input to agent ${agentId} (${agent.mode} mode): ${input}`);
 
@@ -912,16 +951,33 @@ router.post('/:id/input', async (req: express.Request, res) => {
       const success = manager.sendInput(agentId, input + (agent.mode === 'chat' ? '' : '\n'));
 
       if (success) {
+        // Agent is now processing the message
+        await agentStateManager.updateHeartbeat(agentId);
+
         res.json({
-          message: `Input sent to ${agent.mode} agent successfully`
+          message: `Input sent to ${agent.mode} agent successfully`,
+          agentState: 'working'
         });
+
+        // Mark task complete after a delay (simulated for now)
+        setTimeout(async () => {
+          await agentStateManager.markTaskComplete(agentId);
+        }, 5000); // 5 seconds for demo
+
       } else {
+        // If send failed, mark agent as available again
+        await agentStateManager.updateAgentState(agentId, 'available');
+
         res.status(404).json({
           error: `Agent ${agent.mode} session not found or not ready`
         });
       }
     } catch (terminalError) {
       console.error(`❌ Error sending input to ${agent.mode} agent ${agentId}:`, terminalError);
+
+      // Mark agent as having an error
+      await agentStateManager.updateAgentState(agentId, 'error');
+
       res.status(500).json({
         error: `Failed to send input to ${agent.mode} agent: ${terminalError instanceof Error ? terminalError.message : String(terminalError)}`
       });
@@ -1022,6 +1078,9 @@ router.delete('/:id', async (req: express.Request, res) => {
         console.warn(`Failed to kill agent session ${agentId}:`, killError);
       }
     }
+
+    // Clean up agent state management
+    await agentStateManager.cleanupAgent(agentId);
 
     // Delete the agent from database
     await prisma.agents.delete({

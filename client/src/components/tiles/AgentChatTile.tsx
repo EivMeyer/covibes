@@ -12,6 +12,9 @@ interface AgentDetails {
   task: string;
   status: string;
   mode?: 'terminal' | 'chat';
+  agentState?: 'initializing' | 'available' | 'working' | 'error' | 'offline';
+  isReady?: boolean;
+  queueLength?: number;
 }
 
 interface Message {
@@ -76,7 +79,9 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
   const spinnerChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
   const isOwner = agent?.userId === currentUser?.id;
-  const canInteract = isOwner && (agent?.status === 'running' || agent?.status === 'starting');
+  const canInteract = isOwner && (agent?.status === 'running' || agent?.status === 'starting') &&
+                     (!agent?.agentState || agent.agentState === 'available');
+  const isAgentInitializing = agent?.agentState === 'initializing';
 
   // Show voice mode indicator temporarily when voice mode changes
   useEffect(() => {
@@ -615,9 +620,27 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
         <div className="flex items-center gap-2 font-mono text-xs">
           <span className="text-gray-400">[agent]</span>
           {agent ? (
-            <span className="text-green-400">
-              {agent.agentName || agent.id.substring(0, 8)}
-            </span>
+            <>
+              <span className="text-green-400">
+                {agent.agentName || agent.id.substring(0, 8)}
+              </span>
+              {/* Agent State Indicator */}
+              {agent.agentState && (
+                <span className={`text-xs ${
+                  agent.agentState === 'initializing' ? 'text-amber-400' :
+                  agent.agentState === 'available' ? 'text-emerald-400' :
+                  agent.agentState === 'working' ? 'text-blue-400 animate-pulse' :
+                  agent.agentState === 'error' ? 'text-red-400' :
+                  'text-slate-500'
+                }`}>
+                  {agent.agentState === 'initializing' ? '[⏳ starting]' :
+                   agent.agentState === 'available' ? '[✅ ready]' :
+                   agent.agentState === 'working' ? `[💬 working${agent.queueLength ? ` (${agent.queueLength} queued)` : ''}]` :
+                   agent.agentState === 'error' ? '[❌ error]' :
+                   '[🔌 offline]'}
+                </span>
+              )}
+            </>
           ) : (
             <span className="text-gray-600">disconnected</span>
           )}
@@ -685,6 +708,22 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
                             [{a.status === 'running' ? 'active' : 'starting'}]
                           </span>
                           <span className="text-gray-300">{a.agentName || a.id.substring(0, 8)}</span>
+                          {/* Agent State Indicator */}
+                          {a.agentState && (
+                            <span className={`text-xs ${
+                              a.agentState === 'initializing' ? 'text-amber-400 animate-pulse' :
+                              a.agentState === 'available' ? 'text-emerald-400' :
+                              a.agentState === 'working' ? 'text-blue-400 animate-pulse' :
+                              a.agentState === 'error' ? 'text-red-400' :
+                              'text-slate-500'
+                            }`}>
+                              {a.agentState === 'initializing' ? '⏳' :
+                               a.agentState === 'available' ? '✅' :
+                               a.agentState === 'working' ? '💬' :
+                               a.agentState === 'error' ? '❌' :
+                               '🔌'}
+                            </span>
+                          )}
                         </div>
                         <div className="text-gray-600 truncate pl-12">{a.task}</div>
                       </button>
@@ -713,7 +752,35 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
 
       {/* Messages */}
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 font-mono" style={{ fontSize: `${fontSize}px` }}>
-        {messages.length === 0 && !agent ? (
+        {/* Show loading spinner when agent is initializing */}
+        {agent && agent.agentState === 'initializing' && messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto mb-3"></div>
+              <div className="text-sm text-gray-400">Initializing agent...</div>
+              <div className="text-xs text-gray-600 mt-2">{agent.agentName || agent.id.substring(0, 8)}</div>
+              <div className="text-xs text-amber-400 mt-1 animate-pulse">Setting up environment...</div>
+            </div>
+          </div>
+        ) : agent && agent.agentState === 'error' && messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-3">❌</div>
+              <div className="text-sm text-red-400">Agent encountered an error</div>
+              <div className="text-xs text-gray-600 mt-2">{agent.agentName || agent.id.substring(0, 8)}</div>
+              <div className="text-xs text-gray-400 mt-1">Try restarting the agent</div>
+            </div>
+          </div>
+        ) : agent && agent.agentState === 'offline' && messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-3">🔌</div>
+              <div className="text-sm text-gray-400">Agent is offline</div>
+              <div className="text-xs text-gray-600 mt-2">{agent.agentName || agent.id.substring(0, 8)}</div>
+              <div className="text-xs text-gray-400 mt-1">Waiting for connection...</div>
+            </div>
+          </div>
+        ) : messages.length === 0 && !agent ? (
           <div className="text-gray-600">
             <p>// no agent connected</p>
             <p>// select an agent to start</p>
@@ -802,6 +869,8 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
             placeholder={
               isRecording || voiceMode
                 ? "Listening..."
+                : isAgentInitializing
+                ? "// agent is initializing..."
                 : agent
                 ? ""
                 : "// no agent connected"

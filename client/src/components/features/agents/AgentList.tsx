@@ -11,6 +11,7 @@ interface AgentRowProps {
   formatRuntime: (timestamp: string) => string;
   getStatusIndicator: (status: string) => { color: string; pulse: boolean };
   getContainerStatusIcon: (containerInfo?: ContainerInfo) => string;
+  getAgentStateIndicator?: (agentState?: string) => { emoji: string; label: string; color: string };
   isSelected?: boolean | undefined;
   onSelect?: (() => void) | undefined;
 }
@@ -24,6 +25,7 @@ const AgentRow: React.FC<AgentRowProps> = ({
   formatRuntime,
   getStatusIndicator,
   getContainerStatusIcon,
+  getAgentStateIndicator,
   isSelected = false,
   onSelect,
 }) => {
@@ -90,6 +92,15 @@ const AgentRow: React.FC<AgentRowProps> = ({
         {agent.container && (
           <span className="text-xs text-slate-500 font-mono">
             .{agent.container.containerId.slice(-4)}
+          </span>
+        )}
+        {/* Agent State Indicator */}
+        {agent.agentState && getAgentStateIndicator && (
+          <span
+            className={`text-xs ${getAgentStateIndicator(agent.agentState).color}`}
+            title={getAgentStateIndicator(agent.agentState).label}
+          >
+            {getAgentStateIndicator(agent.agentState).emoji}
           </span>
         )}
       </div>
@@ -242,18 +253,35 @@ export const AgentList: React.FC<AgentListProps> = ({
 
   const getStatusIndicator = (status: string): { color: string; pulse: boolean } => {
     switch (status) {
-      case 'running': 
+      case 'running':
         return { color: 'bg-emerald-500', pulse: true };
-      case 'starting': 
+      case 'starting':
         return { color: 'bg-amber-500', pulse: true };
-      case 'completed': 
+      case 'completed':
         return { color: 'bg-blue-500', pulse: false };
-      case 'failed': 
+      case 'failed':
         return { color: 'bg-red-500', pulse: false };
-      case 'killed': 
+      case 'killed':
         return { color: 'bg-slate-600', pulse: false };
-      default: 
+      default:
         return { color: 'bg-slate-600', pulse: false };
+    }
+  };
+
+  const getAgentStateIndicator = (agentState?: string): { emoji: string; label: string; color: string } => {
+    switch (agentState) {
+      case 'initializing':
+        return { emoji: '⏳', label: 'Starting...', color: 'text-amber-400' };
+      case 'available':
+        return { emoji: '✅', label: 'Available', color: 'text-emerald-400' };
+      case 'working':
+        return { emoji: '💬', label: 'Working', color: 'text-blue-400' };
+      case 'error':
+        return { emoji: '❌', label: 'Error', color: 'text-red-400' };
+      case 'offline':
+        return { emoji: '🔌', label: 'Offline', color: 'text-slate-500' };
+      default:
+        return { emoji: '⚡', label: 'Active', color: 'text-slate-400' };
     }
   };
 
@@ -386,6 +414,7 @@ export const AgentList: React.FC<AgentListProps> = ({
                     formatRuntime={formatRuntime}
                     getStatusIndicator={getStatusIndicator}
                     getContainerStatusIcon={getContainerStatusIcon}
+                    getAgentStateIndicator={getAgentStateIndicator}
                     isSelected={selectedAgentId === agent.id}
                     onSelect={onSelectAgent ? () => onSelectAgent(agent.id) : undefined}
                   />
@@ -415,6 +444,7 @@ export const AgentList: React.FC<AgentListProps> = ({
                     formatRuntime={formatRuntime}
                     getStatusIndicator={getStatusIndicator}
                     getContainerStatusIcon={getContainerStatusIcon}
+                    getAgentStateIndicator={getAgentStateIndicator}
                     isSelected={selectedAgentId === agent.id}
                     onSelect={onSelectAgent ? () => onSelectAgent(agent.id) : undefined}
                   />
