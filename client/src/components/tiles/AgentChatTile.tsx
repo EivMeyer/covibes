@@ -138,10 +138,7 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     a.userId === currentUser?.id // Only show user's own agents
   );
 
-  // Keep ref in sync with state for streaming content
-  useEffect(() => {
-    streamingContentRef.current = streamingContent;
-  }, [streamingContent]);
+  // Ref is now updated directly in handleStreamChunk, no need for sync
 
   // Handle window resize to update mobile detection
   useEffect(() => {
@@ -383,6 +380,8 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
           const separator = prev && (prev.endsWith('.') || prev.endsWith('!') || prev.endsWith(':')) ? '\n\n' : '';
           const newContent = prev + separator + data.content;
           console.log('📝 [FRONTEND] Total streaming content now:', newContent.substring(0, 100));
+          // Update ref immediately with the new content
+          streamingContentRef.current = newContent;
           return newContent;
         });
       }
@@ -391,8 +390,8 @@ export const AgentChatTile: React.FC<AgentChatTileProps> = ({
     const handleStreamComplete = (data: any) => {
       console.log('🏁 [FRONTEND] Stream complete event received:', data);
       if (data.agentId === currentAgentId) {
-        // Get the final streaming content
-        const finalContent = streamingContent || streamingContentRef.current;
+        // Get the final streaming content from ref (always up-to-date)
+        const finalContent = streamingContentRef.current;
         console.log('📄 [FRONTEND] Final streaming content:', finalContent?.substring(0, 100));
 
         // Convert the streaming content to a permanent message

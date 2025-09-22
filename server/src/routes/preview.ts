@@ -492,11 +492,22 @@ router.get('/status', createAuthHandler(async (req, res) => {
         // Check if nginx=true query param is set to force nginx URL
         const forceNginx = req.query['nginx'] === 'true';
         let publicUrl;
-        
-        // Use HTTPS without port number since nginx handles the proxy
-        publicUrl = `https://${BASE_HOST}/preview/${teamId}/`;
-        
-        console.log('🚀 URL SET TO:', publicUrl, 'forceNginx:', forceNginx);
+
+        // In development mode with localhost, use direct container port
+        // In production or when nginx is forced, use nginx proxy path
+        const isDevelopment = process.env.NODE_ENV === 'development' || BASE_HOST === 'localhost';
+
+        if (isDevelopment && !forceNginx) {
+          // Direct access to container port for local development
+          publicUrl = `http://localhost:${dockerStatus.port}/`;
+          console.log('🔧 Development mode - using direct container URL');
+        } else {
+          // Production mode or forced nginx - use HTTPS proxy path
+          publicUrl = `https://${BASE_HOST}/preview/${teamId}/`;
+          console.log('🔐 Production mode - using nginx proxy URL');
+        }
+
+        console.log('🚀 URL SET TO:', publicUrl, 'isDevelopment:', isDevelopment, 'forceNginx:', forceNginx);
         const response = {
           workspace: {
             status: 'running',
