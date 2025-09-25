@@ -390,6 +390,35 @@ model terminal_history {
 
 ## Development Guidelines
 
+### Critical Acceptance Tests
+**⚠️ MANDATORY: Run before ANY changes to preview system components**
+
+#### HMR Acceptance Test
+```bash
+cd /home/ubuntu/covibes/tests
+node hmr-acceptance-test.js
+```
+
+**MUST run this test BEFORE and AFTER changes to:**
+- Nginx configuration
+- Express preview routes (`/api/preview/*`)
+- DedicatedPreviewProxy service
+- Docker container setup or Vite config
+- WebSocket middleware or proxy settings
+- Client preview components (PreviewTile)
+- Any file in `server/services/*preview*.ts`
+
+**Test validates:**
+- HMR works at `/api/preview/proxy/{teamId}/main/`
+- File changes → browser updates WITHOUT refresh
+- WebSocket connection stable through entire proxy chain
+
+**Failure = BLOCKED:**
+- DO NOT deploy
+- DO NOT merge
+- Fix until test passes
+- This functionality is NON-NEGOTIABLE
+
 ### Code Quality
 - **TypeScript**: Strict mode enabled, use proper typing
 - **ESLint**: Configured for both frontend and backend
