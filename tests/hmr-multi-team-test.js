@@ -91,7 +91,8 @@ async function testTeamHMR(teamId, teamName, expectedPort) {
     });
     const page = await context.newPage();
 
-    const PREVIEW_URL = `https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/api/preview/proxy/${teamId}/main/`;
+    const BASE_URL = process.env.TEST_BASE_URL || 'https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com';
+    const PREVIEW_URL = `${BASE_URL}/api/preview/proxy/${teamId}/main/`;
     console.log(`   URL: ${PREVIEW_URL}`);
 
     // Load the preview

@@ -68,7 +68,8 @@ async function testDynamicProxy(teamId) {
     });
     const page = await context.newPage();
 
-    const PREVIEW_URL = `https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/api/preview/proxy/${teamId}/main/`;
+    const BASE_URL = process.env.TEST_BASE_URL || 'https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com';
+    const PREVIEW_URL = `${BASE_URL}/api/preview/proxy/${teamId}/main/`;
     console.log(`   URL: ${PREVIEW_URL}`);
 
     // Load the preview
@@ -137,9 +138,10 @@ async function runTest() {
   // Step 1: Verify hardcoded routes are gone
   console.log('\n1️⃣  Checking if hardcoded nginx routes are removed...');
 
+  const BASE_URL = process.env.TEST_BASE_URL || 'https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com';
   const hardcodedTests = [
-    { url: 'https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/preview/demo-team-001/', expectedBehavior: 'not-preview' },
-    { url: 'https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/hmr', expectedBehavior: 'not-preview' }
+    { url: `${BASE_URL}/preview/demo-team-001/`, expectedBehavior: 'not-preview' },
+    { url: `${BASE_URL}/hmr`, expectedBehavior: 'not-preview' }
   ];
 
   const hardcodedResults = await Promise.all(hardcodedTests.map(t => testUrl(t.url, t.expectedBehavior)));
@@ -163,7 +165,7 @@ async function runTest() {
 
   const hypotheticalTeams = ['team-abc-123', 'production-team', 'customer-xyz'];
   for (const teamId of hypotheticalTeams) {
-    const url = `https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/api/preview/proxy/${teamId}/main/`;
+    const url = `${BASE_URL}/api/preview/proxy/${teamId}/main/`;
     const response = await testUrl(url, 'any');
     console.log(`   ${teamId}: HTTP ${response.statusCode} (Route accessible)`);
   }

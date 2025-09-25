@@ -33,9 +33,11 @@ async function runAcceptanceTest() {
   try {
     // CRITICAL: This URL pattern must work
     const TEAM_ID = 'demo-team-001';
-    const PREVIEW_URL = `https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com/api/preview/proxy/${TEAM_ID}/main/`;
+    const BASE_URL = process.env.TEST_BASE_URL || 'https://ec2-13-48-135-139.eu-north-1.compute.amazonaws.com';
+    const PREVIEW_URL = `${BASE_URL}/api/preview/proxy/${TEAM_ID}/main/`;
 
     console.log('📍 Testing URL pattern: /api/preview/proxy/{teamId}/main/');
+    console.log('📍 Base URL:', BASE_URL);
     console.log('📍 Actual URL:', PREVIEW_URL);
 
     const context = await browser.newContext({
